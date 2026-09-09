@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<!-- server/views/error.ejs - דף שגיאה כללי -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/header') %>
+  <main class="container">
+    <h1>אופס, קרתה שגיאה (<%= statusCode %>)</h1>
+    <p><%= message %></p>
+    <a href="/">חזרה לדף הבית</a>
+  </main>
+</body>
+</html>

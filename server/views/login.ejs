@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!-- server/views/login.ejs - טופס התחברות -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main class="container">
+    <h1>התחברות</h1>
+
+    <% if (error) { %>
+      <p class="error-message"><%= error %></p>
+    <% } %>
+
+    <form action="/login" method="POST" class="auth-form">
+      <label for="email">אימייל</label>
+      <input type="email" id="email" name="email" required />
+
+      <label for="password">סיסמה</label>
+      <input type="password" id="password" name="password" required />
+
+      <button type="submit">התחברות</button>
+    </form>
+  </main>
+</body>
+</html>

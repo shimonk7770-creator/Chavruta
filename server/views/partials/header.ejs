@@ -1,0 +1,16 @@
+<!-- server/views/partials/header.ejs -->
+<!-- תפריט ניווט עליון, מוצג בכל הדפים -->
+<header class="site-header">
+  <a class="logo" href="/">חברותא</a>
+  <nav>
+    <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
+      <span class="welcome">שלום, <%= userName %></span>
+      <form action="/logout" method="POST" style="display:inline">
+        <button type="submit" class="btn-link">התנתקות</button>
+      </form>
+    <% } else { %>
+      <a href="/login">התחברות</a>
+      <a href="/register">הרשמה</a>
+    <% } %>
+  </nav>
+</header>

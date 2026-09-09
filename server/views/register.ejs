@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!-- server/views/register.ejs - טופס הרשמה, כולל בדיקת שם משתמש חי דרך jQuery/Ajax -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main class="container">
+    <h1>הרשמה</h1>
+
+    <% if (error) { %>
+      <p class="error-message"><%= error %></p>
+    <% } %>
+
+    <form action="/register" method="POST" class="auth-form">
+      <label for="fullName">שם מלא</label>
+      <input type="text" id="fullName" name="fullName" required />
+
+      <label for="username">שם משתמש</label>
+      <input type="text" id="username" name="username" required minlength="3" maxlength="20" />
+      <!-- כאן תוצג תוצאת בדיקת הזמינות בזמן אמת -->
+      <span id="username-status"></span>
+
+      <label for="email">אימייל</label>
+      <input type="email" id="email" name="email" required />
+
+      <label for="password">סיסמה (8+ תווים, אות גדולה וספרה)</label>
+      <input type="password" id="password" name="password" required minlength="8" />
+
+      <button type="submit">הרשמה</button>
+    </form>
+  </main>
+
+  <script src="/js/register.js"></script>
+</body>
+</html>
