@@ -1,1 +1,2 @@
 # Chavruta
+בדיקת סנכרון עם Claude — Wed Sep  9 18:32:19 UTC 2026
