@@ -1,0 +1,49 @@
+// server/controllers/commentController.js
+// לוגיקה עסקית לתגובות - תואם ל-FR-015, FR-016 ב-SRS
+// נתיב זה נקרא בעיקר דרך jQuery/Ajax (ראו server/public/js/comments.js) - ללא רענון עמוד
+
+const Comment = require("../models/Comment");
+const Post = require("../models/Post");
+
+// POST /api/posts/:postId/comments - FR-015: הוספת תגובה (מוחזר JSON ל-Ajax)
+async function addComment(req, res) {
+  try {
+    const { content } = req.body;
+    if (!content || !content.trim()) {
+      return res.status(400).json({ success: false, message: "התגובה לא יכולה להיות ריקה" });
+    }
+
+    const post = await Post.findById(req.params.postId);
+    if (!post) {
+      return res.status(404).json({ success: false, message: "הפוסט לא נמצא" });
+    }
+
+    const comment = await Comment.create({
+      postId: post._id,
+      authorId: req.session.userId,
+      content,
+    });
+    await comment.populate("authorId", "fullName");
+
+    res.json({ success: true, comment });
+  } catch (error) {
+    console.error("שגיאה בהוספת תגובה:", error);
+    res.status(500).json({ success: false, message: "אירעה שגיאה בשרת" });
+  }
+}
+
+// GET /api/posts/:postId/comments - שליפת תגובות לפוסט (לטעינה דרך Ajax)
+async function listComments(req, res) {
+  const comments = await Comment.find({ postId: req.params.postId, isArchived: false })
+    .populate("authorId", "fullName")
+    .sort({ createdAt: 1 });
+  res.json({ success: true, comments });
+}
+
+// DELETE /api/comments/:id - FR-016: מחיקת תגובה - הבעלים או מנהל הקבוצה (נבדק במידלוור)
+async function deleteComment(req, res) {
+  await req.comment.deleteOne();
+  res.json({ success: true });
+}
+
+module.exports = { addComment, listComments, deleteComment };

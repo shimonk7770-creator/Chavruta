@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!-- server/views/groups/new.ejs - טופס יצירת קבוצה (FR-006) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/header') %>
+  <main class="container">
+    <h1>יצירת קבוצה חדשה</h1>
+    <% if (error) { %><p class="error-message"><%= error %></p><% } %>
+    <form action="/groups" method="POST" class="auth-form">
+      <label for="name">שם הקבוצה</label>
+      <input type="text" id="name" name="name" required minlength="2" maxlength="60" />
+
+      <label for="description">תיאור</label>
+      <textarea id="description" name="description" maxlength="1000"></textarea>
+
+      <label for="category">סוג</label>
+      <select id="category" name="category">
+        <option value="shiur">שיעור</option>
+        <option value="vaad">ועד</option>
+        <option value="community">קהילה</option>
+      </select>
+
+      <label for="topic">נושא</label>
+      <input type="text" id="topic" name="topic" />
+
+      <label for="dayOfWeek">יום בשבוע</label>
+      <input type="text" id="dayOfWeek" name="dayOfWeek" placeholder="לדוגמה: שלישי" />
+
+      <label for="time">שעה</label>
+      <input type="text" id="time" name="time" placeholder="לדוגמה: 20:00" />
+
+      <label for="level">רמה</label>
+      <select id="level" name="level">
+        <option value="">לא רלוונטי</option>
+        <option value="beginners">מתחילים</option>
+        <option value="intermediate">בינוני</option>
+        <option value="advanced">מתקדמים</option>
+      </select>
+
+      <button type="submit">יצירה</button>
+    </form>
+  </main>
+</body>
+</html>

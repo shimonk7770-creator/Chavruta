@@ -27,7 +27,7 @@ server/
 ## התקדמות (לפי חלוקת השבועות ב-SRS)
 
 - [x] שבוע 1: שלד ותשתית - Express, MVC, MongoDB, הרשמה/התחברות עם bcrypt, jQuery/Ajax ראשוני
-- [ ] שבוע 2: מודלים Group/Post/Comment + הרשאות + Seed
+- [x] שבוע 2: מודלים Group/Post/Comment + הרשאות + חיפוש + jQuery/Ajax לתגובות + Seed
 - [ ] שבוע 3: חיפוש, React (מעקב לימוד + Canvas + וידאו), אנדפוינטים ל-D3
 - [ ] שבוע 4: צ'אט (Socket.io) + ליטוש CSS3
 - [ ] שבוע 5: בדיקות, נקודות תורפה, הכנה להגנה

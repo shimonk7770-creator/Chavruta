@@ -120,3 +120,54 @@ button:hover {
     column-count: 1;
   }
 }
+
+/* עיצוב נוסף לרכיבי קבוצות/פוסטים/תגובות (שבוע 2) */
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.search-form input,
+.search-form select {
+  padding: 0.4rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.meta {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.auth-form textarea {
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  min-height: 80px;
+  margin-bottom: 0.8rem;
+}
+
+.post-card .comments-list {
+  margin: 0.6rem 0;
+}
+
+.comment {
+  background: #f2f0eb;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  margin-bottom: 0.3rem;
+}
+
+.comment-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.comment-form input {
+  flex: 1;
+  padding: 0.4rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}

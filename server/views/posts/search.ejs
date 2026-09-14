@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!-- server/views/posts/search.ejs - חיפוש פוסטים (FR-012) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <h1>חיפוש דברי תורה ופוסטים</h1>
+
+    <form action="/posts/search" method="GET" class="search-form">
+      <input type="text" name="keyword" placeholder="מילת מפתח" value="<%= query.keyword || '' %>" />
+      <select name="category">
+        <option value="">כל הקטגוריות</option>
+        <option value="dvarTorah" <%= query.category === 'dvarTorah' ? 'selected' : '' %>>דבר תורה</option>
+        <option value="question" <%= query.category === 'question' ? 'selected' : '' %>>שאלה</option>
+        <option value="update" <%= query.category === 'update' ? 'selected' : '' %>>עדכון</option>
+        <option value="holiday" <%= query.category === 'holiday' ? 'selected' : '' %>>חג</option>
+      </select>
+      <input type="date" name="dateFrom" value="<%= query.dateFrom || '' %>" />
+      <input type="date" name="dateTo" value="<%= query.dateTo || '' %>" />
+      <button type="submit">חיפוש</button>
+    </form>
+
+    <p><%= total %> תוצאות (עמוד <%= page %>)</p>
+
+    <% posts.forEach(function(post) { %>
+      <div class="card">
+        <h3><a href="/groups/<%= post.groupId._id %>"><%= post.title %></a></h3>
+        <p class="meta"><%= post.authorId.fullName %> | קבוצה: <%= post.groupId.name %></p>
+        <p><%= post.content %></p>
+      </div>
+    <% }) %>
+  </main>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!-- server/views/groups/index.ejs - רשימת/חיפוש קבוצות (FR-010, FR-011) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <h1>קבוצות ושיעורים</h1>
+
+    <!-- טופס חיפוש - GET רגיל (לא Ajax) לפשטות, אפשר לשדרג ל-Ajax בהמשך -->
+    <form action="/groups/search" method="GET" class="search-form">
+      <input type="text" name="topic" placeholder="נושא" value="<%= query.topic || '' %>" />
+      <select name="dayOfWeek">
+        <option value="">כל יום</option>
+        <% ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'].forEach(function(day) { %>
+          <option value="<%= day %>" <%= query.dayOfWeek === day ? 'selected' : '' %>><%= day %></option>
+        <% }) %>
+      </select>
+      <select name="level">
+        <option value="">כל הרמות</option>
+        <option value="beginners" <%= query.level === 'beginners' ? 'selected' : '' %>>מתחילים</option>
+        <option value="intermediate" <%= query.level === 'intermediate' ? 'selected' : '' %>>בינוני</option>
+        <option value="advanced" <%= query.level === 'advanced' ? 'selected' : '' %>>מתקדמים</option>
+      </select>
+      <button type="submit">חיפוש</button>
+    </form>
+
+    <p><a href="/groups/new">+ יצירת קבוצה חדשה</a></p>
+
+    <% if (groups.length === 0) { %>
+      <p>לא נמצאו קבוצות התואמות את החיפוש. נסה להרחיב את הקריטריונים.</p>
+    <% } %>
+
+    <% groups.forEach(function(group) { %>
+      <div class="card">
+        <h3><a href="/groups/<%= group._id %>"><%= group.name %></a></h3>
+        <p><%= group.description %></p>
+        <p class="meta">
+          <% if (group.topic) { %>נושא: <%= group.topic %> | <% } %>
+          <% if (group.dayOfWeek) { %>יום: <%= group.dayOfWeek %> | <% } %>
+          <% if (group.time) { %>שעה: <%= group.time %> | <% } %>
+          מנהל: <%= group.managerId.fullName %>
+        </p>
+      </div>
+    <% }) %>
+  </main>
+</body>
+</html>

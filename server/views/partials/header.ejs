@@ -3,6 +3,7 @@
 <header class="site-header">
   <a class="logo" href="/">חברותא</a>
   <nav>
+    <a href="/groups">קבוצות</a>
     <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
       <span class="welcome">שלום, <%= userName %></span>
       <form action="/logout" method="POST" style="display:inline">

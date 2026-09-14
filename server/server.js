@@ -15,6 +15,9 @@ const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 const authRoutes = require("./routes/authRoutes");
 const pageRoutes = require("./routes/pageRoutes");
+const groupRoutes = require("./routes/groupRoutes");
+const postRoutes = require("./routes/postRoutes");
+const commentRoutes = require("./routes/commentRoutes");
 
 const app = express();
 
@@ -51,6 +54,9 @@ app.use(
 // נתיבים (Routes)
 app.use("/", pageRoutes);
 app.use("/", authRoutes);
+app.use("/", groupRoutes);
+app.use("/", postRoutes);
+app.use("/", commentRoutes);
 
 // טיפול בשגיאות - חייב להיות אחרון (סעיף 8 ב-SRS)
 app.use(notFound);
