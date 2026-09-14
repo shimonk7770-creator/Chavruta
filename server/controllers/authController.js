@@ -3,6 +3,7 @@
 // תואם ל-FR-001, FR-002, FR-003 ולכללים BR-001, BR-002, BR-003, BR-010 במסמך ה-SRS
 
 const bcrypt = require("bcryptjs");
+const sanitizeHtml = require("sanitize-html");
 const User = require("../models/User");
 
 const MAX_FAILED_ATTEMPTS = 5; // BR-010
@@ -71,7 +72,7 @@ async function login(req, res) {
     const { email, password } = req.body;
 
     // מביאים את המשתמש כולל שדה הסיסמה (ברירת המחדל select:false מוסתרת, כאן צריך אותה בפירוש)
-    const user = await User.findOne({ email }).select("+passwordHash");
+    const user = await User.findOne({ email, isActive: true }).select("+passwordHash");
 
     // הודעת שגיאה כללית - לא חושפים אם האימייל קיים או שהסיסמה שגויה (מניעת enumeration)
     const genericError = "אימייל או סיסמה שגויים";
@@ -134,6 +135,56 @@ async function checkUsername(req, res) {
   res.json({ available: !existing });
 }
 
+// GET /profile - FR-004: מסך עריכת פרופיל אישי
+async function showProfileForm(req, res) {
+  const user = await User.findById(req.session.userId);
+  res.render("profile", { profileUser: user, error: null, success: null });
+}
+
+// POST /profile - FR-004: עדכון פרופיל אישי (שם, ביוגרפיה, אווטאר, ולחלופין סיסמה חדשה)
+async function updateProfile(req, res) {
+  try {
+    const user = await User.findById(req.session.userId).select("+passwordHash");
+    const { fullName, bio, avatarUrl, currentPassword, newPassword } = req.body;
+
+    if (fullName && fullName.trim()) user.fullName = fullName.trim();
+    // ניקוי HTML מהביוגרפיה - הגנה מפני XSS (NFR-006)
+    user.bio = sanitizeHtml(bio || "", { allowedTags: [], allowedAttributes: {} }).trim();
+    if (avatarUrl !== undefined) user.avatarUrl = avatarUrl.trim();
+
+    // שינוי סיסמה - דורש הזנת הסיסמה הנוכחית לאימות (FR-004)
+    if (newPassword) {
+      const isMatch = await bcrypt.compare(currentPassword || "", user.passwordHash);
+      if (!isMatch) {
+        return res.render("profile", { profileUser: user, error: "הסיסמה הנוכחית שגויה", success: null });
+      }
+      if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+        return res.render("profile", {
+          profileUser: user,
+          error: "הסיסמה החדשה חייבת לכלול לפחות 8 תווים, אות גדולה וספרה",
+          success: null,
+        });
+      }
+      user.passwordHash = await bcrypt.hash(newPassword, 10);
+    }
+
+    await user.save();
+    req.session.userName = user.fullName;
+    res.render("profile", { profileUser: user, error: null, success: "הפרטים עודכנו בהצלחה" });
+  } catch (error) {
+    console.error("שגיאה בעדכון פרופיל:", error);
+    res.render("profile", { profileUser: req.body, error: "אירעה שגיאה, נסה שוב", success: null });
+  }
+}
+
+// POST /profile/delete - FR-005: מחיקת חשבון (רכה - isActive:false, לא מחיקה פיזית - BR-011)
+async function deleteAccount(req, res) {
+  await User.findByIdAndUpdate(req.session.userId, { isActive: false });
+  req.session.destroy(() => {
+    res.redirect("/");
+  });
+}
+
 module.exports = {
   showRegisterForm,
   register,
@@ -141,4 +192,7 @@ module.exports = {
   login,
   logout,
   checkUsername,
+  showProfileForm,
+  updateProfile,
+  deleteAccount,
 };

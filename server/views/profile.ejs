@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!-- server/views/profile.ejs - עריכת פרופיל אישי ומחיקת חשבון (FR-004, FR-005) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main class="container">
+    <h1>הפרופיל שלי</h1>
+
+    <% if (typeof error !== 'undefined' && error) { %><p class="error-message"><%= error %></p><% } %>
+    <% if (typeof success !== 'undefined' && success) { %><p style="color:var(--color-secondary)"><%= success %></p><% } %>
+
+    <form action="/profile" method="POST" class="auth-form">
+      <label for="fullName">שם מלא</label>
+      <input type="text" id="fullName" name="fullName" value="<%= profileUser.fullName %>" required />
+
+      <label for="bio">קצת עליי</label>
+      <textarea id="bio" name="bio" maxlength="300"><%= profileUser.bio %></textarea>
+
+      <label for="avatarUrl">קישור לתמונת פרופיל (אופציונלי)</label>
+      <input type="text" id="avatarUrl" name="avatarUrl" value="<%= profileUser.avatarUrl %>" />
+
+      <hr />
+      <p class="meta">שינוי סיסמה (השאר ריק אם אינך רוצה לשנות):</p>
+      <label for="currentPassword">סיסמה נוכחית</label>
+      <input type="password" id="currentPassword" name="currentPassword" />
+
+      <label for="newPassword">סיסמה חדשה</label>
+      <input type="password" id="newPassword" name="newPassword" />
+
+      <button type="submit">שמירת שינויים</button>
+    </form>
+
+    <hr />
+    <h2>מחיקת חשבון</h2>
+    <p class="meta">מחיקת החשבון היא רכה - הפרופיל יושבת, אך תוכן שפרסמת (פוסטים/תגובות) יישאר קיים לצורך שלמות ההיסטוריה של אחרים.</p>
+    <form action="/profile/delete" method="POST" onsubmit="return confirm('האם אתה בטוח שברצונך למחוק את החשבון?')">
+      <button type="submit" style="background-color:#b3261e">מחיקת החשבון שלי</button>
+    </form>
+  </main>
+</body>
+</html>
