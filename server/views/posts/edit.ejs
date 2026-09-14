@@ -26,6 +26,20 @@
 
       <button type="submit">שמירת שינויים</button>
     </form>
+    <hr />
+    <h2>וידאו מצורף</h2>
+    <% if (post.videoUrl) { %>
+      <video controls style="max-width:100%; border-radius: var(--radius);" src="<%= post.videoUrl %>"></video>
+      <p class="meta">להחלפת הווידאו, העלה קובץ חדש למטה - הוא יחליף את הקיים.</p>
+    <% } else { %>
+      <p class="meta">אין עדיין וידאו מצורף לפוסט הזה.</p>
+    <% } %>
+    <form action="/posts/<%= post.id %>/video" method="POST" enctype="multipart/form-data" class="auth-form">
+      <label for="video">קובץ וידאו (mp4/webm, עד 50MB)</label>
+      <input type="file" id="video" name="video" accept="video/mp4,video/webm" required />
+      <button type="submit">העלאת וידאו</button>
+    </form>
+
     <p><a href="/groups/<%= post.groupId %>">חזרה לקבוצה</a></p>
   </main>
 </body>

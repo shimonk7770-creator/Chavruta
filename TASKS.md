@@ -58,7 +58,7 @@
 - [x] מודל LearningLog (FR-018, FR-019 - רישום/עריכה/מחיקה של יחידת לימוד, מסך /learning)
 - [x] מודול React נפרד - "בית המדרש האישי" (עמוד /study-room, נטען דרך React+Babel Standalone מ-CDN בלי build step)
 - [x] FR-020 תצוגת מעקב לימוד ב-Canvas (heatmap של 26 שבועות אחרונים, מבוסס על /api/learning/heatmap)
-- [ ] העלאת/נגינת וידאו בקומפוננטת React (BR-008 - עד 50MB, mp4/webm) - עדיין לא בוצע
+- [x] העלאה/נגינת וידאו לפוסטים (BR-008 - עד 50MB, mp4/webm, דרך multer) - שבוע 3 הושלם במלואו
 
 ## שבוע 4 - צ'אט בזמן אמת (Socket.io), גרפי D3
 

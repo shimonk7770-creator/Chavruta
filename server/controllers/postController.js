@@ -76,6 +76,17 @@ async function updatePost(req, res) {
   res.redirect(`/groups/${post.groupId}`);
 }
 
+// POST /posts/:id/video - BR-008: העלאת קובץ וידאו לפוסט קיים (הבעלים או מנהל הקבוצה בלבד)
+async function uploadVideo(req, res) {
+  const post = req.post; // הגיע ממידלוור ההרשאה canModifyPost
+  if (!req.file) {
+    return res.render("posts/edit", { post, error: "יש לבחור קובץ וידאו בפורמט mp4 או webm" });
+  }
+  const videoUrl = `/uploads/${req.file.filename}`;
+  const updated = await Post.update(post.id, { videoUrl });
+  res.redirect(`/groups/${updated.groupId}`);
+}
+
 // DELETE /posts/:id - FR-014: מחיקת פוסט - הבעלים או מנהל הקבוצה (נבדק במידלוור)
 async function deletePost(req, res) {
   const post = req.post; // הגיע ממידלוור ההרשאה
@@ -107,4 +118,4 @@ async function myFeed(req, res) {
   res.render("posts/feed", { posts, total, page, pageSize });
 }
 
-module.exports = { createPost, showEditPostForm, updatePost, deletePost, searchPosts, myFeed };
+module.exports = { createPost, showEditPostForm, updatePost, uploadVideo, deletePost, searchPosts, myFeed };
