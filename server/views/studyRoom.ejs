@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!-- server/views/studyRoom.ejs - "בית המדרש האישי" - מודול React עם Canvas (FR-020) -->
+<!-- טוען React/ReactDOM/Babel דרך CDN (ללא שלב build) - כתיבת JSX ישירות בדפדפן, בדומה לטעינת jQuery ב-head.ejs -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('partials/head') %>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main class="container">
+    <h1>בית המדרש האישי</h1>
+    <p class="meta">לוח ההתקדמות שלך בלימוד - כל משבצת מייצגת יום, וככל שלמדת יותר באותו יום כך היא כהה יותר.</p>
+
+    <!-- כאן React "יורכב" (mount) - ראו server/public/js/studyRoom.js -->
+    <div id="study-room-root" class="card"></div>
+
+    <p><a href="/learning">חזרה למעקב הלימוד</a></p>
+  </main>
+
+  <script type="text/babel" src="/js/studyRoom.js"></script>
+</body>
+</html>
