@@ -5,6 +5,7 @@
 const Group = require("../models/Group");
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
+const LearningLog = require("../models/LearningLog");
 
 // בודק שהמשתמש המחובר הוא המנהל של הקבוצה הספציפית הזו (לא סתם "מנהל" באופן כללי)
 async function isGroupManagerOf(req, res, next) {
@@ -67,4 +68,19 @@ async function canModifyComment(req, res, next) {
   next();
 }
 
-module.exports = { isGroupManagerOf, canModifyPost, canModifyComment };
+// בודק שהמשתמש הוא הבעלים של רישום הלימוד - FR-019: הבעלים בלבד, גם לא אדמין (מידע אישי)
+async function canModifyLearningLog(req, res, next) {
+  const log = await LearningLog.findById(req.params.id);
+  if (!log) {
+    res.status(404);
+    return next(new Error("הרישום לא נמצא"));
+  }
+  if (log.userId !== req.session.userId) {
+    res.status(403);
+    return next(new Error("אין לך הרשאה לערוך רישום לימוד של משתמש אחר"));
+  }
+  req.learningLog = log;
+  next();
+}
+
+module.exports = { isGroupManagerOf, canModifyPost, canModifyComment, canModifyLearningLog };
