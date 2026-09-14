@@ -22,6 +22,7 @@ const pageRoutes = require("./routes/pageRoutes");
 const groupRoutes = require("./routes/groupRoutes");
 const postRoutes = require("./routes/postRoutes");
 const commentRoutes = require("./routes/commentRoutes");
+const learningLogRoutes = require("./routes/learningLogRoutes");
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use("/", authRoutes);
 app.use("/", groupRoutes);
 app.use("/", postRoutes);
 app.use("/", commentRoutes);
+app.use("/", learningLogRoutes);
 
 // טיפול בשגיאות - חייב להיות אחרון (סעיף 8 ב-SRS)
 app.use(notFound);

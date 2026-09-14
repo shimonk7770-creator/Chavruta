@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!-- server/views/learning/index.ejs - מעקב לימוד אישי: רשימת רישומים + טופס הוספה (FR-018, FR-019) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <h1>מעקב לימוד אישי</h1>
+    <p><a class="btn btn-secondary" href="/study-room">צפייה בלוח ההתקדמות (Canvas)</a></p>
+
+    <% if (error) { %><p class="error-message"><%= error %></p><% } %>
+
+    <h2>רישום לימוד חדש</h2>
+    <form action="/learning" method="POST" class="auth-form">
+      <label for="date">תאריך</label>
+      <input type="date" id="date" name="date" required />
+
+      <label for="unit">מה נלמד (למשל: "בבא מציעא דף י&quot;ב")</label>
+      <input type="text" id="unit" name="unit" required maxlength="150" />
+
+      <label for="groupId">קבוצה (אופציונלי)</label>
+      <select id="groupId" name="groupId">
+        <option value="">ללא קבוצה</option>
+        <% myGroups.forEach(function(g) { %>
+          <option value="<%= g.id %>"><%= g.name %></option>
+        <% }) %>
+      </select>
+
+      <label for="notes">הערות (אופציונלי)</label>
+      <textarea id="notes" name="notes" maxlength="500"></textarea>
+
+      <button type="submit">רישום</button>
+    </form>
+
+    <h2>הרישומים שלי</h2>
+    <% if (logs.length === 0) { %>
+      <div class="card"><p>עדיין לא רשמת יחידות לימוד. התחל עכשיו!</p></div>
+    <% } %>
+    <% logs.forEach(function(log) { %>
+      <div class="card">
+        <p class="meta">
+          <%= new Date(log.date.toDate ? log.date.toDate() : log.date).toLocaleDateString('he-IL') %>
+          <% if (log.groupName) { %> | קבוצה: <%= log.groupName %><% } %>
+        </p>
+        <p><strong><%= log.unit %></strong></p>
+        <% if (log.notes) { %><p><%= log.notes %></p><% } %>
+        <p class="meta">
+          <a href="/learning/<%= log.id %>/edit">עריכה</a>
+          <form action="/learning/<%= log.id %>?_method=DELETE" method="POST" style="display:inline">
+            <button type="submit" class="btn-link">מחיקה</button>
+          </form>
+        </p>
+      </div>
+    <% }) %>
+  </main>
+</body>
+</html>
