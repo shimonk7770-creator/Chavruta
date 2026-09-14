@@ -33,6 +33,9 @@ app.set("views", path.join(__dirname, "views"));
 // קבצים סטטיים (CSS, JS, תמונות)
 app.use(express.static(path.join(__dirname, "public")));
 
+// קבצי וידאו שהועלו על ידי משתמשים (BR-008) - מוגשים כ-static מתיקיית /uploads בשורש הפרויקט
+app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+
 // פענוח גוף הבקשה (טפסים, JSON)
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
