@@ -49,6 +49,6 @@ seed/          - סקריפט אתחול נתוני דמו
 - [x] שבוע 1: שלד ותשתית - Express, MVC, הרשמה/התחברות עם bcrypt, jQuery/Ajax ראשוני
 - [x] שבוע 2: מודלים Group/Post/Comment + הרשאות + חיפוש + jQuery/Ajax לתגובות + Seed
 - [x] מעבר תשתית מ-MongoDB ל-Firebase/Firestore + השלמת פערים (עריכת פרופיל, מחיקת חשבון, עריכת פוסט, פיד אישי, הגנת XSS)
-- [ ] שבוע 3: React (מעקב לימוד + Canvas + וידאו)
+- [x] שבוע 3: מעקב לימוד (/learning) + מודול React עם Canvas heatmap (/study-room) + העלאת/נגינת וידאו לפוסטים
 - [ ] שבוע 4: צ'אט (Socket.io) + גרפי D3
 - [ ] שבוע 5: בדיקות, נקודות תורפה, הכנה להגנה
