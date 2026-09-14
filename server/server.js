@@ -7,10 +7,14 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const session = require("express-session");
-const MongoStore = require("connect-mongo");
 const methodOverride = require("method-override");
 
-const connectDB = require("./config/db");
+const { connectDB } = require("./config/db");
+
+// מתחברים ל-Firestore *לפני* טעינת הראוטים/קונטרולרים,
+// כדי שכל מודול שמשתמש במסד הנתונים ימצא אותו כבר מוכן
+connectDB();
+
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 const authRoutes = require("./routes/authRoutes");
@@ -20,9 +24,6 @@ const postRoutes = require("./routes/postRoutes");
 const commentRoutes = require("./routes/commentRoutes");
 
 const app = express();
-
-// חיבור למסד הנתונים MongoDB
-connectDB();
 
 // מנוע התצוגה - EJS (חלק ה-View במבנה ה-MVC)
 app.set("view engine", "ejs");
@@ -38,13 +39,12 @@ app.use(express.json());
 // תמיכה ב-PUT/DELETE מטפסי HTML רגילים
 app.use(methodOverride("_method"));
 
-// ניהול session - שומר את המידע שלו במסד הנתונים עצמו, כדי שלא ייעלם באתחול שרת
+// ניהול session - נשמר בזיכרון השרת (מספיק לפרויקט לימודי בתהליך יחיד; ה-DB עצמו הוא Firestore)
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "chavruta_dev_secret",
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }),
     cookie: {
       maxAge: 30 * 60 * 1000, // NFR-005: תפוגת session אחרי 30 דקות חוסר פעילות
     },
