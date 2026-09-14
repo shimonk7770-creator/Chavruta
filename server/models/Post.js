@@ -1,47 +1,133 @@
 // server/models/Post.js
-// מודל הפוסט (דבר תורה / שאלה / עדכון / תוכן חג) - Model במבנה ה-MVC
-// תואם ל-FR-013..FR-017 ולסכמת המסד בסעיף 9 ב-SRS
+// מודל הפוסט (דבר תורה / שאלה / עדכון / תוכן חג) - שכבת גישה לנתונים ב-Firestore (collection: "posts")
+// תואם ל-FR-012..FR-017 ולסכמת המסד בסעיף 9 ב-SRS
+//
+// הערה: עבר מ-Mongoose ל-Firestore. שם המחבר (authorName) ושם הקבוצה (groupName)
+// נשמרים ישירות על מסמך הפוסט (denormalization) כדי להימנע מ-populate() שלא קיים ב-Firestore.
+// חיפוש טקסט חופשי (FR-012) מבוצע בזיכרון השרת - ל-Firestore אין אינדקס $text מובנה כמו ב-Mongo.
 
-const mongoose = require("mongoose");
+const { getDb } = require("../config/db");
 
-const postSchema = new mongoose.Schema(
-  {
-    title: {
-      type: String,
-      required: [true, "יש להזין כותרת"],
-      trim: true,
-      maxlength: 150,
-    },
-    content: {
-      type: String,
-      required: [true, "יש להזין תוכן"],
-      minlength: [1, "תוכן הפוסט לא יכול להיות ריק"],
-      maxlength: [5000, "תוכן הפוסט ארוך מדי (מקסימום 5000 תווים)"], // BR-007
-    },
-    category: {
-      type: String,
-      enum: ["dvarTorah", "question", "update", "holiday"],
-      default: "update",
-    },
-    groupId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Group",
-      required: true,
-    },
-    authorId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    videoUrl: { type: String, default: "" },
+const COLLECTION = "posts";
+const VALID_CATEGORIES = ["dvarTorah", "question", "update", "holiday"];
 
-    // ארכוב לוגי - כשקבוצה נמחקת, הפוסטים שלה מסומנים כארכיביים ולא נמחקים פיזית (BR-011)
-    isArchived: { type: Boolean, default: false },
-  },
-  { timestamps: true }
-);
+function toPost(snap) {
+  if (!snap.exists) return null;
+  return { id: snap.id, ...snap.data() };
+}
 
-// אינדקס טקסט לחיפוש חופשי (FR-012) על כותרת ותוכן
-postSchema.index({ title: "text", content: "text" });
+function sortByCreatedAtDesc(items) {
+  return items.sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt));
+}
+function toMillis(v) {
+  return v?.toDate ? v.toDate().getTime() : new Date(v).getTime();
+}
 
-module.exports = mongoose.model("Post", postSchema);
+// FR-013: יצירת פוסט
+async function create(data) {
+  const db = getDb();
+  const now = new Date();
+  const docRef = await db.collection(COLLECTION).add({
+    title: data.title,
+    content: data.content,
+    category: VALID_CATEGORIES.includes(data.category) ? data.category : "update",
+    groupId: data.groupId,
+    groupName: data.groupName || "",
+    authorId: data.authorId,
+    authorName: data.authorName || "",
+    videoUrl: data.videoUrl || "",
+    isArchived: false,
+    createdAt: now,
+    updatedAt: now,
+  });
+  return findById(docRef.id);
+}
+
+async function findById(id) {
+  if (!id) return null;
+  const db = getDb();
+  const snap = await db.collection(COLLECTION).doc(id).get();
+  return toPost(snap);
+}
+
+// פוסטים פעילים של קבוצה מסוימת (מוצג בעמוד הקבוצה)
+async function listByGroup(groupId) {
+  const db = getDb();
+  const snaps = await db
+    .collection(COLLECTION)
+    .where("groupId", "==", groupId)
+    .where("isArchived", "==", false)
+    .get();
+  return sortByCreatedAtDesc(snaps.docs.map(toPost));
+}
+
+// FR-017: פיד אישי - כל הפוסטים הפעילים מתוך רשימת מזהי קבוצות (הקבוצות שהמשתמש חבר בהן)
+// Firestore מגביל שאילתת "in" ל-30 ערכים לכל היותר - סביר לחלוטין לפרויקט לימודי
+async function listByGroupIds(groupIds, { page = 1, pageSize = 10 } = {}) {
+  if (!groupIds.length) return { posts: [], total: 0 };
+  const db = getDb();
+  const snaps = await db
+    .collection(COLLECTION)
+    .where("groupId", "in", groupIds.slice(0, 30))
+    .where("isArchived", "==", false)
+    .get();
+  const all = sortByCreatedAtDesc(snaps.docs.map(toPost));
+  return paginate(all, page, pageSize);
+}
+
+// FR-012: חיפוש פוסטים - category/groupId מסוננים ב-DB, טווח תאריכים על createdAt, keyword בזיכרון
+async function search({ category, groupId, dateFrom, dateTo, keyword }, { page = 1, pageSize = 10 } = {}) {
+  const db = getDb();
+  let query = db.collection(COLLECTION).where("isArchived", "==", false);
+
+  if (category) query = query.where("category", "==", category);
+  if (groupId) query = query.where("groupId", "==", groupId);
+  if (dateFrom) query = query.where("createdAt", ">=", new Date(dateFrom));
+  if (dateTo) query = query.where("createdAt", "<=", new Date(dateTo));
+
+  const snaps = await query.get();
+  let posts = sortByCreatedAtDesc(snaps.docs.map(toPost));
+
+  if (keyword) {
+    const needle = keyword.trim().toLowerCase();
+    posts = posts.filter(
+      (p) => (p.title || "").toLowerCase().includes(needle) || (p.content || "").toLowerCase().includes(needle)
+    );
+  }
+
+  return paginate(posts, page, pageSize);
+}
+
+function paginate(items, page, pageSize) {
+  const total = items.length;
+  const start = (page - 1) * pageSize;
+  return { posts: items.slice(start, start + pageSize), total };
+}
+
+// FR-014: עדכון פוסט
+async function update(id, patch) {
+  const db = getDb();
+  await db
+    .collection(COLLECTION)
+    .doc(id)
+    .update({ ...patch, updatedAt: new Date() });
+  return findById(id);
+}
+
+// FR-014: מחיקת פוסט (מחיקה פיזית - הבעלים בעצמו בחר להסיר את התוכן שלו)
+async function remove(id) {
+  const db = getDb();
+  await db.collection(COLLECTION).doc(id).delete();
+}
+
+// BR-011: כשקבוצה נמחקת - כל הפוסטים שלה עוברים ארכוב לוגי, לא נמחקים פיזית
+async function archiveByGroup(groupId) {
+  const db = getDb();
+  const snaps = await db.collection(COLLECTION).where("groupId", "==", groupId).get();
+  const batch = db.batch();
+  snaps.docs.forEach((doc) => batch.update(doc.ref, { isArchived: true }));
+  await batch.commit();
+  return snaps.docs.map((d) => d.id);
+}
+
+module.exports = { create, findById, listByGroup, listByGroupIds, search, update, remove, archiveByGroup };

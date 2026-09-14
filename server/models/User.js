@@ -1,62 +1,102 @@
 // server/models/User.js
-// מודל המשתמש - Model במבנה ה-MVC
+// מודל המשתמש - שכבת גישה לנתונים ב-Firestore (collection: "users")
 // תואם לסכמת המסד ולדרישות ה-RBAC בסעיף 3 וה-FR-001..FR-005 במסמך ה-SRS
+//
+// הערה: המערכת עברה מ-MongoDB/Mongoose ל-Firebase/Firestore (לבקשת הקורס).
+// ב-Firestore אין Schema מובנה כמו ב-Mongoose - הולידציה מתבצעת ידנית בקונטרולר,
+// וכל מסמך מקבל מזהה (id) שהוא מחרוזת (לא ObjectId).
 
-const mongoose = require("mongoose");
+const { getDb } = require("../config/db");
 
-const userSchema = new mongoose.Schema(
-  {
-    fullName: {
-      type: String,
-      required: [true, "יש להזין שם מלא"],
-      trim: true,
-    },
-    username: {
-      type: String,
-      required: [true, "יש להזין שם משתמש"],
-      unique: true, // BR-001: שם משתמש ייחודי
-      trim: true,
-      minlength: [3, "שם משתמש חייב להכיל לפחות 3 תווים"],
-      maxlength: [20, "שם משתמש לא יכול להכיל יותר מ-20 תווים"],
-    },
-    email: {
-      type: String,
-      required: [true, "יש להזין כתובת אימייל"],
-      unique: true, // BR-003: אימייל ייחודי
-      trim: true,
-      lowercase: true,
-      match: [/^\S+@\S+\.\S+$/, "כתובת האימייל אינה תקינה"],
-    },
-    // חשוב: לעולם לא לשלוח שדה זה חזרה בתגובת API (NFR-003) - select:false מסתיר אותו כברירת מחדל
-    passwordHash: {
-      type: String,
-      required: true,
-      select: false,
-    },
-    // תפקיד המשתמש - קובע הרשאות (RBAC), ראו סעיף 3 ב-SRS
-    role: {
-      type: String,
-      enum: ["member", "manager", "admin"],
-      default: "member",
-    },
-    avatarUrl: { type: String, default: "" },
-    bio: { type: String, default: "", maxlength: 300 },
+const COLLECTION = "users";
 
-    // מחיקה רכה - BR-011 / FR-005 - לא מוחקים משתמש פיזית כדי לשמר שלמות תוכן
-    isActive: { type: Boolean, default: true },
+// ממיר מסמך Firestore לאובייקט JS רגיל עם שדה id
+function toUser(snap) {
+  if (!snap.exists) return null;
+  return { id: snap.id, ...snap.data() };
+}
 
-    // BR-010: נעילת חשבון זמנית אחרי 5 ניסיונות התחברות כושלים
-    failedLoginAttempts: { type: Number, default: 0 },
-    lockUntil: { type: Date, default: null },
-  },
-  {
-    timestamps: true, // מוסיף אוטומטית createdAt ו-updatedAt
-  }
-);
+// גרסה "בטוחה לתצוגה" של המשתמש - בלי סיסמת ה-hash (חשוב! NFR-003)
+function toPublicUser(user) {
+  if (!user) return null;
+  const { passwordHash, ...safe } = user;
+  return safe;
+}
 
-// שיטת עזר - בודקת אם המשתמש נעול כרגע (BR-010)
-userSchema.methods.isLocked = function () {
-  return this.lockUntil && this.lockUntil > Date.now();
+// POST /register - FR-001: יצירת משתמש חדש
+async function create(data) {
+  const db = getDb();
+  const now = new Date();
+  const docRef = await db.collection(COLLECTION).add({
+    fullName: data.fullName,
+    username: data.username,
+    email: data.email,
+    passwordHash: data.passwordHash,
+    role: data.role || "member",
+    avatarUrl: data.avatarUrl || "",
+    bio: data.bio || "",
+    isActive: true,
+    failedLoginAttempts: 0,
+    lockUntil: null,
+    createdAt: now,
+    updatedAt: now,
+  });
+  return findById(docRef.id);
+}
+
+async function findById(id) {
+  if (!id) return null;
+  const db = getDb();
+  const snap = await db.collection(COLLECTION).doc(id).get();
+  return toUser(snap);
+}
+
+// BR-003: חיפוש לפי אימייל (משמש גם בכניסה וגם בבדיקת ייחודיות)
+async function findByEmail(email, { activeOnly = false } = {}) {
+  const db = getDb();
+  const q = await db.collection(COLLECTION).where("email", "==", email).limit(1).get();
+  if (q.empty) return null;
+  const user = toUser(q.docs[0]);
+  if (activeOnly && !user.isActive) return null; // FR-005: חשבון שנמחק לא יכול להתחבר
+  return user;
+}
+
+// BR-001: חיפוש לפי שם משתמש (משמש בבדיקת ייחודיות ובבדיקת זמינות ב-Ajax)
+async function findByUsername(username) {
+  const db = getDb();
+  const q = await db.collection(COLLECTION).where("username", "==", username).limit(1).get();
+  if (q.empty) return null;
+  return toUser(q.docs[0]);
+}
+
+// בדיקת ייחודיות אימייל/שם משתמש בהרשמה - Firestore לא תומך ב-$or בין שני שדות,
+// לכן מריצים שתי שאילתות במקביל ומאחדים את התוצאה
+async function findByEmailOrUsername(email, username) {
+  const [byEmail, byUsername] = await Promise.all([findByEmail(email), findByUsername(username)]);
+  return byEmail || byUsername;
+}
+
+async function update(id, patch) {
+  const db = getDb();
+  await db
+    .collection(COLLECTION)
+    .doc(id)
+    .update({ ...patch, updatedAt: new Date() });
+  return findById(id);
+}
+
+// BR-010: בודקת אם המשתמש נעול כרגע עקב ניסיונות התחברות כושלים
+function isLocked(user) {
+  return !!(user.lockUntil && new Date(user.lockUntil) > new Date());
+}
+
+module.exports = {
+  create,
+  findById,
+  findByEmail,
+  findByUsername,
+  findByEmailOrUsername,
+  update,
+  isLocked,
+  toPublicUser,
 };
-
-module.exports = mongoose.model("User", userSchema);
