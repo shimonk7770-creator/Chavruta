@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- server/views/home.ejs - דף הבית -->
+<!-- server/views/home.ejs - דף הבית - כולל אזור פתיחה (Hero) וקטגוריות ראשיות של האתר -->
 <html lang="he" dir="rtl">
 <head>
   <%- include('partials/head') %>
@@ -8,13 +8,59 @@
   <%- include('partials/header') %>
 
   <main class="container">
-    <h1>ברוכים הבאים ל"חברותא"</h1>
-    <p>
-      רשת חברתית קהילתית-תורנית - מקום אחד לשיעורים, דברי תורה, מעקב לימוד וחיבור קהילתי.
-    </p>
-    <% if (!isLoggedIn) { %>
-      <p><a href="/register">הצטרפו עכשיו</a> כדי להתחיל.</p>
-    <% } %>
+
+    <!-- ===== אזור פתיחה - כותרת, טקסט הסבר ואיור SVG מוטמע (בלי תלות בקבצי תמונה חיצוניים) ===== -->
+    <section class="hero">
+      <div class="hero-text">
+        <h1>ברוכים הבאים ל"חברותא"</h1>
+        <p>
+          רשת חברתית קהילתית - מקום אחד לשיעורים, קבוצות לימוד, דברי תורה, מעקב התקדמות וחיבור קהילתי.
+        </p>
+        <% if (!isLoggedIn) { %>
+          <a class="btn btn-primary" href="/register">הצטרפו עכשיו</a>
+          <a class="btn btn-secondary" href="/groups">גלו קבוצות</a>
+        <% } else { %>
+          <a class="btn btn-primary" href="/groups">לכל הקבוצות שלי</a>
+        <% } %>
+      </div>
+      <div class="hero-image">
+        <!-- איור פשוט של אנשים לומדים יחד סביב שולחן, מצויר כ-SVG -->
+        <svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="160" cy="210" rx="130" ry="14" fill="#f0e4d0"/>
+          <rect x="60" y="140" width="200" height="14" rx="7" fill="#c97b3c"/>
+          <rect x="90" y="154" width="16" height="50" fill="#a85f27"/>
+          <rect x="214" y="154" width="16" height="50" fill="#a85f27"/>
+          <rect x="120" y="118" width="80" height="28" rx="4" fill="#fff" stroke="#1f6f5c" stroke-width="3"/>
+          <line x1="160" y1="118" x2="160" y2="146" stroke="#1f6f5c" stroke-width="2"/>
+          <circle cx="95" cy="95" r="22" fill="#f0c39a"/>
+          <path d="M73 118c0-14 10-24 22-24s22 10 22 24" fill="#1f6f5c"/>
+          <circle cx="225" cy="95" r="22" fill="#f0c39a"/>
+          <path d="M203 118c0-14 10-24 22-24s22 10 22 24" fill="#c97b3c"/>
+        </svg>
+      </div>
+    </section>
+
+    <!-- ===== קטגוריות ראשיות של האתר - ניווט מהיר לפי נושא ===== -->
+    <section class="feature-grid">
+      <a class="feature-card" href="/groups">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/><circle cx="17" cy="8" r="2.5"/><path d="M16 14.2c2.8.4 5 2.6 5 5.8"/></svg>
+        <h3>קבוצות ושיעורים</h3>
+        <p>מצאו קבוצת לימוד לפי נושא, יום ורמה, או הקימו קבוצה חדשה משלכם.</p>
+      </a>
+      <a class="feature-card" href="/posts/search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H7l-3 3V4z"/></svg>
+        <h3>דברי תורה ועדכונים</h3>
+        <p>שתפו רעיונות, שאלות ועדכוני קהילה, וקבלו תגובות בזמן אמת.</p>
+      </a>
+      <a class="feature-card" href="<%= isLoggedIn ? '/register' : '/register' %>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+        <h3>הצטרפות לקהילה</h3>
+        <p>הרשמו בכמה שניות והתחילו להשתתף בקבוצות ובשיחות.</p>
+      </a>
+    </section>
+
   </main>
+
+  <footer class="site-footer">חברותא &middot; פרויקט מסכם בפיתוח אתרים</footer>
 </body>
 </html>

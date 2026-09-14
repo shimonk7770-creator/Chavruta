@@ -1,100 +1,298 @@
 /* server/public/css/style.css */
-/* עיצוב כללי לאתר - כולל את חמשת יכולות ה-CSS3 הנדרשות בדרישה 27 */
+/* עיצוב כללי לאתר "חברותא" - כולל את חמשת יכולות ה-CSS3 הנדרשות בדרישה 27 */
+/* פלטת צבעים חמה ומודרנית + מבנה עיצוב אחיד לכל העמודים */
 
-/* דרישה 27.iv - font-face: הגדרת גופן מותאם אישית (כאן דוגמה עם קובץ מקומי, אפשר להחליף בגופן עברי אמיתי) */
+/* ===== משתני עיצוב (CSS Custom Properties) - כדי לשמור על עקביות צבעים בכל הקבצים ===== */
+:root {
+  --color-primary: #c97b3c;      /* כתום-חום חם - צבע ראשי, כפתורים עיקריים */
+  --color-primary-dark: #a85f27;
+  --color-secondary: #1f6f5c;    /* ירוק-טורקיז כהה - צבע משני */
+  --color-secondary-dark: #16503f;
+  --color-bg: #fbf7f1;           /* רקע קרם חם */
+  --color-surface: #ffffff;      /* רקע כרטיסים */
+  --color-text: #2b2620;
+  --color-text-muted: #6b6259;
+  --color-border: #e7dfd3;
+  --radius: 14px;
+  --shadow-soft: 0 2px 8px rgba(43, 38, 32, 0.08);
+  --shadow-hover: 0 8px 20px rgba(43, 38, 32, 0.14);
+}
+
+/* דרישה 27.iv - font-face: הגדרת גופן מותאם אישית לכותרות (עם נפילה חינה לגופנים מקומיים) */
 @font-face {
-  font-family: "ChavrutaFont";
-  src: local("Arial");
-  font-weight: normal;
+  font-family: "ChavrutaDisplay";
+  src: local("Frank Ruhl Libre"), local("David"), local("Georgia");
+  font-weight: 700;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
-  font-family: "ChavrutaFont", "Segoe UI", Arial, sans-serif;
+  font-family: "Heebo", "Segoe UI", Arial, sans-serif; /* גופן מגוגל פונטס נטען ב-head.ejs */
   direction: rtl; /* עברית - כיווניות מימין לשמאל */
   margin: 0;
-  background-color: #f7f5f2;
-  color: #2b2b2b;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
 }
 
+h1, h2, h3 {
+  font-family: "ChavrutaDisplay", "Frank Ruhl Libre", Georgia, serif;
+  color: var(--color-secondary-dark);
+}
+
+a {
+  color: var(--color-secondary);
+}
+
+/* ===== סרגל ניווט עליון ===== */
 .site-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   padding: 1rem 2rem;
-  background-color: #1f3b57;
+  background: linear-gradient(90deg, var(--color-secondary-dark), var(--color-secondary));
   color: white;
 }
 
-.site-header .logo {
+.site-header .brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   color: white;
-  font-size: 1.5rem;
+  font-family: "ChavrutaDisplay", "Frank Ruhl Libre", Georgia, serif;
+  font-size: 1.6rem;
   font-weight: bold;
   text-decoration: none;
   /* דרישה 27.i - text-shadow */
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.35);
 }
 
-.site-header a,
-.site-header .btn-link {
+.site-header .brand svg {
+  width: 28px;
+  height: 28px;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* קטגוריות ניווט - כל קישור מוצג ככפתור-פיל עם אייקון, כדי שהניווט בין אזורי האתר יהיה ברור */
+.nav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   color: white;
-  margin-right: 1rem;
   text-decoration: none;
-  background: none;
+  background: rgba(255, 255, 255, 0.12);
   border: none;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px; /* border-radius */
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  /* דרישה 27.ii - transition חלקה */
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.nav-pill:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+
+.nav-pill.primary {
+  background: var(--color-primary);
+}
+.nav-pill.primary:hover {
+  background: var(--color-primary-dark);
+}
+
+.nav-pill svg {
+  width: 16px;
+  height: 16px;
+}
+
+.welcome {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  margin-left: 0.3rem;
 }
 
 .container {
-  max-width: 900px;
+  max-width: 960px;
   margin: 2rem auto;
-  padding: 0 1rem;
+  padding: 0 1.25rem;
 }
 
-/* כרטיסים (לשימוש עתידי - פוסטים, קבוצות וכו') */
-.card {
-  background: white;
-  padding: 1rem 1.5rem;
-  margin-bottom: 1rem;
-  /* דרישה 27.v - border-radius */
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  /* דרישה 27.ii - transition חלקה באפקטים */
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* ===== אזור פתיחה (Hero) בדף הבית ===== */
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, #fff 0%, #fdf1e2 100%);
+  border-radius: var(--radius);
+  padding: 2.5rem;
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 2.5rem;
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.hero-text {
+  flex: 1 1 320px;
+}
+
+.hero-text h1 {
+  font-size: 2.1rem;
+  margin-bottom: 0.6rem;
+}
+
+.hero-text p {
+  color: var(--color-text-muted);
+  font-size: 1.05rem;
+  margin-bottom: 1.2rem;
+}
+
+.hero-image {
+  flex: 1 1 260px;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.hero-image svg {
+  width: 100%;
+  height: auto;
+}
+
+/* ===== כפתורים ===== */
+.btn {
+  display: inline-block;
+  border: none;
+  padding: 0.65rem 1.3rem;
+  border-radius: 10px; /* border-radius */
+  cursor: pointer;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.15s ease; /* transition */
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+.btn-primary:hover {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: white;
+}
+.btn-secondary:hover {
+  background-color: var(--color-secondary-dark);
 }
 
 button,
 .auth-form button {
-  background-color: #2e5a87;
+  background-color: var(--color-primary);
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;
-  border-radius: 8px; /* border-radius */
+  border-radius: 10px;
   cursor: pointer;
-  transition: background-color 0.2s ease; /* transition */
+  transition: background-color 0.2s ease;
 }
 
 button:hover {
-  background-color: #1f3b57;
+  background-color: var(--color-primary-dark);
+}
+
+/* ===== כרטיסי תכונות/קטגוריות בדף הבית ===== */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.feature-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.4rem;
+  text-align: center;
+  text-decoration: none;
+  color: var(--color-text);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+}
+
+.feature-card svg {
+  width: 42px;
+  height: 42px;
+  color: var(--color-primary);
+  margin-bottom: 0.6rem;
+}
+
+.feature-card h3 {
+  margin: 0.3rem 0;
+}
+
+.feature-card p {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ===== כרטיסים כלליים (קבוצות, פוסטים) ===== */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 1.1rem 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: var(--radius); /* דרישה 27.v - border-radius */
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.2s ease, box-shadow 0.2s ease; /* דרישה 27.ii - transition */
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
   max-width: 400px;
-  gap: 0.4rem;
+  gap: 0.2rem;
+  background: var(--color-surface);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
 }
 
-.auth-form input {
-  padding: 0.5rem;
+.auth-form input,
+.auth-form textarea {
+  padding: 0.55rem;
   margin-bottom: 0.8rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  font-family: inherit;
+}
+
+.auth-form textarea {
+  min-height: 80px;
 }
 
 .error-message {
@@ -103,13 +301,13 @@ button:hover {
 }
 
 #username-status.available {
-  color: green;
+  color: var(--color-secondary);
 }
 #username-status.taken {
   color: #b3261e;
 }
 
-/* דרישה 27.iii - multiple-columns: לשימוש עתידי בעמוד "עלון קהילתי" של דברי תורה */
+/* דרישה 27.iii - multiple-columns: עמוד "עלון קהילתי" של דברי תורה */
 .digest-columns {
   column-count: 2;
   column-gap: 2rem;
@@ -119,34 +317,34 @@ button:hover {
   .digest-columns {
     column-count: 1;
   }
+  .site-header {
+    justify-content: center;
+    text-align: center;
+  }
 }
 
-/* עיצוב נוסף לרכיבי קבוצות/פוסטים/תגובות (שבוע 2) */
+/* ===== רכיבי קבוצות/פוסטים/תגובות (שבוע 2) ===== */
 .search-form {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.2rem;
+  background: var(--color-surface);
+  padding: 0.9rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
 }
 
 .search-form input,
 .search-form select {
-  padding: 0.4rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  padding: 0.45rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
 }
 
 .meta {
-  color: #666;
+  color: var(--color-text-muted);
   font-size: 0.85rem;
-}
-
-.auth-form textarea {
-  padding: 0.5rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  min-height: 80px;
-  margin-bottom: 0.8rem;
 }
 
 .post-card .comments-list {
@@ -154,9 +352,9 @@ button:hover {
 }
 
 .comment {
-  background: #f2f0eb;
-  padding: 0.4rem 0.6rem;
-  border-radius: 8px;
+  background: #f5f0e6;
+  padding: 0.4rem 0.7rem;
+  border-radius: 10px;
   margin-bottom: 0.3rem;
 }
 
@@ -167,7 +365,15 @@ button:hover {
 
 .comment-form input {
   flex: 1;
-  padding: 0.4rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  padding: 0.45rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+/* ===== פוטר ===== */
+.site-footer {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
 }

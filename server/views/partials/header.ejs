@@ -1,17 +1,51 @@
 <!-- server/views/partials/header.ejs -->
-<!-- תפריט ניווט עליון, מוצג בכל הדפים -->
+<!-- תפריט ניווט עליון, מוצג בכל הדפים - מחולק לקטגוריות ברורות עם אייקונים -->
 <header class="site-header">
-  <a class="logo" href="/">חברותא</a>
-  <nav>
-    <a href="/groups">קבוצות</a>
+  <a class="brand" href="/">
+    <!-- אייקון לוגו - ספר פתוח (SVG מוטמע, בלי תלות בקבצי תמונה חיצוניים) -->
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 6c2-1.5 5-1.5 7 0v13c-2-1.5-5-1.5-7 0V6z"/>
+      <path d="M22 6c-2-1.5-5-1.5-7 0v13c2-1.5 5-1.5 7 0V6z"/>
+    </svg>
+    חברותא
+  </a>
+
+  <nav class="site-nav">
+    <!-- קטגוריית ניווט: דף הבית -->
+    <a class="nav-pill" href="/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      בית
+    </a>
+    <!-- קטגוריית ניווט: קבוצות ושיעורים -->
+    <a class="nav-pill" href="/groups">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/><circle cx="17" cy="8" r="2.5"/><path d="M16 14.2c2.8.4 5 2.6 5 5.8"/></svg>
+      קבוצות
+    </a>
+    <!-- קטגוריית ניווט: חיפוש פוסטים -->
+    <a class="nav-pill" href="/posts/search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      חיפוש
+    </a>
+
     <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
       <span class="welcome">שלום, <%= userName %></span>
       <form action="/logout" method="POST" style="display:inline">
-        <button type="submit" class="btn-link">התנתקות</button>
+        <button type="submit" class="nav-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+          התנתקות
+        </button>
       </form>
     <% } else { %>
-      <a href="/login">התחברות</a>
-      <a href="/register">הרשמה</a>
+      <!-- קטגוריית ניווט: התחברות -->
+      <a class="nav-pill" href="/login">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+        התחברות
+      </a>
+      <!-- קטגוריית ניווט: הרשמה - קריאה לפעולה עיקרית, מודגשת בצבע ראשי -->
+      <a class="nav-pill primary" href="/register">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+        הרשמה
+      </a>
     <% } %>
   </nav>
 </header>
