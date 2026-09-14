@@ -10,18 +10,18 @@
   <main class="container">
     <h1><%= group.name %></h1>
     <p><%= group.description %></p>
-    <p class="meta">מנהל: <%= group.managerId.fullName %> | חברים: <%= group.members.length %></p>
+    <p class="meta">מנהל: <%= group.managerName %> | חברים: <%= group.members.length %></p>
 
     <% if (isManager) { %>
-      <p><a href="/groups/<%= group._id %>/edit">עריכת הקבוצה</a></p>
+      <p><a href="/groups/<%= group.id %>/edit">עריכת הקבוצה</a></p>
     <% } %>
 
     <% if (isMember) { %>
-      <form action="/groups/<%= group._id %>/leave" method="POST" style="display:inline">
+      <form action="/groups/<%= group.id %>/leave" method="POST" style="display:inline">
         <button type="submit">עזיבת הקבוצה</button>
       </form>
     <% } else { %>
-      <form action="/groups/<%= group._id %>/join" method="POST" style="display:inline">
+      <form action="/groups/<%= group.id %>/join" method="POST" style="display:inline">
         <button type="submit">הצטרפות לקבוצה</button>
       </form>
     <% } %>
@@ -30,7 +30,7 @@
 
     <% if (isMember) { %>
       <h2>פרסום פוסט חדש</h2>
-      <form action="/groups/<%= group._id %>/posts" method="POST" class="auth-form">
+      <form action="/groups/<%= group.id %>/posts" method="POST" class="auth-form">
         <input type="text" name="title" placeholder="כותרת" required maxlength="150" />
         <textarea name="content" placeholder="תוכן..." required maxlength="5000"></textarea>
         <select name="category">
@@ -44,24 +44,24 @@
 
     <h2>פוסטים בקבוצה</h2>
     <% posts.forEach(function(post) { %>
-      <div class="card post-card" data-post-id="<%= post._id %>">
+      <div class="card post-card" data-post-id="<%= post.id %>">
         <h3><%= post.title %></h3>
-        <p class="meta"><%= post.authorId.fullName %> | <%= post.category %></p>
+        <p class="meta"><%= post.authorName %> | <%= post.category %></p>
         <p><%= post.content %></p>
 
         <!-- קישורי ניהול פוסט - מוצגים רק לבעל הפוסט או למנהל הקבוצה (בדיקת ההרשאה האמיתית מתבצעת בשרת ב-middleware canModifyPost) -->
-        <% if (isManager || post.authorId._id.toString() === userId) { %>
+        <% if (isManager || post.authorId === userId) { %>
           <p class="meta">
-            <a href="/posts/<%= post._id %>/edit">עריכה</a>
-            <form action="/posts/<%= post._id %>?_method=DELETE" method="POST" style="display:inline">
+            <a href="/posts/<%= post.id %>/edit">עריכה</a>
+            <form action="/posts/<%= post.id %>?_method=DELETE" method="POST" style="display:inline">
               <button type="submit" class="btn-link">מחיקה</button>
             </form>
           </p>
         <% } %>
 
         <!-- אזור התגובות - נטען ומתעדכן דרך jQuery/Ajax, ללא רענון עמוד (דרישה 25) -->
-        <div class="comments-list" id="comments-<%= post._id %>"></div>
-        <form class="comment-form" data-post-id="<%= post._id %>">
+        <div class="comments-list" id="comments-<%= post.id %>"></div>
+        <form class="comment-form" data-post-id="<%= post.id %>">
           <input type="text" name="content" placeholder="כתוב תגובה..." maxlength="1000" required />
           <button type="submit">שלח</button>
         </form>

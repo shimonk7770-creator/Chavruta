@@ -36,13 +36,13 @@
 
     <% groups.forEach(function(group) { %>
       <div class="card">
-        <h3><a href="/groups/<%= group._id %>"><%= group.name %></a></h3>
+        <h3><a href="/groups/<%= group.id %>"><%= group.name %></a></h3>
         <p><%= group.description %></p>
         <p class="meta">
           <% if (group.topic) { %>נושא: <%= group.topic %> | <% } %>
           <% if (group.dayOfWeek) { %>יום: <%= group.dayOfWeek %> | <% } %>
           <% if (group.time) { %>שעה: <%= group.time %> | <% } %>
-          מנהל: <%= group.managerId.fullName %>
+          מנהל: <%= group.managerName %>
         </p>
       </div>
     <% }) %>

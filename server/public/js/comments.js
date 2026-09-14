@@ -55,8 +55,8 @@ $(function () {
         response.comments.forEach(function (comment) {
           $container.append(
             `<p class="comment">
-              <strong>${escapeHtml(comment.authorId.fullName)}:</strong> ${escapeHtml(comment.content)}
-              <button class="btn-link delete-comment-btn" data-comment-id="${comment._id}" data-post-id="${postId}">מחק</button>
+              <strong>${escapeHtml(comment.authorName)}:</strong> ${escapeHtml(comment.content)}
+              <button class="btn-link delete-comment-btn" data-comment-id="${comment.id}" data-post-id="${postId}">מחק</button>
             </p>`
           );
         });

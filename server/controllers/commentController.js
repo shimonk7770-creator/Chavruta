@@ -1,6 +1,7 @@
 // server/controllers/commentController.js
 // לוגיקה עסקית לתגובות - תואם ל-FR-015, FR-016 ב-SRS
 // נתיב זה נקרא בעיקר דרך jQuery/Ajax (ראו server/public/js/comments.js) - ללא רענון עמוד
+// שכבת הנתונים (Comment/Post model) עובדת מול Firestore
 
 const sanitizeHtml = require("sanitize-html");
 const Comment = require("../models/Comment");
@@ -25,11 +26,11 @@ async function addComment(req, res) {
     }
 
     const comment = await Comment.create({
-      postId: post._id,
+      postId: post.id,
       authorId: req.session.userId,
+      authorName: req.session.userName,
       content,
     });
-    await comment.populate("authorId", "fullName");
 
     res.json({ success: true, comment });
   } catch (error) {
@@ -40,15 +41,13 @@ async function addComment(req, res) {
 
 // GET /api/posts/:postId/comments - שליפת תגובות לפוסט (לטעינה דרך Ajax)
 async function listComments(req, res) {
-  const comments = await Comment.find({ postId: req.params.postId, isArchived: false })
-    .populate("authorId", "fullName")
-    .sort({ createdAt: 1 });
+  const comments = await Comment.listByPost(req.params.postId);
   res.json({ success: true, comments });
 }
 
 // DELETE /api/comments/:id - FR-016: מחיקת תגובה - הבעלים או מנהל הקבוצה (נבדק במידלוור)
 async function deleteComment(req, res) {
-  await req.comment.deleteOne();
+  await Comment.remove(req.comment.id);
   res.json({ success: true });
 }
 

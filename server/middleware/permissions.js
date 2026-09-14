@@ -13,7 +13,7 @@ async function isGroupManagerOf(req, res, next) {
     res.status(404);
     return next(new Error("הקבוצה לא נמצאה"));
   }
-  const isManager = group.managerId.toString() === req.session.userId;
+  const isManager = group.managerId === req.session.userId;
   const isAdmin = req.session.userRole === "admin";
   if (!isManager && !isAdmin) {
     res.status(403);
@@ -30,13 +30,13 @@ async function canModifyPost(req, res, next) {
     res.status(404);
     return next(new Error("הפוסט לא נמצא"));
   }
-  const isOwner = post.authorId.toString() === req.session.userId;
+  const isOwner = post.authorId === req.session.userId;
   const isAdmin = req.session.userRole === "admin";
 
   if (!isOwner && !isAdmin) {
     // אם זה לא הבעלים - בודקים אם מדובר במנהל הקבוצה הספציפית שהפוסט שייך אליה
     const group = await Group.findById(post.groupId);
-    const isManagerOfThisGroup = group && group.managerId.toString() === req.session.userId;
+    const isManagerOfThisGroup = group && group.managerId === req.session.userId;
     if (!isManagerOfThisGroup) {
       res.status(403);
       return next(new Error("אין לך הרשאה לערוך/למחוק פוסט זה"));
@@ -52,13 +52,13 @@ async function canModifyComment(req, res, next) {
   if (!comment) {
     return res.status(404).json({ success: false, message: "התגובה לא נמצאה" });
   }
-  const isOwner = comment.authorId.toString() === req.session.userId;
+  const isOwner = comment.authorId === req.session.userId;
   const isAdmin = req.session.userRole === "admin";
 
   if (!isOwner && !isAdmin) {
     const post = await Post.findById(comment.postId);
     const group = post && (await Group.findById(post.groupId));
-    const isManagerOfThisGroup = group && group.managerId.toString() === req.session.userId;
+    const isManagerOfThisGroup = group && group.managerId === req.session.userId;
     if (!isManagerOfThisGroup) {
       return res.status(403).json({ success: false, message: "אין לך הרשאה למחוק תגובה זו" });
     }

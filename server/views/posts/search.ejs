@@ -28,8 +28,8 @@
 
     <% posts.forEach(function(post) { %>
       <div class="card">
-        <h3><a href="/groups/<%= post.groupId._id %>"><%= post.title %></a></h3>
-        <p class="meta"><%= post.authorId.fullName %> | קבוצה: <%= post.groupId.name %></p>
+        <h3><a href="/groups/<%= post.groupId %>"><%= post.title %></a></h3>
+        <p class="meta"><%= post.authorName %> | קבוצה: <%= post.groupName %></p>
         <p><%= post.content %></p>
       </div>
     <% }) %>

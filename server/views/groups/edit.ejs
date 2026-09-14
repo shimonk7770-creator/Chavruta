@@ -9,7 +9,7 @@
   <main class="container">
     <h1>עריכת קבוצה</h1>
     <% if (error) { %><p class="error-message"><%= error %></p><% } %>
-    <form action="/groups/<%= group._id %>?_method=PUT" method="POST" class="auth-form">
+    <form action="/groups/<%= group.id %>?_method=PUT" method="POST" class="auth-form">
       <label for="name">שם הקבוצה</label>
       <input type="text" id="name" name="name" required value="<%= group.name %>" />
 
@@ -28,7 +28,7 @@
       <button type="submit">שמירה</button>
     </form>
 
-    <form action="/groups/<%= group._id %>?_method=DELETE" method="POST" onsubmit="return confirm('למחוק את הקבוצה לצמיתות?')">
+    <form action="/groups/<%= group.id %>?_method=DELETE" method="POST" onsubmit="return confirm('למחוק את הקבוצה לצמיתות?')">
       <button type="submit" style="background-color:#b3261e">מחיקת הקבוצה</button>
     </form>
   </main>
