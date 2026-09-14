@@ -76,7 +76,7 @@ async function showGroup(req, res, next) {
     const isMember = group.members.some((m) => m.toString() === req.session.userId);
     const isManager = group.managerId._id.toString() === req.session.userId;
 
-    res.render("groups/show", { group, posts, isMember, isManager });
+    res.render("groups/show", { group, posts, isMember, isManager, userId: req.session.userId });
   } catch (error) {
     next(error);
   }

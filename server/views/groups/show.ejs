@@ -49,6 +49,16 @@
         <p class="meta"><%= post.authorId.fullName %> | <%= post.category %></p>
         <p><%= post.content %></p>
 
+        <!-- קישורי ניהול פוסט - מוצגים רק לבעל הפוסט או למנהל הקבוצה (בדיקת ההרשאה האמיתית מתבצעת בשרת ב-middleware canModifyPost) -->
+        <% if (isManager || post.authorId._id.toString() === userId) { %>
+          <p class="meta">
+            <a href="/posts/<%= post._id %>/edit">עריכה</a>
+            <form action="/posts/<%= post._id %>?_method=DELETE" method="POST" style="display:inline">
+              <button type="submit" class="btn-link">מחיקה</button>
+            </form>
+          </p>
+        <% } %>
+
         <!-- אזור התגובות - נטען ומתעדכן דרך jQuery/Ajax, ללא רענון עמוד (דרישה 25) -->
         <div class="comments-list" id="comments-<%= post._id %>"></div>
         <form class="comment-form" data-post-id="<%= post._id %>">

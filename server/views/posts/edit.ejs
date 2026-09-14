@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<!-- server/views/posts/edit.ejs - טופס עריכת פוסט (FR-014) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/header') %>
+  <main class="container">
+    <h1>עריכת פוסט</h1>
+    <% if (typeof error !== 'undefined' && error) { %><p class="error-message"><%= error %></p><% } %>
+    <form action="/posts/<%= post._id %>?_method=PUT" method="POST" class="auth-form">
+      <label for="title">כותרת</label>
+      <input type="text" id="title" name="title" required maxlength="150" value="<%= post.title %>" />
+
+      <label for="content">תוכן</label>
+      <textarea id="content" name="content" required maxlength="5000"><%= post.content %></textarea>
+
+      <label for="category">קטגוריה</label>
+      <select id="category" name="category">
+        <option value="dvarTorah" <%= post.category === 'dvarTorah' ? 'selected' : '' %>>דבר תורה</option>
+        <option value="question" <%= post.category === 'question' ? 'selected' : '' %>>שאלה</option>
+        <option value="update" <%= post.category === 'update' ? 'selected' : '' %>>עדכון</option>
+        <option value="holiday" <%= post.category === 'holiday' ? 'selected' : '' %>>חג</option>
+      </select>
+
+      <button type="submit">שמירת שינויים</button>
+    </form>
+    <p><a href="/groups/<%= post.groupId %>">חזרה לקבוצה</a></p>
+  </main>
+</body>
+</html>

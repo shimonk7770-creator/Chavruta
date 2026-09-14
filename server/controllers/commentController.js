@@ -2,14 +2,20 @@
 // לוגיקה עסקית לתגובות - תואם ל-FR-015, FR-016 ב-SRS
 // נתיב זה נקרא בעיקר דרך jQuery/Ajax (ראו server/public/js/comments.js) - ללא רענון עמוד
 
+const sanitizeHtml = require("sanitize-html");
 const Comment = require("../models/Comment");
 const Post = require("../models/Post");
+
+// ניקוי HTML/סקריפטים מתוכן תגובה (הגנה מפני XSS - NFR-006)
+function sanitizeContent(text) {
+  return sanitizeHtml(text || "", { allowedTags: [], allowedAttributes: {} }).trim();
+}
 
 // POST /api/posts/:postId/comments - FR-015: הוספת תגובה (מוחזר JSON ל-Ajax)
 async function addComment(req, res) {
   try {
-    const { content } = req.body;
-    if (!content || !content.trim()) {
+    const content = sanitizeContent(req.body.content);
+    if (!content) {
       return res.status(400).json({ success: false, message: "התגובה לא יכולה להיות ריקה" });
     }
 

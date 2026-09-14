@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!-- server/views/posts/feed.ejs - פיד אישי: פוסטים מכל הקבוצות שהמשתמש חבר בהן (FR-017) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <h1>הפיד שלי</h1>
+
+    <% if (posts.length === 0) { %>
+      <!-- מצב ריק ידידותי - סעיף 12.9 ב-SRS -->
+      <div class="card">
+        <p>עדיין אין כאן תוכן. <a href="/groups">הצטרף לקבוצה</a> כדי לראות פוסטים בפיד שלך.</p>
+      </div>
+    <% } %>
+
+    <% posts.forEach(function(post) { %>
+      <div class="card">
+        <h3><a href="/groups/<%= post.groupId._id %>"><%= post.title %></a></h3>
+        <p class="meta"><%= post.authorId.fullName %> | קבוצה: <%= post.groupId.name %></p>
+        <p><%= post.content %></p>
+      </div>
+    <% }) %>
+
+    <p class="meta"><%= total %> פוסטים סה"כ (עמוד <%= page %>)</p>
+  </main>
+</body>
+</html>
