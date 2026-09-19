@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <!-- אייקון האתר להתקנה כ-PWA - ספר פתוח, אותו מוטיב כמו הלוגו בתפריט העליון (partials/header.ejs) -->
+  <rect width="192" height="192" rx="40" fill="#1f6f5c"/>
+  <path d="M42 58c22-16 58-16 80 0v70c-22-16-58-16-80 0V58z" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M96 58v70" stroke="#ffffff" stroke-width="9" stroke-linecap="round"/>
+</svg>

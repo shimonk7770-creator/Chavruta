@@ -6,6 +6,36 @@ $(function () {
   const $status = $("#username-status");
   let debounceTimer = null;
 
+  // בדיקת התאמה בין "סיסמה" ל"הזן שוב את הסיסמה" בזמן אמת (בנוסף לבדיקה בצד השרת ב-authController.js -
+  // ולידציה בצד לקוח היא נוחות למשתמש בלבד, אף פעם לא תחליף לבדיקה אמיתית בשרת)
+  const $password = $("#password");
+  const $confirmPassword = $("#confirmPassword");
+  const $confirmStatus = $("#confirm-password-status");
+
+  function checkPasswordsMatch() {
+    if (!$confirmPassword.val()) {
+      $confirmStatus.text("").removeClass("available taken");
+      return;
+    }
+    if ($password.val() === $confirmPassword.val()) {
+      $confirmStatus.text("הסיסמאות תואמות ✓").removeClass("taken").addClass("available");
+    } else {
+      $confirmStatus.text("הסיסמאות אינן תואמות ✗").removeClass("available").addClass("taken");
+    }
+  }
+
+  $password.on("input", checkPasswordsMatch);
+  $confirmPassword.on("input", checkPasswordsMatch);
+
+  // מניעת שליחת הטופס אם הסיסמאות לא תואמות - הודעת השרת עדיין קיימת כגיבוי (defense in depth)
+  $(".auth-form").on("submit", function (e) {
+    if ($password.val() !== $confirmPassword.val()) {
+      e.preventDefault();
+      checkPasswordsMatch();
+      $confirmPassword.trigger("focus");
+    }
+  });
+
   $usernameInput.on("input", function () {
     const username = $(this).val().trim();
     clearTimeout(debounceTimer);

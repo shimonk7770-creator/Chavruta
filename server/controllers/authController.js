@@ -12,22 +12,30 @@ const LOCK_TIME_MS = 15 * 60 * 1000; // 15 דקות
 
 // GET /register - מציג את טופס ההרשמה
 function showRegisterForm(req, res) {
-  res.render("register", { error: null });
+  res.render("register", { error: null, fullName: "", username: "", email: "" });
 }
 
 // POST /register - FR-001: הרשמת משתמש חדש
 async function register(req, res) {
-  try {
-    const { fullName, username, email, password } = req.body;
+  // שדות שאינם סיסמה - נשמרים ומועברים בחזרה לטופס בכל מקרה של שגיאה,
+  // כדי שהמשתמש לא יצטרך להקליד מחדש את כל הטופס בגלל טעות בסיסמה בלבד (חוויית משתמש)
+  const { fullName, username, email, password, confirmPassword } = req.body;
+  const keepValues = { fullName: fullName || "", username: username || "", email: email || "" };
 
+  try {
     // ולידציה בסיסית בצד שרת (חובה! גם אם יש ולידציה בצד לקוח - ראו סעיף 7 ב-SRS)
-    if (!fullName || !username || !email || !password) {
-      return res.render("register", { error: "יש למלא את כל השדות" });
+    if (!fullName || !username || !email || !password || !confirmPassword) {
+      return res.render("register", { error: "יש למלא את כל השדות", ...keepValues });
+    }
+    if (password !== confirmPassword) {
+      // אימות שדה "הזן שוב את הסיסמה" - מונע רישום עם סיסמה שהוקלדה בטעות
+      return res.render("register", { error: "הסיסמאות שהוזנו אינן תואמות", ...keepValues });
     }
     if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
       // BR-002: סיסמה חייבת 8 תווים לפחות, אות גדולה וספרה
       return res.render("register", {
         error: "הסיסמה חייבת לכלול לפחות 8 תווים, אות גדולה אחת וספרה אחת",
+        ...keepValues,
       });
     }
 
@@ -36,6 +44,7 @@ async function register(req, res) {
     if (existingUser) {
       return res.render("register", {
         error: "כתובת האימייל או שם המשתמש כבר תפוסים במערכת",
+        ...keepValues,
       });
     }
 
@@ -58,20 +67,22 @@ async function register(req, res) {
     res.redirect("/");
   } catch (error) {
     console.error("שגיאה בהרשמה:", error);
-    res.render("register", { error: "אירעה שגיאה, נסה שוב" });
+    res.render("register", { error: "אירעה שגיאה, נסה שוב", ...keepValues });
   }
 }
 
 // GET /login - מציג את טופס ההתחברות
 function showLoginForm(req, res) {
-  res.render("login", { error: null });
+  res.render("login", { error: null, email: "" });
 }
 
 // POST /login - FR-002: התחברות משתמש
 async function login(req, res) {
-  try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
+  // שומרים את האימייל שהוקלד גם אם ההתחברות נכשלת - אותו שיפור חוויית משתמש כמו בטופס ההרשמה
+  const keepEmail = { email: email || "" };
 
+  try {
     // activeOnly: משתמש שמחק את חשבונו (FR-005) לא יכול להתחבר יותר
     const user = await User.findByEmail(email, { activeOnly: true });
 
@@ -79,7 +90,7 @@ async function login(req, res) {
     const genericError = "אימייל או סיסמה שגויים";
 
     if (!user) {
-      return res.render("login", { error: genericError });
+      return res.render("login", { error: genericError, ...keepEmail });
     }
 
     // BR-010: בדיקת נעילת חשבון זמנית
@@ -87,6 +98,7 @@ async function login(req, res) {
       const minutesLeft = Math.ceil((new Date(user.lockUntil) - Date.now()) / 60000);
       return res.render("login", {
         error: `החשבון נעול זמנית עקב ניסיונות כושלים רבים. נסה שוב בעוד כ-${minutesLeft} דקות`,
+        ...keepEmail,
       });
     }
 
@@ -101,7 +113,7 @@ async function login(req, res) {
         patch.failedLoginAttempts = 0;
       }
       await User.update(user.id, patch);
-      return res.render("login", { error: genericError });
+      return res.render("login", { error: genericError, ...keepEmail });
     }
 
     // התחברות מוצלחת - איפוס מונה הכשלונות
@@ -114,7 +126,7 @@ async function login(req, res) {
     res.redirect("/");
   } catch (error) {
     console.error("שגיאה בהתחברות:", error);
-    res.render("login", { error: "אירעה שגיאה, נסה שוב" });
+    res.render("login", { error: "אירעה שגיאה, נסה שוב", ...keepEmail });
   }
 }
 

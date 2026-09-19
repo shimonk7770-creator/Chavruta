@@ -1,0 +1,14 @@
+{
+  "name": "חברותא - רשת חברתית קהילתית-תורנית",
+  "short_name": "חברותא",
+  "description": "קבוצות לימוד, דברי תורה, צ'אט קהילתי ומעקב לימוד אישי - במקום אחד",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbf7f1",
+  "theme_color": "#1f6f5c",
+  "dir": "rtl",
+  "lang": "he",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

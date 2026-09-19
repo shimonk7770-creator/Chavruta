@@ -18,6 +18,38 @@
   --shadow-hover: 0 8px 20px rgba(43, 38, 32, 0.14);
 }
 
+/* ===== מצב כהה (Dark Mode) =====
+   מופעל ע"י תוספת [data-theme="dark"] ל-<html> (server/public/js/themeToggle.js).
+   כל שאר ה-CSS בקובץ משתמש במשתני --color-* בלבד, ולכן אין צורך לשכתב שום rule נוסף -
+   מספיק להגדיר מחדש את ערכי המשתנים כאן וכל האתר "נצבע" מחדש אוטומטית. */
+[data-theme="dark"] {
+  --color-primary: #e08f4f;
+  --color-primary-dark: #c97b3c;
+  --color-secondary: #3fa38a;
+  --color-secondary-dark: #2c8a72;
+  --color-bg: #1c1a17;
+  --color-surface: #2a2723;
+  --color-text: #f0ebe3;
+  --color-text-muted: #b5ac9e;
+  --color-border: #423d36;
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.45);
+}
+
+/* בהתחשב במה שהפרויקט מגיש (ולידציה/תמונות/גרפים), h1 בגרדיאנט וה-hero שומרים ניגודיות טובה גם במצב כהה
+   כי הם משתמשים באותם משתני --color-primary/--color-secondary שמתעדכנים אוטומטית למעלה */
+[data-theme="dark"] .hero {
+  background: linear-gradient(135deg, #24211d 0%, #2e2621 100%);
+}
+
+[data-theme="dark"] .comment {
+  background: #35302a;
+}
+
+[data-theme="dark"] .chat-message {
+  background: #35302a;
+}
+
 /* דרישה 27.iv - font-face: הגדרת גופן מותאם אישית לכותרות (עם נפילה חינה לגופנים מקומיים) */
 @font-face {
   font-family: "ChavrutaDisplay";
@@ -54,6 +86,7 @@ body {
   color: var(--color-text);
   line-height: 1.6;
   animation: page-fade-in 0.45s ease-out; /* מעבר קליל בין עמודים */
+  transition: background-color 0.25s ease, color 0.25s ease; /* מעבר חלק בין מצב בהיר לכהה */
 }
 
 h1, h2, h3 {
@@ -170,6 +203,27 @@ a {
   height: 22px;
   background: rgba(255, 255, 255, 0.28);
   margin: 0 0.3rem;
+}
+
+/* כפתור החלפת מצב כהה/בהיר בתפריט העליון (server/public/js/themeToggle.js) */
+.theme-toggle-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
 }
 
 .welcome {
@@ -325,28 +379,87 @@ button:hover {
   box-shadow: var(--shadow-hover);
 }
 
+/* עמוד הרשמה/התחברות - ממרכזים את הטופס אופקית בתוך ה-container (במקום שיידבק לצד ימין) */
+.auth-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.auth-page h1 {
+  align-self: center;
+}
+
 .auth-form {
   display: flex;
   flex-direction: column;
-  max-width: 400px;
+  width: 100%;
+  max-width: 440px; /* טיפה יותר גדול מבעבר, לבקשת המשתמש */
   gap: 0.2rem;
   background: var(--color-surface);
-  padding: 1.5rem;
+  padding: 2rem;
+  margin: 1rem auto 0;
   border-radius: var(--radius);
   box-shadow: var(--shadow-soft);
+  text-align: right; /* התוכן בתוך הטופס עצמו נשאר מיושר לימין (עברית), רק הטופס כולו ממורכז */
+}
+
+.auth-form label {
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
 }
 
 .auth-form input,
 .auth-form textarea {
-  padding: 0.55rem;
+  padding: 0.65rem;
   margin-bottom: 0.8rem;
   border-radius: 8px;
   border: 1px solid var(--color-border);
   font-family: inherit;
+  font-size: 1rem;
+  width: 100%;
 }
 
 .auth-form textarea {
   min-height: 80px;
+}
+
+/* עטיפת שדה סיסמה + כפתור "עין" להצגה/הסתרה (server/public/js/passwordToggle.js) */
+.password-wrapper {
+  position: relative;
+  margin-bottom: 0.8rem;
+}
+
+.password-wrapper input {
+  margin-bottom: 0; /* המרווח עבר לעטיפה עצמה כדי שהכפתור יתמקם נכון בתוך תיבת הקלט */
+  padding-inline-end: 2.6rem; /* מקום לכפתור העין, בלי שהטקסט יתחבא מתחתיו */
+}
+
+.toggle-password-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  inset-inline-end: 0.5rem; /* בעברית (RTL) זה מציב את הכפתור בצד שמאל של תיבת הקלט */
+  background: none;
+  border: none;
+  padding: 0.2rem;
+  cursor: pointer;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: var(--color-text-muted);
+}
+
+.toggle-password-btn:hover {
+  background: none;
+  color: var(--color-secondary);
+}
+
+#confirm-password-status.available {
+  color: var(--color-secondary);
+}
+#confirm-password-status.taken {
+  color: #b3261e;
 }
 
 .error-message {
@@ -491,6 +604,26 @@ button:hover {
   box-shadow: var(--shadow-soft);
   background: #111;
   margin-bottom: 0.8rem;
+}
+
+/* כרטיס "מה ההרשאות שלי" בדף הבית - עוזר למשתמש מחובר להבין מיד מה תפקידו ומה מותר לו */
+.role-info-card {
+  border-inline-start: 4px solid var(--color-secondary);
+}
+
+.role-info-card h3 {
+  margin-top: 0;
+}
+
+.role-badge {
+  display: inline-block;
+  background: var(--color-secondary);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  margin-inline-start: 0.4rem;
 }
 
 /* ===== פוטר ===== */

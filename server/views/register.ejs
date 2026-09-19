@@ -7,32 +7,49 @@
 <body>
   <%- include('partials/header') %>
 
-  <main class="container">
+  <main class="container auth-page">
     <h1>הרשמה</h1>
 
     <% if (error) { %>
       <p class="error-message"><%= error %></p>
     <% } %>
 
+    <!--
+      שימו לב לשדות ה-value: אם ההרשמה נכשלת (למשל סיסמה לא תקינה), authController.js מחזיר את
+      הערכים שהמשתמש כבר הקליד (fullName/username/email) חזרה ל-render - כדי שהוא לא יצטרך למלא
+      את כל הטופס מחדש. שדה הסיסמה נשאר תמיד ריק (גם מטעמי אבטחה וגם כי זה בדיוק השדה שהיה בו הבעיה).
+    -->
     <form action="/register" method="POST" class="auth-form">
       <label for="fullName">שם מלא</label>
-      <input type="text" id="fullName" name="fullName" required />
+      <input type="text" id="fullName" name="fullName" required value="<%= typeof fullName !== 'undefined' ? fullName : '' %>" />
 
       <label for="username">שם משתמש</label>
-      <input type="text" id="username" name="username" required minlength="3" maxlength="20" />
+      <input type="text" id="username" name="username" required minlength="3" maxlength="20" value="<%= typeof username !== 'undefined' ? username : '' %>" />
       <!-- כאן תוצג תוצאת בדיקת הזמינות בזמן אמת -->
       <span id="username-status"></span>
 
       <label for="email">אימייל</label>
-      <input type="email" id="email" name="email" required />
+      <input type="email" id="email" name="email" required value="<%= typeof email !== 'undefined' ? email : '' %>" />
 
       <label for="password">סיסמה (8+ תווים, אות גדולה וספרה)</label>
-      <input type="password" id="password" name="password" required minlength="8" />
+      <!-- עטיפת password-wrapper מאפשרת למקם את כפתור "הצג/הסתר סיסמה" בתוך תיבת הקלט (server/public/js/passwordToggle.js) -->
+      <div class="password-wrapper">
+        <input type="password" id="password" name="password" required minlength="8" />
+        <button type="button" class="toggle-password-btn" aria-label="הצג סיסמה">👁️</button>
+      </div>
+
+      <label for="confirmPassword">הזן שוב את הסיסמה</label>
+      <div class="password-wrapper">
+        <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8" />
+        <button type="button" class="toggle-password-btn" aria-label="הצג סיסמה">👁️</button>
+      </div>
+      <span id="confirm-password-status"></span>
 
       <button type="submit">הרשמה</button>
     </form>
   </main>
 
   <script src="/js/register.js"></script>
+  <script src="/js/passwordToggle.js"></script>
 </body>
 </html>

@@ -8,6 +8,7 @@ const express = require("express");
 const path = require("path");
 const session = require("express-session");
 const methodOverride = require("method-override");
+const helmet = require("helmet"); // NFR - חיזוק אבטחה בסיסי: headers מגנים (X-Frame-Options, X-Content-Type-Options ועוד)
 const http = require("http"); // דרוש כדי לחבר גם Express וגם Socket.io לאותו שרת HTTP (שבוע 4)
 const { Server } = require("socket.io");
 
@@ -29,6 +30,11 @@ const chatRoutes = require("./routes/chatRoutes"); // שבוע 4 - צ'אט קב�
 const statsRoutes = require("./routes/statsRoutes"); // שבוע 4 - נתוני גרפי D3
 
 const app = express();
+
+// helmet מוסיף אוטומטית כמה HTTP headers מגנים בסיסיים (מניעת clickjacking, sniffing סוג קובץ וכו').
+// contentSecurityPolicy מבוטלת בכוונה: האתר טוען סקריפטים חיצוניים מ-CDN (jQuery, React, D3, Babel, Socket.io-client, Google Fonts) -
+// מדיניות CSP ברירת המחדל של helmet הייתה חוסמת את כל אלה. בפרויקט אמיתי (לא לימודי) היינו מגדירים CSP מדויקת במקום לבטל אותה.
+app.use(helmet({ contentSecurityPolicy: false }));
 
 // מנוע התצוגה - EJS (חלק ה-View במבנה ה-MVC)
 app.set("view engine", "ejs");
@@ -66,6 +72,17 @@ const sessionMiddleware = session({
   },
 });
 app.use(sessionMiddleware);
+
+// middleware גלובלי נוסף - שם בהישג יד של *כל* תבנית EJS את מצב ההתחברות של המשתמש (res.locals.isLoggedIn/userName/userRole).
+// זה מתקן בעיה שהייתה קיימת: לפני התוספת הזו, רק חלק מהקונטרולרים טרחו להעביר isLoggedIn ל-render בעצמם,
+// ולכן בעמודים ששכחו להעביר אותו (למשל קבוצות/פוסטים/פרופיל) התפריט העליון "שכח" שהמשתמש מחובר
+// והציג שוב את כפתורי "התחברות/הרשמה" גם למשתמש שכבר מחובר. עכשיו זה מחושב פעם אחת, במקום אחד, לכל בקשה.
+app.use((req, res, next) => {
+  res.locals.isLoggedIn = !!(req.session && req.session.userId);
+  res.locals.userName = (req.session && req.session.userName) || null;
+  res.locals.userRole = (req.session && req.session.userRole) || null;
+  next();
+});
 
 // נתיבים (Routes)
 app.use("/", pageRoutes);

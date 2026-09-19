@@ -7,7 +7,7 @@
 <body>
   <%- include('partials/header') %>
 
-  <main class="container">
+  <main class="container auth-page">
     <h1>התחברות</h1>
 
     <% if (error) { %>
@@ -16,13 +16,19 @@
 
     <form action="/login" method="POST" class="auth-form">
       <label for="email">אימייל</label>
-      <input type="email" id="email" name="email" required />
+      <input type="email" id="email" name="email" required value="<%= typeof email !== 'undefined' ? email : '' %>" />
 
       <label for="password">סיסמה</label>
-      <input type="password" id="password" name="password" required />
+      <!-- אותה עטיפת password-wrapper כמו בטופס ההרשמה, לעקביות עיצובית (server/public/js/passwordToggle.js) -->
+      <div class="password-wrapper">
+        <input type="password" id="password" name="password" required />
+        <button type="button" class="toggle-password-btn" aria-label="הצג סיסמה">👁️</button>
+      </div>
 
       <button type="submit">התחברות</button>
     </form>
   </main>
+
+  <script src="/js/passwordToggle.js"></script>
 </body>
 </html>

@@ -69,11 +69,7 @@
 - [x] כרטיס קטגוריה חדש בדף הבית שמדגיש את יכולת "שיעורים בוידאו"
 - [x] מסמך DEFENSE-CHECKLIST.md - רשימת בדיקות מעשית להכנה להגנה, מבוססת על סעיף 12+13 ב-SRS
 
-## שבוע 4 - צ'אט בזמן אמת (Socket.io), גרפי D3
-
-> **הערה**: כל הפריטים למטה - הקוד הושלם ונבדק סטטית (syntax + רינדור EJS מלא עם נתוני דוגמה),
-> אבל **טרם נבדק מול Firebase אמיתי ומול שרת רץ בפועל** (אין עדיין serviceAccountKey.json).
-> יש להריץ `npm install` (מוסיף socket.io) ואז לבדוק בפועל ברגע שה-DB מוכן - ראו DEFENSE-CHECKLIST.md.
+## שבוע 4 - צ'אט בזמן אמת (Socket.io), גרפי D3 (הושלם והופעל מול Firebase אמיתי)
 
 - [x] מודל Message (server/models/Message.js - collection "messages", כל קבוצה = חדר צ'אט נפרד)
 - [x] FR-021 שליחת הודעה (Socket.io + שמירה ב-Firestore + broadcast לחדר - server/sockets/chatSocket.js)
@@ -83,16 +79,33 @@
 - [x] FR-025 גרף D3: פעילות (פוסטים) לפי קבוצה - Post.countActiveByGroup + /api/stats/posts-per-group
 - [x] FR-026 גרף D3: מגמת לימוד קהילתית 30 יום - LearningLog.countAllGroupedByDate + /api/stats/learning-trend
 - [x] FR-027 מצב ריק ידידותי בגרפים ובצ'אט (showEmptyState ב-statsCharts.js + הודעה בעמוד chat.ejs)
+- [x] `npm install` הורץ בהצלחה (socket.io מותקן בפועל)
+- [x] פרויקט Firebase אמיתי הוקם (Firestore, מצב Production, תוכנית Spark חינמית) + `serviceAccountKey.json` במקום
+- [x] אימות חיבור אמיתי ל-Firestore: `npm run seed` רץ בהצלחה מול ה-DB האמיתי, הרשמה/התחברות עובדות, השרת עולה על localhost:3000
 
 ### קבצים חדשים שנוספו
 server/models/Message.js, server/sockets/chatSocket.js, server/controllers/chatController.js,
 server/routes/chatRoutes.js, server/controllers/statsController.js, server/routes/statsRoutes.js,
 server/public/js/chat.js, server/public/js/statsCharts.js, server/views/groups/chat.ejs
 
-### מה נשאר לפני שסוגרים את שבוע 4 סופית
-- [ ] `npm install` (מוסיף את socket.io שנכנס ל-package.json)
-- [ ] בדיקה מול Firebase אמיתי: שליחת הודעה בזמן אמת בין שני טאבים/משתמשים, ניתוק ידני (כיבוי WiFi) ובדיקת reconnection
-- [ ] בדיקת שני הגרפים עם נתונים אמיתיים מה-seed
+### מה עוד כדאי לבדוק בפועל (לא קריטי, אפשר גם בשבוע 5)
+- [ ] בדיקת הצ'אט בין שני משתמשים בו-זמנית (שני טאבים/דפדפנים) כולל ניתוק ידני (כיבוי WiFi) ובדיקת reconnection
+- [ ] הצצה ויזואלית בשני הגרפים (/study-room) עם הנתונים האמיתיים מה-seed
+
+## שיפורי UX בהרשמה/התחברות ובתפריט הניווט (עדכון לאחר בדיקת המשתמש באתר החי)
+
+> נמצאו ותוקנו בעקבות סבב בדיקות ראשון של המשתמש על האתר הרץ מול Firebase אמיתי.
+
+- [x] **תיקון באג משמעותי**: לאחר התחברות, התפריט העליון המשיך להציג "התחברות/הרשמה" בהרבה עמודים (קבוצות, פוסטים, פרופיל וכו').
+      הסיבה: רק חלק מהקונטרולרים העבירו `isLoggedIn` ל-`render`. **תוקן בשורש הבעיה**: middleware גלובלי חדש
+      ב-server.js ממלא `res.locals.isLoggedIn/userName/userRole` פעם אחת לכל בקשה, לכל התבניות.
+- [x] כפתור "עין" להצגה/הסתרה של סיסמה בטפסי הרשמה והתחברות (server/public/js/passwordToggle.js)
+- [x] שדה "הזן שוב את הסיסמה" בהרשמה + ולידציה בצד לקוח (jQuery, בזמן אמת) ובצד שרת
+- [x] תיקון UX: שגיאת ולידציה בהרשמה (למשל סיסמה לא תקינה) כבר לא מוחקת את כל הטופס -
+      שם מלא/שם משתמש/אימייל נשמרים ומוצגים חזרה, רק שדה הסיסמה מתאפס
+- [x] מיקוד טופס ההרשמה/התחברות במרכז העמוד (היה נוטה לימין) + הגדלה קלה של הטופס
+- [x] כרטיס חדש בדף הבית "מה ההרשאות שלי" - מוצג רק למשתמש מחובר, מסביר לפי role (member/manager/admin)
+      מה בדיוק מותר לו לעשות באתר
 
 ## שבוע 5 - מעגל השנה, בדיקות, הכנה להגנה
 

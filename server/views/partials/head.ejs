@@ -3,6 +3,31 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>חברותא</title>
+
+<!--
+  קביעת מצב כהה/בהיר *לפני* טעינת ה-CSS - חייב לרוץ מוקדם ככל האפשר בתוך <head>, לפני
+  ה-<link rel="stylesheet">, אחרת המשתמש יראה הבזק (Flash) של הצבעים הבהירים לפני שהם מתחלפים
+  לכהים. הלחיצה על הכפתור עצמו מטופלת ב-server/public/js/themeToggle.js.
+-->
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem("chavruta-theme");
+      if (saved === "dark") {
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
+    } catch (e) {
+      // localStorage חסום (למשל גלישה פרטית מאוד מחמירה) - פשוט נשארים במצב הבהיר, לא קריטי
+    }
+  })();
+</script>
+
+<!-- PWA - הופך את האתר לניתן ל"התקנה" כאפליקציה במחשב/בנייד (ראו manifest.json, service-worker.js) -->
+<link rel="manifest" href="/manifest.json" />
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/icons/icon.svg" />
+<meta name="theme-color" content="#1f6f5c" />
+
 <!-- גופנים חמים ומודרניים מ-Google Fonts (Heebo לטקסט רגיל, Frank Ruhl Libre לכותרות) -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -10,3 +35,4 @@
 <link rel="stylesheet" href="/css/style.css" />
 <!-- טעינת jQuery מ-CDN - נדרש לדרישה 25 במסמך הדרישות -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="/js/pwaRegister.js"></script>
