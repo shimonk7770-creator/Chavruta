@@ -60,16 +60,39 @@
 - [x] FR-020 תצוגת מעקב לימוד ב-Canvas (heatmap של 26 שבועות אחרונים, מבוסס על /api/learning/heatmap)
 - [x] העלאה/נגינת וידאו לפוסטים (BR-008 - עד 50MB, mp4/webm, דרך multer) - שבוע 3 הושלם במלואו
 
+### שיפורי עיצוב וחוויית משתמש (נוסף בהמשך שבוע 3)
+- [x] כותרות (h1) בגרדיאנט צבעוני + פס הדגשה - נראות מודרנית וחיה יותר
+- [x] אנימציית "כניסה" חלקה לכל עמוד (page-fade-in) - תחושת מעבר קליל בין דפים
+- [x] הדגשת קטגוריית ניווט פעילה (nav-pill.active) לפי העמוד הנוכחי - middleware חדש ב-server.js שממלא res.locals.currentPath
+- [x] הפרדה חזותית (קו מפריד) בין קטגוריות תוכן לבין קטגוריית חשבון בתפריט
+- [x] עיצוב אחיד לנגן הוידאו בפוסטים (.post-video ב-CSS, במקום style מוטמע)
+- [x] כרטיס קטגוריה חדש בדף הבית שמדגיש את יכולת "שיעורים בוידאו"
+- [x] מסמך DEFENSE-CHECKLIST.md - רשימת בדיקות מעשית להכנה להגנה, מבוססת על סעיף 12+13 ב-SRS
+
 ## שבוע 4 - צ'אט בזמן אמת (Socket.io), גרפי D3
 
-- [ ] מודל Message
-- [ ] FR-021 שליחת הודעה (DB + Socket.io broadcast)
-- [ ] FR-022 היסטוריית צ'אט
-- [ ] FR-023 מחווני "מחובר/מקליד" (nice-to-have)
-- [ ] FR-024 טיפול בניתוק/חיבור מחדש
-- [ ] FR-025 גרף D3: פעילות לפי קבוצה (aggregation חי מה-DB)
-- [ ] FR-026 גרף D3: מגמת לימוד קהילתית
-- [ ] FR-027 מצב ריק ידידותי בגרפים
+> **הערה**: כל הפריטים למטה - הקוד הושלם ונבדק סטטית (syntax + רינדור EJS מלא עם נתוני דוגמה),
+> אבל **טרם נבדק מול Firebase אמיתי ומול שרת רץ בפועל** (אין עדיין serviceAccountKey.json).
+> יש להריץ `npm install` (מוסיף socket.io) ואז לבדוק בפועל ברגע שה-DB מוכן - ראו DEFENSE-CHECKLIST.md.
+
+- [x] מודל Message (server/models/Message.js - collection "messages", כל קבוצה = חדר צ'אט נפרד)
+- [x] FR-021 שליחת הודעה (Socket.io + שמירה ב-Firestore + broadcast לחדר - server/sockets/chatSocket.js)
+- [x] FR-022 היסטוריית צ'אט (נטענת ב-SSR עם כניסה לעמוד /groups/:id/chat)
+- [x] FR-023 מחווני "מקליד..." (chat:typing, נעלם אוטומטית אחרי 2 שניות)
+- [x] FR-024 טיפול בניתוק/חיבור מחדש (socket.io-client reconnection אוטומטי + REST fallback ב-/api/groups/:id/chat/history)
+- [x] FR-025 גרף D3: פעילות (פוסטים) לפי קבוצה - Post.countActiveByGroup + /api/stats/posts-per-group
+- [x] FR-026 גרף D3: מגמת לימוד קהילתית 30 יום - LearningLog.countAllGroupedByDate + /api/stats/learning-trend
+- [x] FR-027 מצב ריק ידידותי בגרפים ובצ'אט (showEmptyState ב-statsCharts.js + הודעה בעמוד chat.ejs)
+
+### קבצים חדשים שנוספו
+server/models/Message.js, server/sockets/chatSocket.js, server/controllers/chatController.js,
+server/routes/chatRoutes.js, server/controllers/statsController.js, server/routes/statsRoutes.js,
+server/public/js/chat.js, server/public/js/statsCharts.js, server/views/groups/chat.ejs
+
+### מה נשאר לפני שסוגרים את שבוע 4 סופית
+- [ ] `npm install` (מוסיף את socket.io שנכנס ל-package.json)
+- [ ] בדיקה מול Firebase אמיתי: שליחת הודעה בזמן אמת בין שני טאבים/משתמשים, ניתוק ידני (כיבוי WiFi) ובדיקת reconnection
+- [ ] בדיקת שני הגרפים עם נתונים אמיתיים מה-seed
 
 ## שבוע 5 - מעגל השנה, בדיקות, הכנה להגנה
 

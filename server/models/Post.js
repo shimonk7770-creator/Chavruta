@@ -130,4 +130,27 @@ async function archiveByGroup(groupId) {
   return snaps.docs.map((d) => d.id);
 }
 
-module.exports = { create, findById, listByGroup, listByGroupIds, search, update, remove, archiveByGroup };
+// FR-025: כמות פוסטים פעילים לכל קבוצה - aggregation בזיכרון השרת, כי ל-Firestore אין $group מובנה
+// (משמש את גרף העמודות "פעילות לפי קבוצה" ב-/study-room, ראו statsController.js)
+async function countActiveByGroup() {
+  const db = getDb();
+  const snaps = await db.collection(COLLECTION).where("isArchived", "==", false).get();
+  const counts = {};
+  snaps.docs.forEach((doc) => {
+    const groupId = doc.data().groupId;
+    counts[groupId] = (counts[groupId] || 0) + 1;
+  });
+  return counts;
+}
+
+module.exports = {
+  create,
+  findById,
+  listByGroup,
+  listByGroupIds,
+  search,
+  update,
+  remove,
+  archiveByGroup,
+  countActiveByGroup,
+};

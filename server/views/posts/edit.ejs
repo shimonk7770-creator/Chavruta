@@ -29,7 +29,7 @@
     <hr />
     <h2>וידאו מצורף</h2>
     <% if (post.videoUrl) { %>
-      <video controls style="max-width:100%; border-radius: var(--radius);" src="<%= post.videoUrl %>"></video>
+      <video class="post-video" controls src="<%= post.videoUrl %>"></video>
       <p class="meta">להחלפת הווידאו, העלה קובץ חדש למטה - הוא יחליף את הקיים.</p>
     <% } else { %>
       <p class="meta">אין עדיין וידאו מצורף לפוסט הזה.</p>

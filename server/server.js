@@ -8,6 +8,8 @@ const express = require("express");
 const path = require("path");
 const session = require("express-session");
 const methodOverride = require("method-override");
+const http = require("http"); // דרוש כדי לחבר גם Express וגם Socket.io לאותו שרת HTTP (שבוע 4)
+const { Server } = require("socket.io");
 
 const { connectDB } = require("./config/db");
 
@@ -23,6 +25,8 @@ const groupRoutes = require("./routes/groupRoutes");
 const postRoutes = require("./routes/postRoutes");
 const commentRoutes = require("./routes/commentRoutes");
 const learningLogRoutes = require("./routes/learningLogRoutes");
+const chatRoutes = require("./routes/chatRoutes"); // שבוע 4 - צ'אט קבוצתי
+const statsRoutes = require("./routes/statsRoutes"); // שבוע 4 - נתוני גרפי D3
 
 const app = express();
 
@@ -43,17 +47,25 @@ app.use(express.json());
 // תמיכה ב-PUT/DELETE מטפסי HTML רגילים
 app.use(methodOverride("_method"));
 
-// ניהול session - נשמר בזיכרון השרת (מספיק לפרויקט לימודי בתהליך יחיד; ה-DB עצמו הוא Firestore)
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "chavruta_dev_secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 30 * 60 * 1000, // NFR-005: תפוגת session אחרי 30 דקות חוסר פעילות
-    },
-  })
-);
+// middleware גלובלי - שם את נתיב הבקשה הנוכחי בהישג יד של כל תבנית EJS (res.locals.currentPath).
+// משמש ב-partials/header.ejs כדי להדגיש (class "active") את קטגוריית הניווט המתאימה לעמוד הנוכחי
+app.use((req, res, next) => {
+  res.locals.currentPath = req.path;
+  next();
+});
+
+// ניהול session - נשמר בזיכרון השרת (מספיק לפרויקט לימודי בתהליך יחיד; ה-DB עצמו הוא Firestore).
+// מחולץ למשתנה נפרד (לא ישר ל-app.use) כדי שנוכל לחבר את אותו session גם ל-Socket.io למטה -
+// בלי session משותף, ה-socket לא היה יודע "מי אתה" (socket.request.session.userId)
+const sessionMiddleware = session({
+  secret: process.env.SESSION_SECRET || "chavruta_dev_secret",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 30 * 60 * 1000, // NFR-005: תפוגת session אחרי 30 דקות חוסר פעילות
+  },
+});
+app.use(sessionMiddleware);
 
 // נתיבים (Routes)
 app.use("/", pageRoutes);
@@ -62,12 +74,22 @@ app.use("/", groupRoutes);
 app.use("/", postRoutes);
 app.use("/", commentRoutes);
 app.use("/", learningLogRoutes);
+app.use("/", chatRoutes); // שבוע 4
+app.use("/", statsRoutes); // שבוע 4
 
 // טיפול בשגיאות - חייב להיות אחרון (סעיף 8 ב-SRS)
 app.use(notFound);
 app.use(errorHandler);
 
+// שבוע 4: עוטפים את Express בשרת HTTP "גולמי" כדי שגם Express וגם Socket.io יאזינו על אותו פורט -
+// זו התבנית הסטנדרטית לחיבור Socket.io ל-Express (לא ניתן פשוט עם app.listen)
+const server = http.createServer(app);
+
+const io = new Server(server);
+io.engine.use(sessionMiddleware); // "משתילים" את אותו session גם לתוך כל handshake של Socket.io
+require("./sockets/chatSocket")(io); // רישום כל מאזיני אירועי הצ'אט (join/send/typing/disconnect)
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`שרת חברותא רץ על פורט ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`שרת חברותא רץ על פורט ${PORT} (כולל Socket.io לצ'אט בזמן אמת)`);
 });

@@ -10,34 +10,43 @@
     חברותא
   </a>
 
+  <!--
+    הערה: כדי לסמן איזו קטגוריה "פעילה" (מודגשת) בהתאם לעמוד הנוכחי, אנחנו משתמשים ב-res.locals.currentPath
+    שממולא ע"י middleware גלובלי ב-server.js (app.use שרץ על כל בקשה, לפני הראוטים).
+    אם המשתנה לא קיים מסיבה כלשהי (typeof undefined) - פשוט לא מודגש כלום, בלי שגיאה.
+  -->
   <nav class="site-nav">
     <!-- קטגוריית ניווט: דף הבית -->
-    <a class="nav-pill" href="/">
+    <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath === '/' ? ' active' : '' %>" href="/">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
       בית
     </a>
     <!-- קטגוריית ניווט: קבוצות ושיעורים -->
-    <a class="nav-pill" href="/groups">
+    <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/groups') ? ' active' : '' %>" href="/groups">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/><circle cx="17" cy="8" r="2.5"/><path d="M16 14.2c2.8.4 5 2.6 5 5.8"/></svg>
       קבוצות
     </a>
     <!-- קטגוריית ניווט: חיפוש פוסטים -->
-    <a class="nav-pill" href="/posts/search">
+    <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/posts/search') ? ' active' : '' %>" href="/posts/search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
       חיפוש
     </a>
 
     <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
-      <!-- קטגוריית ניווט: הפיד האישי (FR-017) - מוצג רק למשתמש מחובר -->
-      <a class="nav-pill" href="/learning">
+      <!-- קטגוריית ניווט: מעקב לימוד + בית מדרש אישי (FR-020) - מוצג רק למשתמש מחובר -->
+      <a class="nav-pill<%= typeof currentPath !== 'undefined' && (currentPath.startsWith('/learning') || currentPath.startsWith('/study-room')) ? ' active' : '' %>" href="/learning">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         מעקב לימוד
       </a>
-      <a class="nav-pill" href="/feed">
+      <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/feed') ? ' active' : '' %>" href="/feed">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
         הפיד שלי
       </a>
-      <a class="nav-pill" href="/profile">
+
+      <!-- קו מפריד - מבדיל ויזואלית בין קטגוריות תוכן (בית/קבוצות/חיפוש/לימוד) לבין קטגוריית החשבון -->
+      <span class="nav-divider"></span>
+
+      <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/profile') ? ' active' : '' %>" href="/profile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
         <%= userName %>
       </a>
@@ -48,13 +57,14 @@
         </button>
       </form>
     <% } else { %>
+      <span class="nav-divider"></span>
       <!-- קטגוריית ניווט: התחברות -->
-      <a class="nav-pill" href="/login">
+      <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/login') ? ' active' : '' %>" href="/login">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
         התחברות
       </a>
       <!-- קטגוריית ניווט: הרשמה - קריאה לפעולה עיקרית, מודגשת בצבע ראשי -->
-      <a class="nav-pill primary" href="/register">
+      <a class="nav-pill primary<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/register') ? ' active' : '' %>" href="/register">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
         הרשמה
       </a>

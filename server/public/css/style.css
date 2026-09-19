@@ -25,8 +25,25 @@
   font-weight: 700;
 }
 
+html {
+  scroll-behavior: smooth; /* גלילה חלקה בתוך העמוד (קישורי עוגן) */
+}
+
 * {
   box-sizing: border-box;
+}
+
+/* אנימציית כניסה עדינה לכל עמוד - יוצרת תחושת "מעבר קליל" בין דפים.
+   כל קישור באתר הוא ניווט רגיל (לא SPA), אז האנימציה רצה מחדש בכל טעינה - זה בכוונה */
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 body {
@@ -36,11 +53,33 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
   line-height: 1.6;
+  animation: page-fade-in 0.45s ease-out; /* מעבר קליל בין עמודים */
 }
 
 h1, h2, h3 {
   font-family: "ChavrutaDisplay", "Frank Ruhl Libre", Georgia, serif;
   color: var(--color-secondary-dark);
+}
+
+/* כותרות ראשיות (h1) בגרדיאנט צבעוני - נראה "חי" ומזמין יותר מטקסט אחיד.
+   ה-color למעלה נשאר כ-fallback לדפדפנים ישנים שלא תומכים ב-background-clip: text */
+h1 {
+  display: inline-block;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* פס צבעוני קצר מתחת לכל כותרת ראשית - מדגיש ויזואלית את תחילת כל עמוד/קטגוריה */
+h1::after {
+  content: "";
+  display: block;
+  width: 64px;
+  height: 4px;
+  margin-top: 0.35rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
 }
 
 a {
@@ -113,9 +152,24 @@ a {
   background: var(--color-primary-dark);
 }
 
+/* מצב "פעיל" - מסמן לאיזו קטגוריית ניווט העמוד הנוכחי שייך (מחושב בשרת: res.locals.currentPath) */
+.nav-pill.active {
+  background: rgba(255, 255, 255, 0.32);
+  box-shadow: inset 0 -2px 0 0 #fff;
+  font-weight: 600;
+}
+
 .nav-pill svg {
   width: 16px;
   height: 16px;
+}
+
+/* קו מפריד עדין בין קטגוריות התוכן (בית/קבוצות/חיפוש/לימוד) לבין קטגוריית החשבון (פרופיל/התנתקות) */
+.nav-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.28);
+  margin: 0 0.3rem;
 }
 
 .welcome {
@@ -368,6 +422,75 @@ button:hover {
   padding: 0.45rem;
   border-radius: 8px;
   border: 1px solid var(--color-border);
+}
+
+/* ===== צ'אט קבוצתי (שבוע 4 - FR-021..FR-024) ===== */
+.chat-box {
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chat-message {
+  align-self: flex-start;
+  background: #f5f0e6;
+  padding: 0.5rem 0.8rem;
+  border-radius: 12px 12px 12px 2px;
+  max-width: 75%;
+}
+
+/* הודעות של המשתמש המחובר עצמו - מיושרות לצד השני ובצבע ראשי, כמו בכל אפליקציית צ'אט מוכרת */
+.chat-message.mine {
+  align-self: flex-end;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 12px 12px 2px 12px;
+}
+
+.chat-sender {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.8;
+  margin-bottom: 0.15rem;
+}
+
+.chat-typing {
+  font-style: italic;
+}
+
+.chat-status.error {
+  color: #b3261e;
+}
+
+/* ===== גרפי D3 קהילתיים (שבוע 4 - FR-025, FR-026, FR-027) ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.chart-container svg {
+  width: 100%;
+  height: auto;
+}
+
+.chart-empty {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+/* נגן הוידאו בפוסטים - עיצוב אחיד לכל מקום שמוצג בו וידאו מצורף (BR-008), במקום style מוטמע ב-EJS */
+.post-video {
+  display: block;
+  max-width: 100%;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  background: #111;
+  margin-bottom: 0.8rem;
 }
 
 /* ===== פוטר ===== */

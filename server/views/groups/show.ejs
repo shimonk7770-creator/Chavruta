@@ -48,8 +48,9 @@
         <h3><%= post.title %></h3>
         <p class="meta"><%= post.authorName %> | <%= post.category %></p>
         <p><%= post.content %></p>
+        <!-- נגן הוידאו המצורף לפוסט (BR-008) - העיצוב מגיע מ-.post-video ב-style.css, לא inline -->
         <% if (post.videoUrl) { %>
-          <video controls style="max-width:100%; border-radius: var(--radius); margin-bottom: 0.6rem;" src="<%= post.videoUrl %>"></video>
+          <video class="post-video" controls src="<%= post.videoUrl %>"></video>
         <% } %>
 
         <!-- קישורי ניהול פוסט - מוצגים רק לבעל הפוסט או למנהל הקבוצה (בדיקת ההרשאה האמיתית מתבצעת בשרת ב-middleware canModifyPost) -->

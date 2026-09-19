@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!-- server/views/groups/chat.ejs - צ'אט קבוצתי בזמן אמת (FR-021..FR-024) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+  <!-- הקובץ למטה נוצר ומוגש אוטומטית ע"י חבילת socket.io בצד השרת - אין צורך להוריד/להתקין אותו ידנית -->
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <h1>צ'אט - <%= group.name %></h1>
+    <p class="meta">הצ'אט פתוח לחברי הקבוצה בלבד. הודעות נשמרות ונטענות מחדש בכל כניסה.</p>
+
+    <div id="chat-messages" class="card chat-box" data-group-id="<%= group.id %>" data-user-id="<%= userId %>">
+      <% if (!messages.length) { %>
+        <!-- מצב ריק ידידותי - גם בצ'אט, לא רק בגרפים (ברוח FR-027) -->
+        <p class="meta chat-empty">עדיין אין הודעות בקבוצה הזו. היו הראשונים לכתוב!</p>
+      <% } %>
+      <% messages.forEach(function(msg) { %>
+        <div class="chat-message<%= msg.senderId === userId ? ' mine' : '' %>">
+          <span class="chat-sender"><%= msg.senderName %></span>
+          <span class="chat-content"><%= msg.content %></span>
+        </div>
+      <% }) %>
+    </div>
+
+    <p id="chat-typing-indicator" class="meta chat-typing" style="display:none"></p>
+    <p id="chat-connection-status" class="meta chat-status"></p>
+
+    <form id="chat-form" class="comment-form">
+      <input type="text" id="chat-input" placeholder="כתבו הודעה..." maxlength="1000" autocomplete="off" required />
+      <button type="submit">שליחה</button>
+    </form>
+
+    <p><a href="/groups/<%= group.id %>">חזרה לעמוד הקבוצה</a></p>
+  </main>
+
+  <script src="/js/chat.js"></script>
+</body>
+</html>

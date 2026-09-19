@@ -84,4 +84,23 @@ async function remove(id) {
   await db.collection(COLLECTION).doc(id).delete();
 }
 
-module.exports = { create, findById, listByUser, update, remove };
+// FR-026: מגמת לימוד קהילתית - כמות רישומי לימוד (של כל המשתמשים יחד) לפי יום, ב-N הימים האחרונים
+// aggregation בזיכרון השרת - בדומה לחיפושים אחרים בקובץ הזה, כי ל-Firestore אין $group מובנה
+// (משמש את גרף הקו "מגמת לימוד קהילתית" ב-/study-room, ראו statsController.js)
+async function countAllGroupedByDate({ days = 30 } = {}) {
+  const db = getDb();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  const snaps = await db.collection(COLLECTION).where("date", ">=", cutoff).get();
+  const counts = {};
+  snaps.docs.forEach((doc) => {
+    const d = doc.data().date;
+    const dt = d?.toDate ? d.toDate() : new Date(d);
+    const key = dt.toISOString().slice(0, 10); // מקבצים לפי יום (YYYY-MM-DD), בלי שעה
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  return counts;
+}
+
+module.exports = { create, findById, listByUser, update, remove, countAllGroupedByDate };

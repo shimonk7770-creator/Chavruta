@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<!-- server/views/studyRoom.ejs - "בית המדרש האישי" - מודול React עם Canvas (FR-020) -->
-<!-- טוען React/ReactDOM/Babel דרך CDN (ללא שלב build) - כתיבת JSX ישירות בדפדפן, בדומה לטעינת jQuery ב-head.ejs -->
+<!-- server/views/studyRoom.ejs - "בית המדרש האישי" - מודול React עם Canvas (FR-020) + גרפי D3 קהילתיים (FR-025, FR-026) -->
+<!-- טוען React/ReactDOM/Babel + D3 דרך CDN (ללא שלב build) - בדומה לטעינת jQuery ב-head.ejs -->
 <html lang="he" dir="rtl">
 <head>
   <%- include('partials/head') %>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 </head>
 <body>
   <%- include('partials/header') %>
@@ -18,9 +19,24 @@
     <!-- כאן React "יורכב" (mount) - ראו server/public/js/studyRoom.js -->
     <div id="study-room-root" class="card"></div>
 
+    <h2>נתונים קהילתיים</h2>
+    <p class="meta">שני גרפים חיים שמתעדכנים ישירות מהנתונים ב-Firestore, בעזרת D3.js (FR-025, FR-026).</p>
+
+    <div class="stats-grid">
+      <div class="card">
+        <h3>פעילות לפי קבוצה</h3>
+        <div id="chart-posts-per-group" class="chart-container"></div>
+      </div>
+      <div class="card">
+        <h3>מגמת לימוד קהילתית (30 יום אחרונים)</h3>
+        <div id="chart-learning-trend" class="chart-container"></div>
+      </div>
+    </div>
+
     <p><a href="/learning">חזרה למעקב הלימוד</a></p>
   </main>
 
   <script type="text/babel" src="/js/studyRoom.js"></script>
+  <script src="/js/statsCharts.js"></script>
 </body>
 </html>
