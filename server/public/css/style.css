@@ -596,6 +596,47 @@ button:hover {
   text-align: center;
 }
 
+/* גלריית תמונות בפוסט - עד 6 תמונות, רשת רספונסיבית עם thumbnails מרובעים אחידים */
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.gallery-thumb {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.2s ease;
+}
+
+.gallery-thumb:hover {
+  transform: scale(1.03);
+}
+
+/* תמונת פרופיל (אווטאר) קטנה - מוצגת בתפריט העליון ליד שם המשתמש (server/views/partials/header.ejs) */
+.avatar-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  vertical-align: middle;
+}
+
+/* תמונת פרופיל גדולה יותר - מוצגת בעמוד /profile */
+.avatar-preview {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 0.8rem;
+  display: block;
+}
+
 /* נגן הוידאו בפוסטים - עיצוב אחיד לכל מקום שמוצג בו וידאו מצורף (BR-008), במקום style מוטמע ב-EJS */
 .post-video {
   display: block;

@@ -47,7 +47,12 @@
       <span class="nav-divider"></span>
 
       <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/profile') ? ' active' : '' %>" href="/profile">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+        <!-- אם למשתמש יש תמונת פרופיל אמיתית שהועלתה (userAvatarUrl) - מציגים אותה במקום האייקון הגנרי -->
+        <% if (typeof userAvatarUrl !== 'undefined' && userAvatarUrl) { %>
+          <img class="avatar-thumb" src="<%= userAvatarUrl %>" alt="" />
+        <% } else { %>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+        <% } %>
         <%= userName %>
       </a>
       <form action="/logout" method="POST" style="display:inline">

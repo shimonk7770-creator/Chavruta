@@ -6,6 +6,7 @@ const router = express.Router();
 const rateLimit = require("express-rate-limit");
 const authController = require("../controllers/authController");
 const { isAuthenticated } = require("../middleware/auth");
+const { uploadAvatar } = require("../middleware/upload");
 
 // הגבלת קצב בקשות (NFR - הגנה בסיסית מפני ניחוש סיסמאות/הרשמות אוטומטיות בכמות גדולה - Brute Force).
 // מוגבל רק על הפעולות הרגישות (login/register) ולא על כל האתר, כדי לא לפגוע בגלישה רגילה.
@@ -29,6 +30,8 @@ router.post("/logout", authController.logout);
 // FR-004, FR-005 - דורש התחברות
 router.get("/profile", isAuthenticated, authController.showProfileForm);
 router.post("/profile", isAuthenticated, authController.updateProfile);
+// העלאת תמונת פרופיל אמיתית (קובץ) - נשמר בנפרד מ-POST /profile הרגיל כי multer דורש טופס multipart/form-data נפרד
+router.post("/profile/avatar", isAuthenticated, uploadAvatar.single("avatar"), authController.uploadAvatar);
 router.post("/profile/delete", isAuthenticated, authController.deleteAccount);
 
 // נתיב API קטן שמשמש את jQuery/Ajax בדף ההרשמה

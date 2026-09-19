@@ -36,6 +36,7 @@ async function create(data) {
     authorId: data.authorId,
     authorName: data.authorName || "",
     videoUrl: data.videoUrl || "",
+    imageUrls: data.imageUrls || [], // גלריית תמונות לפוסט (שיפור UX - "רשת חברתית אמיתית")
     isArchived: false,
     createdAt: now,
     updatedAt: now,
@@ -114,6 +115,14 @@ async function update(id, patch) {
   return findById(id);
 }
 
+// הוספת תמונות לגלריית פוסט קיים - מצרפים למערך הקיים (לא מחליפים), עד מקסימום 6 תמונות בסה"כ לפוסט
+async function addImages(id, newUrls) {
+  const post = await findById(id);
+  if (!post) return null;
+  const combined = [...(post.imageUrls || []), ...newUrls].slice(0, 6);
+  return update(id, { imageUrls: combined });
+}
+
 // FR-014: מחיקת פוסט (מחיקה פיזית - הבעלים בעצמו בחר להסיר את התוכן שלו)
 async function remove(id) {
   const db = getDb();
@@ -150,6 +159,7 @@ module.exports = {
   listByGroupIds,
   search,
   update,
+  addImages,
   remove,
   archiveByGroup,
   countActiveByGroup,

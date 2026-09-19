@@ -40,6 +40,27 @@
       <button type="submit">העלאת וידאו</button>
     </form>
 
+    <hr />
+    <h2>גלריית תמונות</h2>
+    <!-- גלריית תמונות לפוסט - עד 6 תמונות בסה"כ, מצטרפות לקיימות (server/models/Post.js addImages) -->
+    <% if (post.imageUrls && post.imageUrls.length) { %>
+      <div class="image-gallery">
+        <% post.imageUrls.forEach(function (url) { %>
+          <img src="<%= url %>" class="gallery-thumb" alt="תמונה מצורפת לפוסט" />
+        <% }) %>
+      </div>
+      <p class="meta"><%= post.imageUrls.length %> מתוך 6 תמונות אפשריות.</p>
+    <% } else { %>
+      <p class="meta">אין עדיין תמונות בפוסט הזה.</p>
+    <% } %>
+    <% if (!post.imageUrls || post.imageUrls.length < 6) { %>
+      <form action="/posts/<%= post.id %>/images" method="POST" enctype="multipart/form-data" class="auth-form">
+        <label for="images">הוספת תמונות (JPG/PNG/WEBP/GIF, עד 5MB לתמונה)</label>
+        <input type="file" id="images" name="images" accept="image/jpeg,image/png,image/webp,image/gif" multiple required />
+        <button type="submit">העלאת תמונות</button>
+      </form>
+    <% } %>
+
     <p><a href="/groups/<%= post.groupId %>">חזרה לקבוצה</a></p>
   </main>
 </body>

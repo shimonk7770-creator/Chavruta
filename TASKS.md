@@ -107,6 +107,34 @@ server/public/js/chat.js, server/public/js/statsCharts.js, server/views/groups/c
 - [x] כרטיס חדש בדף הבית "מה ההרשאות שלי" - מוצג רק למשתמש מחובר, מסביר לפי role (member/manager/admin)
       מה בדיוק מותר לו לעשות באתר
 
+## שיפורים נוספים - אבטחה, עיצוב, PWA ("wow factor" לציון גבוה)
+
+> בעקבות בקשת המשתמש "תעשה את כל מה שהצעת" - יישום כל רשימת השיפורים המתקדמים שהוצעה.
+
+### אבטחה
+- [x] `helmet` - הוספת HTTP headers מגנים בסיסיים (X-Frame-Options, X-Content-Type-Options ועוד) - `contentSecurityPolicy` מבוטלת בכוונה כי האתר טוען סקריפטים מ-CDN חיצוניים (jQuery/React/D3/Babel/Socket.io)
+- [x] `express-rate-limit` - הגבלת קצב על `/login` ו-`/register` בלבד (20 בקשות ל-15 דקות לכל IP) - הגנה נוספת ברמת ה-IP, משלימה את BR-010 (נעילת חשבון)
+
+### עיצוב וחוויית משתמש
+- [x] מצב כהה (Dark Mode) מלא - כפתור מתג 🌙/☀️ בתפריט העליון, מבוסס על CSS Custom Properties (`[data-theme="dark"]`), נשמר ב-localStorage, וללא הבהוב (FOUC) בזכות סקריפט מוקדם ב-`<head>`
+- [x] אווטארים אמיתיים למשתמשים - העלאת קובץ תמונה אמיתי (לא רק קישור טקסט) דרך `/profile/avatar` (multer, עד 5MB), מוצג מיד בתפריט העליון ובעמוד הפרופיל
+- [x] גלריית תמונות לפוסטים - עד 6 תמונות לכל פוסט (`/posts/:id/images`, multer), מוצגות כ-grid בעמוד הקבוצה ובעריכת הפוסט
+
+### PWA - התקנה כאפליקציה
+- [x] `manifest.json` + אייקון SVG - שם בעברית, RTL, תמיכה ב"הוספה למסך הבית"
+- [x] Service Worker (`service-worker.js`) - אסטרטגיית Network-First עם fallback ל-cache, לחוויית שימוש טובה יותר גם ברשת חלשה
+
+### קבצים חדשים שנוספו בשיפורים אלו
+server/public/manifest.json, server/public/icons/icon.svg, server/public/service-worker.js,
+server/public/js/pwaRegister.js, server/public/js/themeToggle.js
+
+### עדיין בתהליך (מתוך "תעשה את כל מה שהצעת")
+- [ ] פעמון התראות בזמן אמת (Socket.io) - הודעה/תגובה חדשה
+- [ ] חיפוש חכם/גלובלי אחד שמחפש גם בקבוצות וגם בפוסטים
+- [ ] לוח מחוונים (Dashboard) למנהל מערכת עם כל הסטטיסטיקות
+- [ ] בדיקות אוטומטיות (`node:test`) לפחות עבור הרשמה והרשאות
+- [ ] כלי AI מובנה - שאלות לפי תוכן הקבוצה/פוסט + סיכום אוטומטי של שיעור (דורש מפתח API מהמשתמש - טרם התקבל)
+
 ## שבוע 5 - מעגל השנה, בדיקות, הכנה להגנה
 
 - [ ] FR-028 יצירת/עריכת מאמר חג (אדמין בלבד)

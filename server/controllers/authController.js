@@ -63,6 +63,7 @@ async function register(req, res) {
     req.session.userId = newUser.id;
     req.session.userRole = newUser.role;
     req.session.userName = newUser.fullName;
+    req.session.userAvatarUrl = newUser.avatarUrl || ""; // כדי שהתפריט העליון יוכל להציג אווטאר בלי לשלוף מהDB בכל בקשה
 
     res.redirect("/");
   } catch (error) {
@@ -122,6 +123,7 @@ async function login(req, res) {
     req.session.userId = user.id;
     req.session.userRole = user.role;
     req.session.userName = user.fullName;
+    req.session.userAvatarUrl = user.avatarUrl || "";
 
     res.redirect("/");
   } catch (error) {
@@ -183,11 +185,25 @@ async function updateProfile(req, res) {
 
     const updated = await User.update(user.id, patch);
     req.session.userName = updated.fullName;
+    req.session.userAvatarUrl = updated.avatarUrl || "";
     res.render("profile", { profileUser: User.toPublicUser(updated), error: null, success: "הפרטים עודכנו בהצלחה" });
   } catch (error) {
     console.error("שגיאה בעדכון פרופיל:", error);
     res.render("profile", { profileUser: req.body, error: "אירעה שגיאה, נסה שוב", success: null });
   }
+}
+
+// POST /profile/avatar - העלאת תמונת פרופיל אמיתית (קובץ, לא רק קישור) - אותו דפוס בדיוק כמו
+// postController.uploadVideo/uploadImages, רק שכאן מעדכנים את מסמך המשתמש במקום מסמך פוסט
+async function uploadAvatar(req, res) {
+  const user = await User.findById(req.session.userId);
+  if (!req.file) {
+    return res.render("profile", { profileUser: User.toPublicUser(user), error: "יש לבחור קובץ תמונה", success: null });
+  }
+  const avatarUrl = `/uploads/${req.file.filename}`;
+  const updated = await User.update(user.id, { avatarUrl });
+  req.session.userAvatarUrl = avatarUrl; // מעדכנים גם את ה-session כדי שהתפריט העליון יציג את התמונה החדשה מיד
+  res.render("profile", { profileUser: User.toPublicUser(updated), error: null, success: "תמונת הפרופיל עודכנה בהצלחה" });
 }
 
 // POST /profile/delete - FR-005: מחיקת חשבון (רכה - isActive:false, לא מחיקה פיזית - BR-011)
@@ -207,5 +223,6 @@ module.exports = {
   checkUsername,
   showProfileForm,
   updateProfile,
+  uploadAvatar,
   deleteAccount,
 };

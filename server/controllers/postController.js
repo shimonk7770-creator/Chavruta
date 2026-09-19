@@ -87,6 +87,18 @@ async function uploadVideo(req, res) {
   res.redirect(`/groups/${updated.groupId}`);
 }
 
+// POST /posts/:id/images - הוספת תמונות לגלריית פוסט קיים (הבעלים או מנהל הקבוצה בלבד)
+// אותו דפוס בדיוק כמו uploadVideo למעלה, רק עם req.files (ריבוי קבצים) במקום req.file
+async function uploadImages(req, res) {
+  const post = req.post; // הגיע ממידלוור ההרשאה canModifyPost
+  if (!req.files || !req.files.length) {
+    return res.render("posts/edit", { post, error: "יש לבחור לפחות תמונה אחת" });
+  }
+  const newUrls = req.files.map((file) => `/uploads/${file.filename}`);
+  const updated = await Post.addImages(post.id, newUrls);
+  res.redirect(`/groups/${updated.groupId}`);
+}
+
 // DELETE /posts/:id - FR-014: מחיקת פוסט - הבעלים או מנהל הקבוצה (נבדק במידלוור)
 async function deletePost(req, res) {
   const post = req.post; // הגיע ממידלוור ההרשאה
@@ -118,4 +130,4 @@ async function myFeed(req, res) {
   res.render("posts/feed", { posts, total, page, pageSize });
 }
 
-module.exports = { createPost, showEditPostForm, updatePost, uploadVideo, deletePost, searchPosts, myFeed };
+module.exports = { createPost, showEditPostForm, updatePost, uploadVideo, uploadImages, deletePost, searchPosts, myFeed };

@@ -13,6 +13,21 @@
     <% if (typeof error !== 'undefined' && error) { %><p class="error-message"><%= error %></p><% } %>
     <% if (typeof success !== 'undefined' && success) { %><p style="color:var(--color-secondary)"><%= success %></p><% } %>
 
+    <!-- תמונת פרופיל - תצוגה מקדימה + העלאת קובץ אמיתי (בנוסף לאפשרות הישנה של הדבקת קישור למטה) -->
+    <h2>תמונת פרופיל</h2>
+    <% if (profileUser.avatarUrl) { %>
+      <img class="avatar-preview" src="<%= profileUser.avatarUrl %>" alt="תמונת הפרופיל שלי" />
+    <% } else { %>
+      <p class="meta">עדיין לא הועלתה תמונת פרופיל.</p>
+    <% } %>
+    <form action="/profile/avatar" method="POST" enctype="multipart/form-data" class="auth-form">
+      <label for="avatar">בחירת תמונה חדשה (JPG/PNG/WEBP/GIF, עד 5MB)</label>
+      <input type="file" id="avatar" name="avatar" accept="image/jpeg,image/png,image/webp,image/gif" required />
+      <button type="submit">העלאת תמונת פרופיל</button>
+    </form>
+
+    <hr />
+
     <form action="/profile" method="POST" class="auth-form">
       <label for="fullName">שם מלא</label>
       <input type="text" id="fullName" name="fullName" value="<%= profileUser.fullName %>" required />
@@ -20,7 +35,7 @@
       <label for="bio">קצת עליי</label>
       <textarea id="bio" name="bio" maxlength="300"><%= profileUser.bio %></textarea>
 
-      <label for="avatarUrl">קישור לתמונת פרופיל (אופציונלי)</label>
+      <label for="avatarUrl">קישור לתמונת פרופיל (אופציונלי - חלופה להעלאת קובץ למעלה)</label>
       <input type="text" id="avatarUrl" name="avatarUrl" value="<%= profileUser.avatarUrl %>" />
 
       <hr />
