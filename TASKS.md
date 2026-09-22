@@ -142,6 +142,7 @@ server/public/js/pwaRegister.js, server/public/js/themeToggle.js
 
 - [x] FR-028 יצירת/עריכת מאמר חג (אדמין בלבד, BR-012) - `server/models/Holiday.js`, `server/controllers/holidayController.js`, `server/routes/holidayRoutes.js`
 - [x] FR-029 עמוד "מעגל השנה" (`GET /holidays`, ציבורי כולל אורחים) - מועד מובלט (`isFeatured`, מסומן ידנית - אין חישוב אסטרונומי, מחוץ להיקף) + ארכיון שאר המועדים בפריסת **multiple-columns** (סוגר בפועל את דרישה 27.iii שהייתה מוגדרת ב-CSS אך לא בשימוש באף עמוד)
+- [x] **עדכון (בעקבות בקשת המשתמש)**: לוח שנה גרגוריאני ויזואלי אמיתי (12 לוחות חודשיים, `server/utils/calendarGrid.js` - פונקציה טהורה עם 6 בדיקות `node:test` משלה) - חג מודגש בלוח רק אם הוגדר לו ידנית שדה `Holiday.gregorianDate` ("YYYY-MM-DD") באדמין; עדיין **אין** חישוב אסטרונומי של הלוח העברי (מחוץ להיקף, סעיף 2.2 ב-SRS) - בדיוק כמו לוח קיר שממלאים ידנית כל שנה. נתוני seed עודכנו עם תאריכים אמיתיים ל-5787 (מקור: hebcal.com)
 - [x] קישור מקבוצת "ועד" רלוונטית ממאמר חג (`linkedGroupId`)
 - [x] נתוני seed למעגל השנה - 4 מאמרים לדוגמה (ראש השנה/יום כיפור/סוכות/פסח), אחד מסומן כמועד הקרוב
 - [x] עמוד `/permissions` - הסבר מלא (טבלה + טקסט) על ארבעת סוגי המשתמשים, כולל "איך הופכים למנהל קבוצה/אדמין" - קישור אליו נוסף גם מכרטיס "מה ההרשאות שלי" בדף הבית
@@ -157,7 +158,7 @@ server/models/Holiday.js, server/controllers/holidayController.js, server/routes
 server/views/holidays/{index,show,new,edit}.ejs, server/controllers/searchController.js, server/views/search.ejs,
 server/controllers/adminController.js, server/routes/adminRoutes.js, server/views/admin/dashboard.ejs,
 server/views/permissions.ejs, server/scripts/makeAdmin.js, server/utils/validators.js, server/utils/permissionRules.js,
-server/test/validators.test.js, server/test/permissionRules.test.js
+server/test/validators.test.js, server/test/permissionRules.test.js, server/utils/calendarGrid.js, server/test/calendarGrid.test.js
 
 ## בדיקת התאמה לדרישות הטכניות של הקורס (סעיפים 15-29)
 
@@ -177,7 +178,7 @@ server/test/validators.test.js, server/test/permissionRules.test.js
 - [~] 26. React + Video + Canvas - **Canvas ✓** (heatmap מעקב לימוד ב-`/study-room`), **Video עדיין לא ✓** בתוך רכיב React (הווידאו בפוסטים הוא HTML5 רגיל דרך EJS, לא React) - **פער פתוח, מתוכנן לסבב הבא**
 - [x] 27. CSS3 - text-shadow, transition, **multiple-columns** (כעת בשימוש בפועל בארכיון מעגל השנה), font-face, border-radius - כולם ממומשים ובשימוש
 - [x] 28. צ'אט עם Socket.io
-- [ ] 29. (השורה נחתכה בתמונה ששמעון שלח - לא ידוע מה תוכן הסעיף, יש לבדוק מול המסמך המלא)
+- [x] 29. המערכת מציגה נתונים סטטיסטיים בלפחות 2 גרפים דינמיים (D3.js), מבוססים על נתוני DB בזמן אמת - קיים כבר: FR-025 (פוסטים לפי קבוצה) ו-FR-026 (מגמת לימוד קהילתית 30 יום), שניהם ב-`/study-room` ומרוכזים שוב ב-`/admin/dashboard`, שואבים ישירות מ-Firestore בכל טעינה (`/api/stats/*`)
 
 ---
 

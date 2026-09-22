@@ -15,6 +15,44 @@
       <p><a class="btn btn-primary" href="/holidays/new">+ הוספת מאמר חג</a></p>
     <% } %>
 
+    <!--
+      ===== לוח שנה גרגוריאני ויזואלי (עדכון לפי בקשת המשתמש - לוח גריד אמיתי, לא רק רשימת מאמרים) =====
+      חשוב: זהו לוח לועזי רגיל בלבד (server/utils/calendarGrid.js) - בלי שום חישוב אסטרונומי של הלוח העברי
+      (מחוץ להיקף המערכת, סעיף 2.2 ב-SRS). חג מסומן בלוח רק אם הוגדר לו ידנית תאריך לועזי (gregorianDate).
+    -->
+    <h2>לוח שנה - 12 החודשים הקרובים</h2>
+    <div class="year-grid">
+      <% calendarMonths.forEach(function (m) { %>
+        <div class="mini-calendar">
+          <h4><%= m.monthName %> <%= m.year %></h4>
+          <table class="mini-calendar-table">
+            <thead>
+              <tr>
+                <% ['א','ב','ג','ד','ה','ו','ש'].forEach(function (letter) { %><th><%= letter %></th><% }) %>
+              </tr>
+            </thead>
+            <tbody>
+              <% m.weeks.forEach(function (week) { %>
+                <tr>
+                  <% week.forEach(function (cell) { %>
+                    <% if (!cell) { %>
+                      <td></td>
+                    <% } else if (cell.holidays.length) { %>
+                      <td class="cal-day has-holiday<%= cell.isToday ? ' is-today' : '' %>">
+                        <a href="/holidays/<%= cell.holidays[0].id %>" title="<%= cell.holidays.map(function (h) { return h.holidayName; }).join(', ') %>"><%= cell.day %></a>
+                      </td>
+                    <% } else { %>
+                      <td class="cal-day<%= cell.isToday ? ' is-today' : '' %>"><%= cell.day %></td>
+                    <% } %>
+                  <% }) %>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% }) %>
+    </div>
+
     <% if (featured) { %>
       <!-- המועד הקרוב מוצג בהבלטה - מסומן ידנית ע"י האדמין (Holiday.isFeatured), ללא חישוב אסטרונומי (מחוץ להיקף) -->
       <section class="card holiday-featured">

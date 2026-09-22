@@ -25,6 +25,9 @@ async function create(data) {
     whatWePray: data.whatWePray || "",
     customs: data.customs || "",
     linkedGroupId: data.linkedGroupId || "",
+    // gregorianDate ("YYYY-MM-DD") - תאריך לועזי מדויק לשנה הנוכחית, מוזן ידנית ע"י האדמין (אופציונלי).
+    // משמש רק להצגה בלוח השנה הגרגוריאני (server/utils/calendarGrid.js) - אין כאן חישוב אסטרונומי של הלוח העברי.
+    gregorianDate: data.gregorianDate || "",
     order: Number.isFinite(Number(data.order)) ? Number(data.order) : 0,
     isFeatured: !!data.isFeatured,
     authorId: data.authorId,

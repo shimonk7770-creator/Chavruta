@@ -789,3 +789,62 @@ button:hover {
   font-family: "ChavrutaDisplay", "Frank Ruhl Libre", Georgia, serif;
   color: var(--color-primary);
 }
+
+/* ===== לוח שנה גרגוריאני ויזואלי בעמוד /holidays - 12 לוחות חודשיים מוקטנים (server/utils/calendarGrid.js) ===== */
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+  margin: 20px 0 32px;
+}
+.mini-calendar {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: var(--shadow-soft);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.mini-calendar:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+.mini-calendar h4 {
+  margin: 0 0 8px;
+  text-align: center;
+  color: var(--color-secondary-dark);
+  font-size: 0.95rem;
+}
+.mini-calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+.mini-calendar-table th {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  padding-bottom: 4px;
+}
+.cal-day {
+  text-align: center;
+  padding: 4px 0;
+  color: var(--color-text-muted);
+  border-radius: 6px;
+}
+.cal-day.is-today {
+  background: var(--color-border);
+  color: var(--color-text);
+  font-weight: 700;
+}
+.cal-day.has-holiday {
+  background: var(--color-primary);
+}
+.cal-day.has-holiday a {
+  display: block;
+  color: #fff;
+  font-weight: 700;
+}
+.cal-day.has-holiday.is-today {
+  outline: 2px solid var(--color-secondary-dark);
+  outline-offset: -2px;
+}

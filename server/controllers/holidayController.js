@@ -4,17 +4,24 @@
 const Holiday = require("../models/Holiday");
 const Group = require("../models/Group");
 const sanitizeHtml = require("sanitize-html"); // ניקוי HTML נגד XSS (NFR-006), כמו בפוסטים/פרופיל
+const { buildYearGrid } = require("../utils/calendarGrid"); // לוח שנה גרגוריאני ויזואלי (עדכון: בקשת המשתמש ללוח אמיתי, לא רק רשימת מאמרים)
 
 function clean(text) {
   return sanitizeHtml(text || "", { allowedTags: [], allowedAttributes: {} }).trim();
 }
 
-// GET /holidays - FR-029: עמוד ציבורי, כולל לאורחים - המועד המובלט למעלה + ארכיון שאר המועדים
+// gregorianDate הוא שדה אופציונלי בפורמט "YYYY-MM-DD" בלבד (כמו ש-<input type="date"> שולח) - אחרת מתעלמים ממנו
+function cleanGregorianDate(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value || "") ? value : "";
+}
+
+// GET /holidays - FR-029: עמוד ציבורי, כולל לאורחים - לוח שנה ויזואלי + המועד המובלט + ארכיון שאר המועדים
 async function listHolidays(req, res) {
   const all = await Holiday.listAll();
   const featured = all.find((h) => h.isFeatured) || null;
   const archive = all.filter((h) => !featured || h.id !== featured.id);
-  res.render("holidays/index", { featured, archive });
+  const calendarMonths = buildYearGrid(all, new Date(), 12); // 12 חודשים קדימה מהיום, ראו server/utils/calendarGrid.js
+  res.render("holidays/index", { featured, archive, calendarMonths });
 }
 
 // GET /holidays/:id - צפייה במאמר בודד, כולל קישור לקבוצת ה"ועד" הרלוונטי אם הוגדר
@@ -36,7 +43,7 @@ async function newHolidayForm(req, res) {
 
 // POST /holidays - FR-028: יצירת מאמר חג (אדמין בלבד - BR-012)
 async function createHoliday(req, res) {
-  const { holidayName, dateHint, whatWeDo, whatWePray, customs, linkedGroupId, order, isFeatured } = req.body;
+  const { holidayName, dateHint, whatWeDo, whatWePray, customs, linkedGroupId, order, isFeatured, gregorianDate } = req.body;
   if (!holidayName || !holidayName.trim()) {
     const groups = await Group.listAll();
     return res.render("holidays/new", { groups, error: "יש להזין שם חג" });
@@ -48,6 +55,7 @@ async function createHoliday(req, res) {
     whatWePray: clean(whatWePray),
     customs: clean(customs),
     linkedGroupId: linkedGroupId || "",
+    gregorianDate: cleanGregorianDate(gregorianDate),
     order,
     isFeatured: isFeatured === "on",
     authorId: req.session.userId,
@@ -68,7 +76,7 @@ async function editHolidayForm(req, res, next) {
 
 // POST /holidays/:id - עדכון מאמר קיים (אדמין בלבד)
 async function updateHoliday(req, res) {
-  const { holidayName, dateHint, whatWeDo, whatWePray, customs, linkedGroupId, order, isFeatured } = req.body;
+  const { holidayName, dateHint, whatWeDo, whatWePray, customs, linkedGroupId, order, isFeatured, gregorianDate } = req.body;
   if (!holidayName || !holidayName.trim()) {
     const holiday = await Holiday.findById(req.params.id);
     const groups = await Group.listAll();
@@ -81,6 +89,7 @@ async function updateHoliday(req, res) {
     whatWePray: clean(whatWePray),
     customs: clean(customs),
     linkedGroupId: linkedGroupId || "",
+    gregorianDate: cleanGregorianDate(gregorianDate),
     order,
     isFeatured: isFeatured === "on",
   });
