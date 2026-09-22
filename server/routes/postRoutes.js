@@ -10,6 +10,7 @@ const { uploadVideo, uploadImages } = require("../middleware/upload");
 
 router.get("/posts/search", postController.searchPosts); // FR-012
 router.get("/feed", isAuthenticated, postController.myFeed); // FR-017 - פיד אישי
+router.get("/api/videos/library", isAuthenticated, postController.videoLibrary); // דרישה 26 - נתונים למרכיב React "הספרייה שלי"
 
 router.get("/posts/:id/edit", isAuthenticated, canModifyPost, postController.showEditPostForm); // FR-014
 router.put("/posts/:id", isAuthenticated, canModifyPost, postController.updatePost); // FR-014

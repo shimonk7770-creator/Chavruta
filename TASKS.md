@@ -134,9 +134,9 @@ server/public/js/pwaRegister.js, server/public/js/themeToggle.js
 - [x] בדיקות אוטומטיות (`node:test`, מובנה ב-Node - לא דורש ספריית בדיקות נוספת) - הרצה: `npm test`. מכסה ולידציית הרשמה (BR-001/002/003, `server/test/validators.test.js`) ולוגיקת הרשאות (AC-002/AC-003, `server/test/permissionRules.test.js`). לצורך כך חולצה לוגיקה טהורה (`server/utils/validators.js`, `server/utils/permissionRules.js`) מתוך authController.js ו-middleware/permissions.js, כדי שאפשר לבדוק אותה בלי חיבור אמיתי ל-Firestore.
 
 ### עדיין בתהליך
-- [ ] פעמון התראות בזמן אמת (Socket.io) - הודעה/תגובה חדשה (מתוכנן לסבב הבא)
-- [ ] כלי AI מובנה - שאלות לפי תוכן הקבוצה/פוסט + סיכום אוטומטי של שיעור (ממתין לבחירת ספק AI ומפתח API מהמשתמש)
-- [ ] רכיב React עם `<video>` אמיתי (לא רק Canvas) - ראו "בדיקת התאמה לדרישות הטכניות" למטה
+- [ ] פעמון התראות בזמן אמת (Socket.io) - הודעה/תגובה חדשה (בעבודה כעת)
+- [ ] כלי AI מובנה - שאלות לפי תוכן הקבוצה/פוסט + סיכום אוטומטי של שיעור (Gemini API, ממתין למפתח מהמשתמש)
+- [x] רכיב React עם `<video>` אמיתי - **הושלם**, ראו סעיף 26 ב"בדיקת התאמה לדרישות הטכניות" למטה
 
 ## שבוע 5 - מעגל השנה, הרשאות, לוח בקרה, בדיקה להגנה
 
@@ -175,7 +175,7 @@ server/test/validators.test.js, server/test/permissionRules.test.js, server/util
 - [x] 23. נתוני seed ריאליסטיים (8 משתמשים, 3 קבוצות, 5 פוסטים, 5 תגובות, 4 מאמרי חג)
 - [x] 24. טיפול בשגיאות ומקרי קצה בצד לקוח ושרת, בלי קריסת שרת
 - [x] 25. שימוש נרחב ב-jQuery/Ajax (תגובות, בדיקת שם משתמש, ולידציית סיסמאות)
-- [~] 26. React + Video + Canvas - **Canvas ✓** (heatmap מעקב לימוד ב-`/study-room`), **Video עדיין לא ✓** בתוך רכיב React (הווידאו בפוסטים הוא HTML5 רגיל דרך EJS, לא React) - **פער פתוח, מתוכנן לסבב הבא**
+- [x] 26. React + Video + Canvas - **Canvas ✓** (heatmap מעקב לימוד ב-`/study-room`) **+ Video ✓** (עודכן) - רכיב React חדש "הספרייה שלי" באותו עמוד, מציג את כל קטעי הוידאו שצורפו לפוסטים באתר (`GET /api/videos/library`) בנגן שכל השליטה בו (נגינה/השהיה/דילוג/עוצמת קול/מהירות) מנוהלת לגמרי ב-React (`useState`+`useRef`), לא `<video controls>` רגיל של הדפדפן כמו בעמוד הקבוצה - זה מה שסוגר את הפער בפועל
 - [x] 27. CSS3 - text-shadow, transition, **multiple-columns** (כעת בשימוש בפועל בארכיון מעגל השנה), font-face, border-radius - כולם ממומשים ובשימוש
 - [x] 28. צ'אט עם Socket.io
 - [x] 29. המערכת מציגה נתונים סטטיסטיים בלפחות 2 גרפים דינמיים (D3.js), מבוססים על נתוני DB בזמן אמת - קיים כבר: FR-025 (פוסטים לפי קבוצה) ו-FR-026 (מגמת לימוד קהילתית 30 יום), שניהם ב-`/study-room` ומרוכזים שוב ב-`/admin/dashboard`, שואבים ישירות מ-Firestore בכל טעינה (`/api/stats/*`)

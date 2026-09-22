@@ -130,4 +130,23 @@ async function myFeed(req, res) {
   res.render("posts/feed", { posts, total, page, pageSize });
 }
 
-module.exports = { createPost, showEditPostForm, updatePost, uploadVideo, uploadImages, deletePost, searchPosts, myFeed };
+// GET /api/videos/library - דרישה 26: רשימת קטעי הוידאו שצורפו לפוסטים באתר, עבור מרכיב ה-React
+// "הספרייה שלי" ב-/study-room (server/public/js/studyRoom.js) - שם הם מנוגנים דרך נגן שנשלט כולו ע"י React,
+// לא <video controls> רגיל דרך EJS כמו בעמוד הקבוצה - כדי לסגור בפועל את הפער "React+Video" בדרישות הקורס.
+async function videoLibrary(req, res, next) {
+  try {
+    const posts = await Post.listWithVideo({ limit: 20 });
+    const videos = posts.map((p) => ({
+      id: p.id,
+      title: p.title,
+      videoUrl: p.videoUrl,
+      groupName: p.groupName,
+      authorName: p.authorName,
+    }));
+    res.json({ success: true, videos });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { createPost, showEditPostForm, updatePost, uploadVideo, uploadImages, deletePost, searchPosts, myFeed, videoLibrary };

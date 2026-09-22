@@ -97,6 +97,146 @@ function LearningHeatmap() {
   );
 }
 
-// "הרכבת" (mount) קומפוננטת ה-React לתוך ה-div שהוכן ב-studyRoom.ejs
+// ============================================================================
+// דרישה 26 (React + Video + Canvas): נגן וידאו שנשלט כולו ע"י React - "הספרייה שלי"
+// שונה במהותו מהוידאו שמוטמע בפוסטים דרך EJS (שם זה <video controls> רגיל של הדפדפן) -
+// כאן ה-state, הכפתורים וההתקדמות מנוהלים ב-React (useState+useRef), וה-<video> עצמו
+// בלי controls מובנים כלל - זה מה שסוגר את הפער בין "יש קובץ וידאו באתר" ל"רכיב React עם Video".
+// ============================================================================
+function VideoLibrary() {
+  const [videos, setVideos] = useState(null);
+  const [error, setError] = useState(null);
+  const [selected, setSelected] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [muted, setMuted] = useState(false);
+  const [rate, setRate] = useState(1);
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    fetch("/api/videos/library")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setVideos(data.videos);
+        else setError("שגיאה בטעינת ספריית הוידאו");
+      })
+      .catch(() => setError("שגיאה בתקשורת עם השרת"));
+  }, []);
+
+  // כל פעם שעוברים לסרטון אחר - מאפסים את מצב הנגינה ומתחילים מהתחלה
+  useEffect(() => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+  }, [selected]);
+
+  function togglePlay() {
+    const el = videoRef.current;
+    if (!el) return;
+    if (el.paused) {
+      el.play();
+      setIsPlaying(true);
+    } else {
+      el.pause();
+      setIsPlaying(false);
+    }
+  }
+
+  function onSeek(e) {
+    const el = videoRef.current;
+    if (!el) return;
+    el.currentTime = Number(e.target.value);
+    setCurrentTime(Number(e.target.value));
+  }
+
+  function toggleMute() {
+    const el = videoRef.current;
+    if (!el) return;
+    el.muted = !el.muted;
+    setMuted(el.muted);
+  }
+
+  function changeRate(newRate) {
+    const el = videoRef.current;
+    if (!el) return;
+    el.playbackRate = newRate;
+    setRate(newRate);
+  }
+
+  function formatTime(sec) {
+    if (!Number.isFinite(sec)) return "0:00";
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  }
+
+  if (error) return <p className="error-message">{error}</p>;
+  if (!videos) return <p>טוען ספריית וידאו...</p>;
+  if (!videos.length) return <p className="meta">עדיין לא צורפו קטעי וידאו לפוסטים באתר.</p>;
+
+  const current = videos[selected];
+
+  return (
+    <div className="video-library">
+      <div className="video-library-list">
+        {videos.map((v, i) => (
+          <button
+            key={v.id}
+            type="button"
+            className={"video-library-item" + (i === selected ? " active" : "")}
+            onClick={() => setSelected(i)}
+          >
+            {v.title}
+            <span className="meta"> · {v.groupName}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="video-player-shell">
+        {/* בלי controls מובנה בכוונה - כל השליטה למטה מנוהלת ע"י React */}
+        <video
+          key={current.id}
+          ref={videoRef}
+          src={current.videoUrl}
+          className="video-player-el"
+          onTimeUpdate={(e) => setCurrentTime(e.target.currentTime)}
+          onLoadedMetadata={(e) => setDuration(e.target.duration)}
+          onEnded={() => setIsPlaying(false)}
+        ></video>
+
+        <div className="video-player-controls">
+          <button type="button" className="btn btn-secondary" onClick={togglePlay}>
+            {isPlaying ? "⏸ השהיה" : "▶ נגינה"}
+          </button>
+          <span className="meta">{formatTime(currentTime)} / {formatTime(duration)}</span>
+          <input
+            type="range"
+            min="0"
+            max={duration || 0}
+            step="0.1"
+            value={currentTime}
+            onChange={onSeek}
+            className="video-seek"
+          />
+          <button type="button" className="btn btn-secondary" onClick={toggleMute}>
+            {muted ? "🔇" : "🔊"}
+          </button>
+          <select value={rate} onChange={(e) => changeRate(Number(e.target.value))}>
+            <option value="0.75">0.75x</option>
+            <option value="1">1x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+          </select>
+        </div>
+        <p className="meta">מתוך: {current.title} ({current.authorName})</p>
+      </div>
+    </div>
+  );
+}
+
+// "הרכבת" (mount) קומפוננטות ה-React לתוך ה-div-ים שהוכנו ב-studyRoom.ejs
 const root = ReactDOM.createRoot(document.getElementById("study-room-root"));
 root.render(<LearningHeatmap />);
+
+const videoRoot = ReactDOM.createRoot(document.getElementById("video-library-root"));
+videoRoot.render(<VideoLibrary />);

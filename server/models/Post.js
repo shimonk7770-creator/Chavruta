@@ -139,6 +139,16 @@ async function archiveByGroup(groupId) {
   return snaps.docs.map((d) => d.id);
 }
 
+// דרישה 26 (React+Video+Canvas): כל הפוסטים הפעילים עם קובץ וידאו מצורף (BR-008) - למרכיב React
+// "הספרייה שלי" ב-/study-room (server/public/js/studyRoom.js). סינון videoUrl נעשה בזיכרון השרת,
+// באותה גישה בדיוק כמו FR-012 (חיפוש פוסטים) - כי Firestore לא תומך בנוחות בסינון "לא ריק" משולב עם where נוסף.
+async function listWithVideo({ limit = 20 } = {}) {
+  const db = getDb();
+  const snaps = await db.collection(COLLECTION).where("isArchived", "==", false).get();
+  const withVideo = snaps.docs.map(toPost).filter((p) => !!p.videoUrl);
+  return sortByCreatedAtDesc(withVideo).slice(0, limit);
+}
+
 // FR-025: כמות פוסטים פעילים לכל קבוצה - aggregation בזיכרון השרת, כי ל-Firestore אין $group מובנה
 // (משמש את גרף העמודות "פעילות לפי קבוצה" ב-/study-room, ראו statsController.js)
 async function countActiveByGroup() {
@@ -163,4 +173,5 @@ module.exports = {
   remove,
   archiveByGroup,
   countActiveByGroup,
+  listWithVideo,
 };

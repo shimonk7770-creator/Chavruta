@@ -848,3 +848,57 @@ button:hover {
   outline: 2px solid var(--color-secondary-dark);
   outline-offset: -2px;
 }
+
+/* ===== "הספרייה שלי" - נגן וידאו הנשלט ע"י React ב-/study-room (דרישה 26) ===== */
+.video-library {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 16px;
+}
+@media (max-width: 640px) {
+  .video-library {
+    grid-template-columns: 1fr;
+  }
+}
+.video-library-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.video-library-item {
+  text-align: right;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.video-library-item:hover {
+  border-color: var(--color-primary);
+}
+.video-library-item.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.video-player-el {
+  width: 100%;
+  max-height: 360px;
+  border-radius: var(--radius);
+  background: #000;
+}
+.video-player-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.video-seek {
+  flex: 1;
+  min-width: 120px;
+}
