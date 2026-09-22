@@ -60,6 +60,15 @@
         </a>
       <% } %>
 
+      <!-- ===== פעמון התראות בזמן אמת (Socket.io) - הודעת צ'אט/תגובה חדשה - server/public/js/notifications.js ===== -->
+      <div class="notif-wrap">
+        <button type="button" id="notif-bell-btn" class="nav-pill" aria-label="התראות">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span id="notif-badge" class="notif-badge" style="display:none">0</span>
+        </button>
+        <div id="notif-dropdown" class="notif-dropdown" style="display:none"></div>
+      </div>
+
       <!-- קו מפריד - מבדיל ויזואלית בין קטגוריות תוכן (בית/קבוצות/חיפוש/לימוד) לבין קטגוריית החשבון -->
       <span class="nav-divider"></span>
 
@@ -98,3 +107,8 @@
 </header>
 
 <script src="/js/themeToggle.js"></script>
+<% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
+  <!-- פעמון ההתראות דורש Socket.io - נטען רק למשתמש מחובר, בכל עמוד באתר (לא רק בעמוד הצ'אט) -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/notifications.js"></script>
+<% } %>

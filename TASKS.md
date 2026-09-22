@@ -134,7 +134,12 @@ server/public/js/pwaRegister.js, server/public/js/themeToggle.js
 - [x] בדיקות אוטומטיות (`node:test`, מובנה ב-Node - לא דורש ספריית בדיקות נוספת) - הרצה: `npm test`. מכסה ולידציית הרשמה (BR-001/002/003, `server/test/validators.test.js`) ולוגיקת הרשאות (AC-002/AC-003, `server/test/permissionRules.test.js`). לצורך כך חולצה לוגיקה טהורה (`server/utils/validators.js`, `server/utils/permissionRules.js`) מתוך authController.js ו-middleware/permissions.js, כדי שאפשר לבדוק אותה בלי חיבור אמיתי ל-Firestore.
 
 ### עדיין בתהליך
-- [ ] פעמון התראות בזמן אמת (Socket.io) - הודעה/תגובה חדשה (בעבודה כעת)
+- [x] פעמון התראות בזמן אמת (Socket.io) - **הושלם**. פעמון בתפריט העליון בכל עמוד (למשתמש מחובר בלבד) -
+      מקבל התראה חיה על הודעת צ'אט חדשה בקבוצה (חוץ ממי שכבר צופה בצ'אט עצמו כרגע) ועל תגובה חדשה על הפוסט שלך.
+      `server/models/Notification.js` (collection "notifications"), `server/sockets/ioInstance.js` (חשיפת ה-io
+      instance ל-commentController.js), `server/utils/notificationRecipients.js` (פונקציה טהורה + 5 בדיקות
+      `node:test` - למי לשלוח התראה ולמי לא), `GET/POST /api/notifications*`, `server/public/js/notifications.js`.
+      כל socket שנפתח באתר מצטרף אוטומטית ל-room אישי (`user:<id>`) כדי שאפשר יהיה לשדר אליו מכל עמוד, לא רק מהצ'אט.
 - [ ] כלי AI מובנה - שאלות לפי תוכן הקבוצה/פוסט + סיכום אוטומטי של שיעור (Gemini API, ממתין למפתח מהמשתמש)
 - [x] רכיב React עם `<video>` אמיתי - **הושלם**, ראו סעיף 26 ב"בדיקת התאמה לדרישות הטכניות" למטה
 
@@ -158,7 +163,9 @@ server/models/Holiday.js, server/controllers/holidayController.js, server/routes
 server/views/holidays/{index,show,new,edit}.ejs, server/controllers/searchController.js, server/views/search.ejs,
 server/controllers/adminController.js, server/routes/adminRoutes.js, server/views/admin/dashboard.ejs,
 server/views/permissions.ejs, server/scripts/makeAdmin.js, server/utils/validators.js, server/utils/permissionRules.js,
-server/test/validators.test.js, server/test/permissionRules.test.js, server/utils/calendarGrid.js, server/test/calendarGrid.test.js
+server/test/validators.test.js, server/test/permissionRules.test.js, server/utils/calendarGrid.js, server/test/calendarGrid.test.js,
+server/models/Notification.js, server/sockets/ioInstance.js, server/controllers/notificationController.js, server/routes/notificationRoutes.js,
+server/public/js/notifications.js, server/utils/notificationRecipients.js, server/test/notificationRecipients.test.js
 
 ## בדיקת התאמה לדרישות הטכניות של הקורס (סעיפים 15-29)
 

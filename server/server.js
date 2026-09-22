@@ -30,6 +30,7 @@ const chatRoutes = require("./routes/chatRoutes"); // שבוע 4 - צ'אט קב�
 const statsRoutes = require("./routes/statsRoutes"); // שבוע 4 - נתוני גרפי D3
 const holidayRoutes = require("./routes/holidayRoutes"); // "מעגל השנה" - FR-028, FR-029
 const adminRoutes = require("./routes/adminRoutes"); // לוח בקרה למנהל מערכת
+const notificationRoutes = require("./routes/notificationRoutes"); // פעמון התראות בזמן אמת
 
 const app = express();
 
@@ -98,6 +99,7 @@ app.use("/", chatRoutes); // שבוע 4
 app.use("/", statsRoutes); // שבוע 4
 app.use("/", holidayRoutes); // מעגל השנה
 app.use("/", adminRoutes); // לוח בקרה למנהל
+app.use("/", notificationRoutes); // פעמון התראות
 
 // טיפול בשגיאות - חייב להיות אחרון (סעיף 8 ב-SRS)
 app.use(notFound);
@@ -109,7 +111,8 @@ const server = http.createServer(app);
 
 const io = new Server(server);
 io.engine.use(sessionMiddleware); // "משתילים" את אותו session גם לתוך כל handshake של Socket.io
-require("./sockets/chatSocket")(io); // רישום כל מאזיני אירועי הצ'אט (join/send/typing/disconnect)
+require("./sockets/ioInstance").setIo(io); // חושף את io גם לקונטרולרים REST רגילים (למשל commentController.js) לצורך התראות
+require("./sockets/chatSocket")(io); // רישום כל מאזיני אירועי הצ'אט (join/send/typing/disconnect) + התראות פעמון
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

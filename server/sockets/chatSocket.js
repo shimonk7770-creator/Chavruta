@@ -5,6 +5,21 @@
 
 const Group = require("../models/Group");
 const Message = require("../models/Message");
+const Notification = require("../models/Notification"); // התראות פעמון בזמן אמת
+const { pickNotificationRecipients } = require("../utils/notificationRecipients");
+
+// מי (userId) נמצא כרגע (active) בחדר צ'אט מסוים - נבדק לפי אילו sockets מחוברים ל-room הזה כרגע.
+// נעזר בזה כדי לא "להציף" בהתראת פעמון מישהו שכבר צופה בהודעה החדשה בזמן אמת בתוך הצ'אט עצמו.
+function getUserIdsInRoom(io, roomId) {
+  const socketIds = io.sockets.adapter.rooms.get(roomId) || new Set();
+  const userIds = new Set();
+  socketIds.forEach((id) => {
+    const s = io.sockets.sockets.get(id);
+    const uid = s && s.request && s.request.session && s.request.session.userId;
+    if (uid) userIds.add(uid);
+  });
+  return userIds;
+}
 
 module.exports = function initChatSocket(io) {
   io.on("connection", (socket) => {
@@ -18,6 +33,11 @@ module.exports = function initChatSocket(io) {
 
     const userId = session.userId;
     const userName = session.userName;
+
+    // "חדר" אישי לפי משתמש (לא לפי קבוצה) - זה מה שמאפשר לשדר לו התראת פעמון מכל עמוד באתר,
+    // לא רק כשהוא בתוך חדר צ'אט ספציפי. כל socket שנפתח באתר (גם דרך notifications.js, לא רק chat.js)
+    // עובר דרך אותו io.on("connection") הזה ולכן מצטרף אוטומטית ל-room האישי שלו.
+    socket.join("user:" + userId);
 
     // FR-021: הצטרפות ל"חדר" הצ'אט של קבוצה מסוימת - כל קבוצה היא room נפרד לפי groupId,
     // כך שהודעות משודרות רק לחברי אותה קבוצה, לא לכל המחוברים לאתר
@@ -58,6 +78,21 @@ module.exports = function initChatSocket(io) {
         });
 
         io.to(groupId).emit("chat:message", message);
+
+        // התראת פעמון: לכל חברי הקבוצה חוץ מהשולח וחוץ ממי שכבר נמצא (active) בחדר הצ'אט הזה כרגע
+        const activeUserIds = getUserIdsInRoom(io, groupId);
+        const recipients = pickNotificationRecipients(group.members, userId, activeUserIds);
+        await Promise.all(
+          recipients.map(async (recipientId) => {
+            const notif = await Notification.create({
+              userId: recipientId,
+              type: "message",
+              text: `${userName} שלח הודעה חדשה בקבוצת "${group.name}"`,
+              link: `/groups/${groupId}/chat`,
+            });
+            io.to("user:" + recipientId).emit("notification:new", notif);
+          })
+        );
       } catch (error) {
         console.error("שגיאה בשליחת הודעת צ'אט:", error.message);
         socket.emit("chat:error", error.message || "שגיאה בשליחת ההודעה");

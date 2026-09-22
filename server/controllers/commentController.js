@@ -6,6 +6,8 @@
 const sanitizeHtml = require("sanitize-html");
 const Comment = require("../models/Comment");
 const Post = require("../models/Post");
+const Notification = require("../models/Notification"); // התראת פעמון לבעל הפוסט על תגובה חדשה
+const { getIo } = require("../sockets/ioInstance");
 
 // ניקוי HTML/סקריפטים מתוכן תגובה (הגנה מפני XSS - NFR-006)
 function sanitizeContent(text) {
@@ -31,6 +33,18 @@ async function addComment(req, res) {
       authorName: req.session.userName,
       content,
     });
+
+    // התראת פעמון בזמן אמת לבעל הפוסט - רק אם מישהו אחר הגיב (לא על התגובה של עצמך)
+    if (post.authorId && post.authorId !== req.session.userId) {
+      const notif = await Notification.create({
+        userId: post.authorId,
+        type: "comment",
+        text: `${req.session.userName} הגיב/ה על הפוסט שלך "${post.title}"`,
+        link: `/groups/${post.groupId}`,
+      });
+      const io = getIo();
+      if (io) io.to("user:" + post.authorId).emit("notification:new", notif);
+    }
 
     res.json({ success: true, comment });
   } catch (error) {
