@@ -6,6 +6,7 @@ const Group = require("../models/Group");
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
 const LearningLog = require("../models/LearningLog");
+const { canModifyContent } = require("../utils/permissionRules"); // לוגיקה טהורה, נבדקת אוטומטית ב-server/test/permissionRules.test.js
 
 // בודק שהמשתמש המחובר הוא המנהל של הקבוצה הספציפית הזו (לא סתם "מנהל" באופן כללי)
 async function isGroupManagerOf(req, res, next) {
@@ -31,17 +32,16 @@ async function canModifyPost(req, res, next) {
     res.status(404);
     return next(new Error("הפוסט לא נמצא"));
   }
-  const isOwner = post.authorId === req.session.userId;
-  const isAdmin = req.session.userRole === "admin";
-
-  if (!isOwner && !isAdmin) {
-    // אם זה לא הבעלים - בודקים אם מדובר במנהל הקבוצה הספציפית שהפוסט שייך אליה
-    const group = await Group.findById(post.groupId);
-    const isManagerOfThisGroup = group && group.managerId === req.session.userId;
-    if (!isManagerOfThisGroup) {
-      res.status(403);
-      return next(new Error("אין לך הרשאה לערוך/למחוק פוסט זה"));
-    }
+  const group = await Group.findById(post.groupId);
+  const allowed = canModifyContent({
+    userId: req.session.userId,
+    userRole: req.session.userRole,
+    ownerId: post.authorId,
+    groupManagerId: group && group.managerId,
+  });
+  if (!allowed) {
+    res.status(403);
+    return next(new Error("אין לך הרשאה לערוך/למחוק פוסט זה"));
   }
   req.post = post;
   next();
@@ -53,16 +53,16 @@ async function canModifyComment(req, res, next) {
   if (!comment) {
     return res.status(404).json({ success: false, message: "התגובה לא נמצאה" });
   }
-  const isOwner = comment.authorId === req.session.userId;
-  const isAdmin = req.session.userRole === "admin";
-
-  if (!isOwner && !isAdmin) {
-    const post = await Post.findById(comment.postId);
-    const group = post && (await Group.findById(post.groupId));
-    const isManagerOfThisGroup = group && group.managerId === req.session.userId;
-    if (!isManagerOfThisGroup) {
-      return res.status(403).json({ success: false, message: "אין לך הרשאה למחוק תגובה זו" });
-    }
+  const post = await Post.findById(comment.postId);
+  const group = post && (await Group.findById(post.groupId));
+  const allowed = canModifyContent({
+    userId: req.session.userId,
+    userRole: req.session.userRole,
+    ownerId: comment.authorId,
+    groupManagerId: group && group.managerId,
+  });
+  if (!allowed) {
+    return res.status(403).json({ success: false, message: "אין לך הרשאה למחוק תגובה זו" });
   }
   req.comment = comment;
   next();
@@ -83,4 +83,13 @@ async function canModifyLearningLog(req, res, next) {
   next();
 }
 
-module.exports = { isGroupManagerOf, canModifyPost, canModifyComment, canModifyLearningLog };
+// בודק שהמשתמש הוא מנהל מערכת (role === "admin") - למשל לניהול תוכן "מעגל השנה" (BR-012)
+function isAdminUser(req, res, next) {
+  if (!req.session || req.session.userRole !== "admin") {
+    res.status(403);
+    return next(new Error("פעולה זו מותרת למנהל מערכת בלבד"));
+  }
+  next();
+}
+
+module.exports = { isGroupManagerOf, canModifyPost, canModifyComment, canModifyLearningLog, isAdminUser };

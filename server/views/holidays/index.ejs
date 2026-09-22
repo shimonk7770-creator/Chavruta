@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!-- server/views/holidays/index.ejs - עמוד "מעגל השנה" (FR-029) - ציבורי, כולל לאורחים -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <h1>מעגל השנה</h1>
+    <p class="meta">מאמרים קצרים על מועדי ומנהגי השנה העברית - מה עושים, מה מתפללים ומה המנהגים העיקריים בכל חג.</p>
+
+    <% if (isLoggedIn && userRole === 'admin') { %>
+      <p><a class="btn btn-primary" href="/holidays/new">+ הוספת מאמר חג</a></p>
+    <% } %>
+
+    <% if (featured) { %>
+      <!-- המועד הקרוב מוצג בהבלטה - מסומן ידנית ע"י האדמין (Holiday.isFeatured), ללא חישוב אסטרונומי (מחוץ להיקף) -->
+      <section class="card holiday-featured">
+        <span class="role-badge">המועד הקרוב</span>
+        <h2><a href="/holidays/<%= featured.id %>"><%= featured.holidayName %></a></h2>
+        <% if (featured.dateHint) { %><p class="meta"><%= featured.dateHint %></p><% } %>
+        <% if (featured.whatWeDo) { %><p><%= featured.whatWeDo %></p><% } %>
+        <p><a href="/holidays/<%= featured.id %>">לקריאה מלאה ←</a></p>
+      </section>
+    <% } %>
+
+    <h2>ארכיון מועדים</h2>
+    <% if (!archive.length) { %>
+      <p class="meta">עדיין אין מועדים נוספים בארכיון.</p>
+    <% } else { %>
+      <!-- דרישה 27.iii - multiple-columns: ארכיון המועדים מוצג בפריסת עמודות מרובות -->
+      <div class="digest-columns">
+        <% archive.forEach(function (h) { %>
+          <div class="card holiday-card">
+            <h3><a href="/holidays/<%= h.id %>"><%= h.holidayName %></a></h3>
+            <% if (h.dateHint) { %><p class="meta"><%= h.dateHint %></p><% } %>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </main>
+</body>
+</html>

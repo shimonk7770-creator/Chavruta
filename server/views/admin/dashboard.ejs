@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!-- server/views/admin/dashboard.ejs - לוח בקרה למנהל מערכת: כל הסטטיסטיקות במקום אחד -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <h1>לוח בקרה</h1>
+    <p class="meta">תמונת מצב חיה של המערכת - כל המספרים נשלפים ישירות מ-Firestore בכל טעינת עמוד.</p>
+
+    <!-- כרטיסי סטטיסטיקה מהירים -->
+    <section class="stats-grid">
+      <div class="card stat-tile"><span class="stat-number"><%= totals.users %></span><span class="meta">משתמשים</span></div>
+      <div class="card stat-tile"><span class="stat-number"><%= totals.groups %></span><span class="meta">קבוצות</span></div>
+      <div class="card stat-tile"><span class="stat-number"><%= totals.posts %></span><span class="meta">פוסטים פעילים</span></div>
+      <div class="card stat-tile"><span class="stat-number"><%= totals.comments %></span><span class="meta">תגובות</span></div>
+      <div class="card stat-tile"><span class="stat-number"><%= totals.messages %></span><span class="meta">הודעות צ'אט</span></div>
+      <div class="card stat-tile"><span class="stat-number"><%= totals.holidays %></span><span class="meta">מאמרי מעגל השנה</span></div>
+    </section>
+
+    <h2>התפלגות משתמשים לפי הרשאה</h2>
+    <section class="stats-grid">
+      <div class="card stat-tile"><span class="stat-number"><%= roleCounts.member || 0 %></span><span class="meta">חברי קהילה</span></div>
+      <div class="card stat-tile"><span class="stat-number"><%= roleCounts.manager || 0 %></span><span class="meta">מנהלי קבוצה</span></div>
+      <div class="card stat-tile"><span class="stat-number"><%= roleCounts.admin || 0 %></span><span class="meta">מנהלי מערכת</span></div>
+      <div class="card stat-tile"><span class="stat-number"><%= lockedCount %></span><span class="meta">חשבונות נעולים כרגע</span></div>
+      <div class="card stat-tile"><span class="stat-number"><%= inactiveCount %></span><span class="meta">חשבונות מחוקים (soft-delete)</span></div>
+    </section>
+
+    <h2>גרפים חיים</h2>
+    <div class="stats-grid">
+      <div class="card">
+        <h3>פעילות לפי קבוצה</h3>
+        <div id="chart-posts-per-group" class="chart-container"></div>
+      </div>
+      <div class="card">
+        <h3>מגמת לימוד קהילתית (30 יום אחרונים)</h3>
+        <div id="chart-learning-trend" class="chart-container"></div>
+      </div>
+    </div>
+
+    <h2>ניהול תוכן</h2>
+    <p><a href="/holidays/new">+ הוספת מאמר "מעגל השנה"</a> &middot; <a href="/groups/new">+ יצירת קבוצה חדשה</a></p>
+  </main>
+
+  <script src="/js/statsCharts.js"></script>
+</body>
+</html>

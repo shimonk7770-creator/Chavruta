@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<!-- server/views/holidays/new.ejs - טופס יצירת מאמר חג חדש (FR-028, אדמין בלבד) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/header') %>
+  <main class="container">
+    <h1>מאמר חג חדש</h1>
+    <% if (error) { %><p class="error-message"><%= error %></p><% } %>
+
+    <form action="/holidays" method="POST" class="auth-form">
+      <label for="holidayName">שם החג</label>
+      <input type="text" id="holidayName" name="holidayName" required maxlength="80" />
+
+      <label for="dateHint">תיאור המועד (לא תאריך מחושב, למשל "תשרי, עשרה ימים אחרי ראש השנה")</label>
+      <input type="text" id="dateHint" name="dateHint" maxlength="150" />
+
+      <label for="whatWeDo">מה עושים</label>
+      <textarea id="whatWeDo" name="whatWeDo" maxlength="2000"></textarea>
+
+      <label for="whatWePray">מה מתפללים</label>
+      <textarea id="whatWePray" name="whatWePray" maxlength="2000"></textarea>
+
+      <label for="customs">מנהגים עיקריים</label>
+      <textarea id="customs" name="customs" maxlength="2000"></textarea>
+
+      <label for="linkedGroupId">קבוצת "ועד" קשורה (אופציונלי)</label>
+      <select id="linkedGroupId" name="linkedGroupId">
+        <option value="">ללא</option>
+        <% groups.forEach(function (g) { %>
+          <option value="<%= g.id %>"><%= g.name %></option>
+        <% }) %>
+      </select>
+
+      <label for="order">סדר תצוגה בארכיון (מספר - קטן יותר מוצג קודם)</label>
+      <input type="number" id="order" name="order" value="0" />
+
+      <label>
+        <input type="checkbox" name="isFeatured" /> הצג כ"מועד הקרוב" בהבלטה בראש העמוד
+      </label>
+
+      <button type="submit">שמירה</button>
+    </form>
+    <p><a href="/holidays">ביטול וחזרה</a></p>
+  </main>
+</body>
+</html>

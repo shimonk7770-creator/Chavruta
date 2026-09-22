@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!-- server/views/search.ejs - חיפוש גלובלי אחד שמחפש גם בקבוצות וגם בפוסטים -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main class="container">
+    <h1>חיפוש</h1>
+    <form action="/search" method="GET" class="search-form">
+      <input type="text" name="q" placeholder="חפש קבוצה, שיעור, דבר תורה..." value="<%= q %>" autofocus />
+      <button type="submit">חיפוש</button>
+    </form>
+    <p class="meta">
+      מחפש שם/כותרת/תוכן חופשי. לחיפוש מתקדם יותר (סינון לפי יום, רמה, קטגוריה או טווח תאריכים) אפשר להשתמש
+      ב<a href="/groups/search">חיפוש קבוצות המתקדם</a> או ב<a href="/posts/search">חיפוש הפוסטים המתקדם</a>.
+    </p>
+
+    <% if (!q) { %>
+      <p class="meta">הזן מילת חיפוש כדי להתחיל.</p>
+    <% } else { %>
+      <h2>קבוצות ושיעורים (<%= groups.length %>)</h2>
+      <% if (!groups.length) { %>
+        <p class="meta">לא נמצאו קבוצות התואמות את "<%= q %>".</p>
+      <% } else { %>
+        <div class="feature-grid">
+          <% groups.forEach(function (g) { %>
+            <a class="card" href="/groups/<%= g.id %>">
+              <h3><%= g.name %></h3>
+              <p class="meta"><% if (g.topic) { %>נושא: <%= g.topic %><% } %></p>
+            </a>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <h2>פוסטים ודברי תורה (<%= posts.length %>)</h2>
+      <% if (!posts.length) { %>
+        <p class="meta">לא נמצאו פוסטים התואמים את "<%= q %>".</p>
+      <% } else { %>
+        <% posts.forEach(function (p) { %>
+          <div class="card">
+            <h3><%= p.title %></h3>
+            <p class="meta"><%= p.authorName %> | <%= p.groupName %></p>
+          </div>
+        <% }) %>
+      <% } %>
+    <% } %>
+  </main>
+</body>
+</html>

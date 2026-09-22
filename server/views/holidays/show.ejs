@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!-- server/views/holidays/show.ejs - צפייה במאמר חג בודד (FR-029) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <h1><%= holiday.holidayName %></h1>
+    <% if (holiday.dateHint) { %><p class="meta"><%= holiday.dateHint %></p><% } %>
+
+    <% if (holiday.whatWeDo) { %>
+      <section class="card">
+        <h2>מה עושים</h2>
+        <p><%= holiday.whatWeDo %></p>
+      </section>
+    <% } %>
+    <% if (holiday.whatWePray) { %>
+      <section class="card">
+        <h2>מה מתפללים</h2>
+        <p><%= holiday.whatWePray %></p>
+      </section>
+    <% } %>
+    <% if (holiday.customs) { %>
+      <section class="card">
+        <h2>מנהגים עיקריים</h2>
+        <p><%= holiday.customs %></p>
+      </section>
+    <% } %>
+
+    <% if (linkedGroup) { %>
+      <p><a class="btn btn-secondary" href="/groups/<%= linkedGroup.id %>">לקבוצת ה"<%= linkedGroup.name %>" הקהילתית ←</a></p>
+    <% } %>
+
+    <% if (isLoggedIn && userRole === 'admin') { %>
+      <p class="meta">
+        <a href="/holidays/<%= holiday.id %>/edit">עריכה</a>
+        &middot;
+        <form action="/holidays/<%= holiday.id %>/delete" method="POST" style="display:inline" onsubmit="return confirm('למחוק את המאמר?')">
+          <button type="submit" class="btn-link">מחיקה</button>
+        </form>
+      </p>
+    <% } %>
+
+    <p><a href="/holidays">חזרה למעגל השנה</a></p>
+  </main>
+</body>
+</html>

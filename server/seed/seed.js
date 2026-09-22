@@ -25,7 +25,7 @@ async function seed() {
 
   // ניקוי נתונים קיימים כדי שההרצה תהיה נקייה וללא כפילויות (NFR-012)
   await Promise.all(
-    ["users", "groups", "posts", "comments"].map((col) => clearCollection(db, col))
+    ["users", "groups", "posts", "comments", "holidays"].map((col) => clearCollection(db, col))
   );
 
   const passwordHash = await bcrypt.hash("Password1", 10); // סיסמה אחידה לכל משתמשי הדמו
@@ -180,8 +180,56 @@ async function seed() {
     await db.collection("comments").add({ ...c, isArchived: false, createdAt: now });
   }
 
+  // "מעגל השנה" - FR-028/FR-029: כמה מאמרי חג לדוגמה, אחד מהם מסומן כ"מועד הקרוב" (isFeatured)
+  const holidaysData = [
+    {
+      holidayName: "ראש השנה",
+      dateHint: "א'-ב' תשרי",
+      whatWeDo: "תוקעים בשופר, אוכלים תפוח בדבש וסימנים נוספים לשנה טובה ומתוקה.",
+      whatWePray: "תפילות מיוחדות הכוללות מלכויות, זכרונות ושופרות.",
+      customs: "שולחים ברכות \"שנה טובה\", עורכים תשליך ליד מקור מים.",
+      order: 1,
+      isFeatured: true,
+      authorId: admin,
+    },
+    {
+      holidayName: "יום כיפור",
+      dateHint: "י' תשרי",
+      whatWeDo: "צמים כ-25 שעות, נמנעים מרחיצה ונעילת נעלי עור.",
+      whatWePray: "כל היום בבית הכנסת - כולל כל נדרי, נעילה ותפילת יזכור.",
+      customs: "מבקשים ומעניקים סליחה, לובשים לבן.",
+      order: 2,
+      isFeatured: false,
+      authorId: admin,
+    },
+    {
+      holidayName: "סוכות",
+      dateHint: "ט\"ו-כ\"ב תשרי",
+      whatWeDo: "אוכלים (ולעיתים גם ישנים) בסוכה, נוטלים לולב ואתרוג.",
+      whatWePray: "הלל בכל ימי החג, הקפות עם ארבעת המינים.",
+      customs: "מקשטים את הסוכה, מארחים אושפיזין.",
+      order: 3,
+      isFeatured: false,
+      authorId: admin,
+      linkedGroupId: groupIds.chesed,
+    },
+    {
+      holidayName: "פסח",
+      dateHint: "ט\"ו-כ\"ב ניסן",
+      whatWeDo: "עורכים סדר פסח, אוכלים מצה ונמנעים מחמץ כל החג.",
+      whatWePray: "הלל בליל הסדר, תפילת טל ביום הראשון.",
+      customs: "קוראים את ההגדה, מחפשים חמץ בליל שלפני החג (בדיקת חמץ).",
+      order: 4,
+      isFeatured: false,
+      authorId: admin,
+    },
+  ];
+  for (const h of holidaysData) {
+    await db.collection("holidays").add({ ...h, createdAt: now, updatedAt: now });
+  }
+
   console.log(
-    `נזרעו בהצלחה: ${usersData.length} משתמשים, ${groupsData.length} קבוצות, ${postsData.length} פוסטים, ${commentsData.length} תגובות`
+    `נזרעו בהצלחה: ${usersData.length} משתמשים, ${groupsData.length} קבוצות, ${postsData.length} פוסטים, ${commentsData.length} תגובות, ${holidaysData.length} מאמרי מעגל השנה`
   );
   console.log("סיסמה לכל משתמשי הדמו: Password1");
   process.exit(0);

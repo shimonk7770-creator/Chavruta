@@ -128,20 +128,56 @@ server/public/js/chat.js, server/public/js/statsCharts.js, server/views/groups/c
 server/public/manifest.json, server/public/icons/icon.svg, server/public/service-worker.js,
 server/public/js/pwaRegister.js, server/public/js/themeToggle.js
 
-### עדיין בתהליך (מתוך "תעשה את כל מה שהצעת")
-- [ ] פעמון התראות בזמן אמת (Socket.io) - הודעה/תגובה חדשה
-- [ ] חיפוש חכם/גלובלי אחד שמחפש גם בקבוצות וגם בפוסטים
-- [ ] לוח מחוונים (Dashboard) למנהל מערכת עם כל הסטטיסטיקות
-- [ ] בדיקות אוטומטיות (`node:test`) לפחות עבור הרשמה והרשאות
-- [ ] כלי AI מובנה - שאלות לפי תוכן הקבוצה/פוסט + סיכום אוטומטי של שיעור (דורש מפתח API מהמשתמש - טרם התקבל)
+### הושלם מתוך "תעשה את כל מה שהצעת"
+- [x] חיפוש גלובלי אחד שמחפש גם בקבוצות וגם בפוסטים (`GET /search`, server/controllers/searchController.js) - בנוסף לשני החיפושים הממוקדים הקיימים (FR-011/FR-012) שנשארו זמינים לחיפוש מתקדם
+- [x] לוח בקרה למנהל מערכת (`GET /admin/dashboard`, אדמין בלבד) - כל הספירות (משתמשים/קבוצות/פוסטים/תגובות/הודעות/מאמרי חג) + התפלגות הרשאות + שני גרפי ה-D3 הקיימים מוצגים יחד במקום אחד
+- [x] בדיקות אוטומטיות (`node:test`, מובנה ב-Node - לא דורש ספריית בדיקות נוספת) - הרצה: `npm test`. מכסה ולידציית הרשמה (BR-001/002/003, `server/test/validators.test.js`) ולוגיקת הרשאות (AC-002/AC-003, `server/test/permissionRules.test.js`). לצורך כך חולצה לוגיקה טהורה (`server/utils/validators.js`, `server/utils/permissionRules.js`) מתוך authController.js ו-middleware/permissions.js, כדי שאפשר לבדוק אותה בלי חיבור אמיתי ל-Firestore.
 
-## שבוע 5 - מעגל השנה, בדיקות, הכנה להגנה
+### עדיין בתהליך
+- [ ] פעמון התראות בזמן אמת (Socket.io) - הודעה/תגובה חדשה (מתוכנן לסבב הבא)
+- [ ] כלי AI מובנה - שאלות לפי תוכן הקבוצה/פוסט + סיכום אוטומטי של שיעור (ממתין לבחירת ספק AI ומפתח API מהמשתמש)
+- [ ] רכיב React עם `<video>` אמיתי (לא רק Canvas) - ראו "בדיקת התאמה לדרישות הטכניות" למטה
 
-- [ ] FR-028 יצירת/עריכת מאמר חג (אדמין בלבד)
-- [ ] FR-029 עמוד "מעגל השנה"
+## שבוע 5 - מעגל השנה, הרשאות, לוח בקרה, בדיקה להגנה
+
+- [x] FR-028 יצירת/עריכת מאמר חג (אדמין בלבד, BR-012) - `server/models/Holiday.js`, `server/controllers/holidayController.js`, `server/routes/holidayRoutes.js`
+- [x] FR-029 עמוד "מעגל השנה" (`GET /holidays`, ציבורי כולל אורחים) - מועד מובלט (`isFeatured`, מסומן ידנית - אין חישוב אסטרונומי, מחוץ להיקף) + ארכיון שאר המועדים בפריסת **multiple-columns** (סוגר בפועל את דרישה 27.iii שהייתה מוגדרת ב-CSS אך לא בשימוש באף עמוד)
+- [x] קישור מקבוצת "ועד" רלוונטית ממאמר חג (`linkedGroupId`)
+- [x] נתוני seed למעגל השנה - 4 מאמרים לדוגמה (ראש השנה/יום כיפור/סוכות/פסח), אחד מסומן כמועד הקרוב
+- [x] עמוד `/permissions` - הסבר מלא (טבלה + טקסט) על ארבעת סוגי המשתמשים, כולל "איך הופכים למנהל קבוצה/אדמין" - קישור אליו נוסף גם מכרטיס "מה ההרשאות שלי" בדף הבית
+- [x] סקריפט `server/scripts/makeAdmin.js` (`npm run make-admin -- email@example.com`) - הדרך המיועדת להפוך משתמש קיים לאדמין (לא ניתן "להעניק לעצמך" הרשאת-על דרך האתר, מטעמי אבטחה)
+- [x] סרטון השראה מוטמע (YouTube iframe) בדף הבית, מוצג לכולם כולל אורחים
+- [x] אנימציות נוספות - כניסה הדרגתית (fade-in-up) לכרטיסים בדף הבית, הרמה עדינה (hover lift) על כרטיסים בכל האתר, פעימה עדינה (pulse) על כפתור הקריאה-לפעולה הראשי
 - [ ] בדיקת כל נקודות התורפה בסעיף 12 ל-SRS (הרשאות אמיתיות, שחזור סביבה נקייה, XSS, סודות ב-git, מצבי קצה)
 - [ ] בדיקת כל קריטריוני הקבלה (AC-001..AC-010)
 - [ ] בדיקה על תיקייה/מחשב נקי: git clone + npm install + seed בלבד
+
+### קבצים חדשים שנוספו בשבוע 5
+server/models/Holiday.js, server/controllers/holidayController.js, server/routes/holidayRoutes.js,
+server/views/holidays/{index,show,new,edit}.ejs, server/controllers/searchController.js, server/views/search.ejs,
+server/controllers/adminController.js, server/routes/adminRoutes.js, server/views/admin/dashboard.ejs,
+server/views/permissions.ejs, server/scripts/makeAdmin.js, server/utils/validators.js, server/utils/permissionRules.js,
+server/test/validators.test.js, server/test/permissionRules.test.js
+
+## בדיקת התאמה לדרישות הטכניות של הקורס (סעיפים 15-29)
+
+> הושוו במדויק מול הקוד בפועל (לא רק מול ה-SRS) - ראו את הטבלה המלאה בהודעה ששלח קלוד לשמעון בצ'אט בתאריך 22.09.2026, ותועד כאן לצורכי הגנה.
+
+- [x] 15. Node.js + Express
+- [x] 16. אחסון נתונים - **הוחלף מ-MongoDB ל-Firebase Firestore** באישור מפורש של מרצה הקורס (מתועד ב-SRS גרסה 1.1, סעיף 1.2)
+- [x] 17. ארכיטקטורת MVC - הפרדה מלאה ל-models/controllers/views
+- [x] 18. לפחות 3 מודלים - יש 7: User, Group, Post, Comment, LearningLog, Message, Holiday
+- [x] 19. CRUD מלא לכל מודל, זמין למשתמש דרך הממשק (לא רק בקוד) - ראו טבלת CRUD בסעיף 4.9 ב-SRS
+- [x] 20. שני חיפושים עם 3+ פרמטרים כל אחד - FR-011 (topic+dayOfWeek+level) ו-FR-012 (category+groupId+טווח תאריכים+keyword) + חיפוש גלובלי מאוחד נוסף (`/search`)
+- [x] 21. הרשאות RBAC אמיתיות בצד שרת, פר-קבוצה
+- [x] 22. פיד אישי + עמוד הרשאות שמסביר לכל משתמש מה מותר לו
+- [x] 23. נתוני seed ריאליסטיים (8 משתמשים, 3 קבוצות, 5 פוסטים, 5 תגובות, 4 מאמרי חג)
+- [x] 24. טיפול בשגיאות ומקרי קצה בצד לקוח ושרת, בלי קריסת שרת
+- [x] 25. שימוש נרחב ב-jQuery/Ajax (תגובות, בדיקת שם משתמש, ולידציית סיסמאות)
+- [~] 26. React + Video + Canvas - **Canvas ✓** (heatmap מעקב לימוד ב-`/study-room`), **Video עדיין לא ✓** בתוך רכיב React (הווידאו בפוסטים הוא HTML5 רגיל דרך EJS, לא React) - **פער פתוח, מתוכנן לסבב הבא**
+- [x] 27. CSS3 - text-shadow, transition, **multiple-columns** (כעת בשימוש בפועל בארכיון מעגל השנה), font-face, border-radius - כולם ממומשים ובשימוש
+- [x] 28. צ'אט עם Socket.io
+- [ ] 29. (השורה נחתכה בתמונה ששמעון שלח - לא ידוע מה תוכן הסעיף, יש לבדוק מול המסמך המלא)
 
 ---
 

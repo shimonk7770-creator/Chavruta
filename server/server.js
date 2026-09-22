@@ -28,6 +28,8 @@ const commentRoutes = require("./routes/commentRoutes");
 const learningLogRoutes = require("./routes/learningLogRoutes");
 const chatRoutes = require("./routes/chatRoutes"); // שבוע 4 - צ'אט קבוצתי
 const statsRoutes = require("./routes/statsRoutes"); // שבוע 4 - נתוני גרפי D3
+const holidayRoutes = require("./routes/holidayRoutes"); // "מעגל השנה" - FR-028, FR-029
+const adminRoutes = require("./routes/adminRoutes"); // לוח בקרה למנהל מערכת
 
 const app = express();
 
@@ -94,6 +96,8 @@ app.use("/", commentRoutes);
 app.use("/", learningLogRoutes);
 app.use("/", chatRoutes); // שבוע 4
 app.use("/", statsRoutes); // שבוע 4
+app.use("/", holidayRoutes); // מעגל השנה
+app.use("/", adminRoutes); // לוח בקרה למנהל
 
 // טיפול בשגיאות - חייב להיות אחרון (סעיף 8 ב-SRS)
 app.use(notFound);

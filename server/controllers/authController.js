@@ -6,6 +6,7 @@
 const bcrypt = require("bcryptjs");
 const sanitizeHtml = require("sanitize-html");
 const User = require("../models/User");
+const { isValidPassword } = require("../utils/validators"); // BR-002, נבדק גם אוטומטית ב-server/test/validators.test.js
 
 const MAX_FAILED_ATTEMPTS = 5; // BR-010
 const LOCK_TIME_MS = 15 * 60 * 1000; // 15 דקות
@@ -31,7 +32,7 @@ async function register(req, res) {
       // אימות שדה "הזן שוב את הסיסמה" - מונע רישום עם סיסמה שהוקלדה בטעות
       return res.render("register", { error: "הסיסמאות שהוזנו אינן תואמות", ...keepValues });
     }
-    if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+    if (!isValidPassword(password)) {
       // BR-002: סיסמה חייבת 8 תווים לפחות, אות גדולה וספרה
       return res.render("register", {
         error: "הסיסמה חייבת לכלול לפחות 8 תווים, אות גדולה אחת וספרה אחת",
@@ -173,7 +174,7 @@ async function updateProfile(req, res) {
       if (!isMatch) {
         return res.render("profile", { profileUser: User.toPublicUser(user), error: "הסיסמה הנוכחית שגויה", success: null });
       }
-      if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      if (!isValidPassword(newPassword)) {
         return res.render("profile", {
           profileUser: User.toPublicUser(user),
           error: "הסיסמה החדשה חייבת לכלול לפחות 8 תווים, אות גדולה וספרה",
