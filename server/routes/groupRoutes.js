@@ -7,7 +7,7 @@ const groupController = require("../controllers/groupController");
 const postController = require("../controllers/postController");
 const { isAuthenticated, hasRole } = require("../middleware/auth");
 const { isGroupManagerOf } = require("../middleware/permissions");
-const { uploadGroupPhoto } = require("../middleware/upload"); // עדכון: תמונת קבוצה (עיצוב בהשראת וואטסאפ)
+const { uploadGroupPhoto, uploadImages } = require("../middleware/upload"); // עדכון: תמונת קבוצה (עיצוב בהשראת וואטסאפ) + תמונות בפוסט חדש
 
 router.get("/groups", groupController.listGroups);
 router.get("/groups/search", groupController.searchGroups); // FR-011
@@ -33,6 +33,7 @@ router.post("/groups/:id/members", isAuthenticated, isGroupManagerOf, groupContr
 router.post("/groups/:id/members/:userId/remove", isAuthenticated, isGroupManagerOf, groupController.removeMemberByManager);
 
 // יצירת פוסט בתוך קבוצה מסוימת (FR-013)
-router.post("/groups/:groupId/posts", isAuthenticated, postController.createPost);
+// עדכון לפי משוב המשתמש (אוקטובר 2026): אפשר לצרף עד 6 תמונות כבר בזמן היצירה (לא רק אחר כך דרך /posts/:id/images)
+router.post("/groups/:groupId/posts", isAuthenticated, uploadImages.array("images", 6), postController.createPost);
 
 module.exports = router;

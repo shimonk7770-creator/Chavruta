@@ -79,25 +79,49 @@
     <hr />
 
     <% if (isMember) { %>
-      <h2>פרסום פוסט חדש</h2>
-      <form action="/groups/<%= group.id %>/posts" method="POST" class="auth-form">
-        <input type="text" name="title" placeholder="כותרת" required maxlength="150" />
-        <textarea name="content" placeholder="תוכן..." required maxlength="5000"></textarea>
-        <select name="category">
-          <option value="dvarTorah">דבר תורה</option>
-          <option value="question">שאלה</option>
-          <option value="update">עדכון</option>
-        </select>
-        <button type="submit">פרסום</button>
-      </form>
+      <!-- עוצב מחדש לפי משוב המשתמש (אוקטובר 2026): טופס פרסום פוסט מושך ויזואלית יותר, כולל צירוף תמונות כבר בזמן הפרסום -->
+      <section class="card new-post-card">
+        <h2>✨ פרסום פוסט חדש</h2>
+        <form action="/groups/<%= group.id %>/posts" method="POST" enctype="multipart/form-data" class="auth-form new-post-form">
+          <label for="postTitle">כותרת</label>
+          <input type="text" id="postTitle" name="title" placeholder="על מה תרצה לכתוב?" required maxlength="150" />
+
+          <label for="postContent">תוכן</label>
+          <textarea id="postContent" name="content" placeholder="שתף דבר תורה, שאלה, או עדכון עם הקבוצה..." required maxlength="5000"></textarea>
+
+          <label>סוג הפוסט</label>
+          <div class="post-category-pills">
+            <label class="option-pill category-pill">
+              <input type="radio" name="category" value="dvarTorah" checked /> 📖 דבר תורה
+            </label>
+            <label class="option-pill category-pill">
+              <input type="radio" name="category" value="question" /> ❓ שאלה
+            </label>
+            <label class="option-pill category-pill">
+              <input type="radio" name="category" value="update" /> 📢 עדכון
+            </label>
+          </div>
+
+          <label for="postImages">תמונות (אופציונלי, עד 6)</label>
+          <input type="file" id="postImages" name="images" accept="image/jpeg,image/png,image/webp,image/gif" multiple />
+          <div class="post-image-preview" id="postImagePreview"></div>
+
+          <button type="submit">📤 פרסום</button>
+        </form>
+      </section>
     <% } %>
 
     <h2>פוסטים בקבוצה</h2>
     <% posts.forEach(function(post) { %>
       <div class="card post-card" data-post-id="<%= post.id %>">
+        <div class="post-card-header">
+          <span class="post-category-badge post-category-<%= post.category %>">
+            <%= post.category === 'dvarTorah' ? '📖 דבר תורה' : post.category === 'question' ? '❓ שאלה' : '📢 עדכון' %>
+          </span>
+          <span class="meta post-author"><%= post.authorName %></span>
+        </div>
         <h3><%= post.title %></h3>
-        <p class="meta"><%= post.authorName %> | <%= post.category %></p>
-        <p><%= post.content %></p>
+        <p class="post-content"><%= post.content %></p>
         <!-- נגן הוידאו המצורף לפוסט (BR-008) - העיצוב מגיע מ-.post-video ב-style.css, לא inline -->
         <% if (post.videoUrl) { %>
           <video class="post-video" controls src="<%= post.videoUrl %>"></video>
@@ -134,5 +158,6 @@
   <%- include('../partials/footer') %>
 
   <script src="/js/comments.js"></script>
+  <script src="/js/postForm.js"></script>
 </body>
 </html>

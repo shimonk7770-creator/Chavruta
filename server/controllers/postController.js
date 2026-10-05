@@ -38,6 +38,10 @@ async function createPost(req, res, next) {
       return res.redirect(`/groups/${group.id}`);
     }
 
+    // עדכון לפי משוב המשתמש (אוקטובר 2026): אפשר לצרף עד 6 תמונות כבר בזמן יצירת הפוסט (לא רק אחר כך
+    // דרך POST /posts/:id/images) - אותו multer instance (uploadImages) בדיוק, רק req.files ולא req.file בודד
+    const imageUrls = (req.files || []).map((file) => `/uploads/${file.filename}`);
+
     await Post.create({
       title,
       content, // כבר עבר sanitize; גם ב-EJS משתמשים ב-<%= %> ולא <%- %> כהגנת-כפל
@@ -46,6 +50,7 @@ async function createPost(req, res, next) {
       groupName: group.name,
       authorId: req.session.userId,
       authorName: req.session.userName,
+      imageUrls,
     });
 
     res.redirect(`/groups/${group.id}`);
