@@ -61,13 +61,20 @@
     </div>
 
     <% if (featured) { %>
-      <!-- המועד הקרוב מוצג בהבלטה - מסומן ידנית ע"י האדמין (Holiday.isFeatured), ללא חישוב אסטרונומי (מחוץ להיקף) -->
+      <!-- המועד הקרוב - מחושב אוטומטית בקונטרולר לפי gregorianDate הקרוב ביותר שעוד לא עבר (ראו holidayController.findUpcomingHoliday) -->
       <section class="card holiday-featured">
         <span class="role-badge">המועד הקרוב</span>
-        <h2><a href="/holidays/<%= featured.id %>"><%= featured.holidayName %></a></h2>
-        <% if (featured.dateHint) { %><p class="meta"><%= featured.dateHint %></p><% } %>
-        <% if (featured.whatWeDo) { %><p><%= featured.whatWeDo %></p><% } %>
-        <p><a href="/holidays/<%= featured.id %>">לקריאה מלאה ←</a></p>
+        <div class="holiday-featured-body">
+          <% if (featured.imageUrl) { %>
+            <img src="<%= featured.imageUrl %>" alt="" class="holiday-featured-image" />
+          <% } %>
+          <div>
+            <h2><a href="/holidays/<%= featured.id %>"><%= featured.holidayName %></a></h2>
+            <% if (featured.dateHint) { %><p class="meta"><%= featured.dateHint %></p><% } %>
+            <% if (featured.whatWeDo) { %><p><%= featured.whatWeDo %></p><% } %>
+            <p><a href="/holidays/<%= featured.id %>">רוצים ללמוד עוד על החג? לחצו כאן ובואו נלמד ←</a></p>
+          </div>
+        </div>
       </section>
     <% } %>
 
@@ -75,13 +82,15 @@
     <% if (!archive.length) { %>
       <p class="meta">עדיין אין מועדים נוספים בארכיון.</p>
     <% } else { %>
+      <p class="meta">רוצים ללמוד עוד על החגים? לחצו על חג ובואו נלמד ←</p>
       <!-- דרישה 27.iii - multiple-columns: ארכיון המועדים מוצג בפריסת עמודות מרובות -->
       <div class="digest-columns">
         <% archive.forEach(function (h) { %>
-          <div class="card holiday-card">
-            <h3><a href="/holidays/<%= h.id %>"><%= h.holidayName %></a></h3>
+          <a class="card holiday-card" href="/holidays/<%= h.id %>">
+            <% if (h.imageUrl) { %><img src="<%= h.imageUrl %>" alt="" class="holiday-card-image" /><% } %>
+            <h3><%= h.holidayName %></h3>
             <% if (h.dateHint) { %><p class="meta"><%= h.dateHint %></p><% } %>
-          </div>
+          </a>
         <% }) %>
       </div>
     <% } %>

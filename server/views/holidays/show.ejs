@@ -7,25 +7,28 @@
 <body>
   <%- include('../partials/header') %>
 
-  <main class="container">
+  <main class="container holiday-detail">
+    <% if (holiday.imageUrl) { %>
+      <img src="<%= holiday.imageUrl %>" alt="<%= holiday.holidayName %>" class="holiday-detail-image" />
+    <% } %>
     <h1><%= holiday.holidayName %></h1>
     <% if (holiday.dateHint) { %><p class="meta"><%= holiday.dateHint %></p><% } %>
 
     <% if (holiday.whatWeDo) { %>
-      <section class="card">
-        <h2>מה עושים</h2>
+      <section class="card holiday-section">
+        <h2><span class="holiday-section-icon" aria-hidden="true">🍽️</span> מה עושים</h2>
         <p><%= holiday.whatWeDo %></p>
       </section>
     <% } %>
     <% if (holiday.whatWePray) { %>
-      <section class="card">
-        <h2>מה מתפללים</h2>
+      <section class="card holiday-section">
+        <h2><span class="holiday-section-icon" aria-hidden="true">🙏</span> מה מתפללים</h2>
         <p><%= holiday.whatWePray %></p>
       </section>
     <% } %>
     <% if (holiday.customs) { %>
-      <section class="card">
-        <h2>מנהגים עיקריים</h2>
+      <section class="card holiday-section">
+        <h2><span class="holiday-section-icon" aria-hidden="true">📜</span> מנהגים עיקריים</h2>
         <p><%= holiday.customs %></p>
       </section>
     <% } %>

@@ -5,6 +5,7 @@ const Holiday = require("../models/Holiday");
 const Group = require("../models/Group");
 const sanitizeHtml = require("sanitize-html"); // ניקוי HTML נגד XSS (NFR-006), כמו בפוסטים/פרופיל
 const { buildMonth } = require("../utils/calendarGrid"); // לוח שנה גרגוריאני ויזואלי (עדכון: בקשת המשתמש ללוח אמיתי, לא רק רשימת מאמרים)
+const { findUpcomingHoliday } = require("../utils/upcomingHoliday"); // עדכון: "המועד הקרוב" מחושב אוטומטית - ראו תיעוד בקובץ
 
 function clean(text) {
   return sanitizeHtml(text || "", { allowedTags: [], allowedAttributes: {} }).trim();
@@ -15,15 +16,16 @@ function cleanGregorianDate(value) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value || "") ? value : "";
 }
 
+
 // GET /holidays - FR-029: עמוד ציבורי, כולל לאורחים - לוח שנה ויזואלי + המועד המובלט + ארכיון שאר המועדים
 // עדכון (בקשת המשתמש): קודם הוצגו 12 חודשים קדימה יחד - עכשיו מוצג רק החודש הנוכחי (ברירת מחדל),
 // עם אפשרות ניווט לחודש/שנה אחרים דרך query params ?year=YYYY&month=M (M הוא 1-12, לא 0-11, לנוחות ב-URL).
 async function listHolidays(req, res) {
   const all = await Holiday.listAll();
-  const featured = all.find((h) => h.isFeatured) || null;
+  const today = new Date();
+  const featured = findUpcomingHoliday(all, today); // מחושב אוטומטית - ראו הערה למעלה
   const archive = all.filter((h) => !featured || h.id !== featured.id);
 
-  const today = new Date();
   let year = parseInt(req.query.year, 10);
   let month1based = parseInt(req.query.month, 10); // כפי שמגיע מה-URL: 1=ינואר ... 12=דצמבר
 
@@ -71,8 +73,9 @@ async function newHolidayForm(req, res) {
 }
 
 // POST /holidays - FR-028: יצירת מאמר חג (אדמין בלבד - BR-012)
+// עדכון: כולל תמיכה בתמונה אופציונלית (req.file, דרך uploadHolidayPhoto.single ב-routes) - בקשת המשתמש
 async function createHoliday(req, res) {
-  const { holidayName, dateHint, whatWeDo, whatWePray, customs, linkedGroupId, order, isFeatured, gregorianDate } = req.body;
+  const { holidayName, dateHint, whatWeDo, whatWePray, customs, linkedGroupId, order, gregorianDate } = req.body;
   if (!holidayName || !holidayName.trim()) {
     const groups = await Group.listAll();
     return res.render("holidays/new", { groups, error: "יש להזין שם חג" });
@@ -85,8 +88,8 @@ async function createHoliday(req, res) {
     customs: clean(customs),
     linkedGroupId: linkedGroupId || "",
     gregorianDate: cleanGregorianDate(gregorianDate),
+    imageUrl: req.file ? `/uploads/${req.file.filename}` : "",
     order,
-    isFeatured: isFeatured === "on",
     authorId: req.session.userId,
   });
   res.redirect("/holidays");
@@ -104,14 +107,15 @@ async function editHolidayForm(req, res, next) {
 }
 
 // POST /holidays/:id - עדכון מאמר קיים (אדמין בלבד)
+// עדכון: תמונה חדשה (req.file) מחליפה את הקיימת; אם לא הועלתה תמונה חדשה - משאירים את ה-imageUrl הקיים כמו שהוא
 async function updateHoliday(req, res) {
-  const { holidayName, dateHint, whatWeDo, whatWePray, customs, linkedGroupId, order, isFeatured, gregorianDate } = req.body;
+  const { holidayName, dateHint, whatWeDo, whatWePray, customs, linkedGroupId, order, gregorianDate } = req.body;
   if (!holidayName || !holidayName.trim()) {
     const holiday = await Holiday.findById(req.params.id);
     const groups = await Group.listAll();
     return res.render("holidays/edit", { holiday, groups, error: "יש להזין שם חג" });
   }
-  await Holiday.update(req.params.id, {
+  const patch = {
     holidayName: clean(holidayName),
     dateHint: clean(dateHint),
     whatWeDo: clean(whatWeDo),
@@ -120,8 +124,9 @@ async function updateHoliday(req, res) {
     linkedGroupId: linkedGroupId || "",
     gregorianDate: cleanGregorianDate(gregorianDate),
     order,
-    isFeatured: isFeatured === "on",
-  });
+  };
+  if (req.file) patch.imageUrl = `/uploads/${req.file.filename}`;
+  await Holiday.update(req.params.id, patch);
   res.redirect("/holidays/" + req.params.id);
 }
 

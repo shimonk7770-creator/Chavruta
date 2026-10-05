@@ -66,4 +66,19 @@ const uploadStatusPhoto = multer({
   limits: { fileSize: IMAGE_MAX_SIZE_BYTES, files: 1 },
 });
 
-module.exports = { uploadVideo, uploadImages, uploadAvatar, uploadGroupPhoto, uploadStatusPhoto, UPLOAD_DIR };
+// תמונה למאמר "מעגל השנה" (עדכון: בקשת המשתמש - תמונות/דברים ויזואליים בכל חג) - קובץ בודד, אותו דפוס בדיוק
+const uploadHolidayPhoto = multer({
+  storage,
+  fileFilter: makeFileFilter(IMAGE_MIME_TYPES, "תמונת החג חייבת להיות בפורמט JPG, PNG, WEBP או GIF"),
+  limits: { fileSize: IMAGE_MAX_SIZE_BYTES, files: 1 },
+});
+
+module.exports = {
+  uploadVideo,
+  uploadImages,
+  uploadAvatar,
+  uploadGroupPhoto,
+  uploadStatusPhoto,
+  uploadHolidayPhoto,
+  UPLOAD_DIR,
+};

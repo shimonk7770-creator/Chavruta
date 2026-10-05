@@ -10,16 +10,22 @@
     <h1>עריכת מאמר חג</h1>
     <% if (error) { %><p class="error-message"><%= error %></p><% } %>
 
-    <form action="/holidays/<%= holiday.id %>" method="POST" class="auth-form">
+    <form action="/holidays/<%= holiday.id %>" method="POST" class="auth-form" enctype="multipart/form-data">
       <label for="holidayName">שם החג</label>
       <input type="text" id="holidayName" name="holidayName" required maxlength="80" value="<%= holiday.holidayName %>" />
 
       <label for="dateHint">תיאור המועד</label>
       <input type="text" id="dateHint" name="dateHint" maxlength="150" value="<%= holiday.dateHint %>" />
 
-      <label for="gregorianDate">תאריך לועזי מדויק לשנה זו (אופציונלי - כדי שהחג יופיע בלוח השנה הגרפי למעלה)</label>
+      <label for="gregorianDate">תאריך לועזי מדויק לשנה זו (אופציונלי - כדי שהחג יופיע בלוח השנה הגרפי למעלה, וכדי שהוא ייחשב אוטומטית כ"מועד הקרוב" כשמתקרבים אליו)</label>
       <input type="date" id="gregorianDate" name="gregorianDate" value="<%= holiday.gregorianDate || '' %>" />
       <p class="meta" style="margin-top:-8px">אם לא מוזן, החג יופיע רק בארכיון המאמרים למטה - כי אין באתר חישוב אוטומטי של הלוח העברי.</p>
+
+      <label for="holidayImage">תמונה לחג (אופציונלי - העלאת קובץ חדש תחליף את הקיימת)</label>
+      <% if (holiday.imageUrl) { %>
+        <p class="meta"><img src="<%= holiday.imageUrl %>" alt="" style="max-width:160px;border-radius:12px;display:block;margin-bottom:0.5rem" /></p>
+      <% } %>
+      <input type="file" id="holidayImage" name="holidayImage" accept="image/*" />
 
       <label for="whatWeDo">מה עושים</label>
       <textarea id="whatWeDo" name="whatWeDo" maxlength="2000"><%= holiday.whatWeDo %></textarea>
@@ -40,10 +46,6 @@
 
       <label for="order">סדר תצוגה בארכיון</label>
       <input type="number" id="order" name="order" value="<%= holiday.order %>" />
-
-      <label>
-        <input type="checkbox" name="isFeatured" <%= holiday.isFeatured ? 'checked' : '' %> /> הצג כ"מועד הקרוב" בהבלטה בראש העמוד
-      </label>
 
       <button type="submit">שמירת שינויים</button>
     </form>

@@ -7,22 +7,24 @@
 <body>
   <%- include('../partials/header') %>
   <main class="container">
-    <h1>עריכת רישום לימוד</h1>
+    <h1>✏️ עריכת רישום לימוד</h1>
     <% if (error) { %><p class="error-message"><%= error %></p><% } %>
-    <form action="/learning/<%= log.id %>?_method=PUT" method="POST" class="auth-form">
-      <label for="date">תאריך</label>
-      <input type="date" id="date" name="date" required
-        value="<%= new Date(log.date.toDate ? log.date.toDate() : log.date).toISOString().slice(0,10) %>" />
+    <section class="card new-log-card">
+      <form action="/learning/<%= log.id %>?_method=PUT" method="POST" class="auth-form learning-form">
+        <label for="date">תאריך</label>
+        <input type="date" id="date" name="date" required
+          value="<%= new Date(log.date.toDate ? log.date.toDate() : log.date).toISOString().slice(0,10) %>" />
 
-      <label for="unit">מה נלמד</label>
-      <input type="text" id="unit" name="unit" required maxlength="150" value="<%= log.unit %>" />
+        <label for="unit">מה נלמד</label>
+        <input type="text" id="unit" name="unit" required maxlength="150" value="<%= log.unit %>" />
 
-      <label for="notes">הערות</label>
-      <textarea id="notes" name="notes" maxlength="500"><%= log.notes %></textarea>
+        <label for="notes">הערות</label>
+        <textarea id="notes" name="notes" maxlength="500"><%= log.notes %></textarea>
 
-      <button type="submit">שמירת שינויים</button>
-    </form>
-    <p><a href="/learning">חזרה לרשימה</a></p>
+        <button type="submit">שמירת שינויים</button>
+      </form>
+    </section>
+    <p><a href="/learning">← חזרה לרשימה</a></p>
   </main>
 
   <%- include('../partials/footer') %>

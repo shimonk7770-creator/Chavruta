@@ -1204,8 +1204,54 @@ button:hover {
   border-inline-start: 4px solid var(--color-primary);
   background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-bg) 100%);
 }
+.holiday-featured-body {
+  display: flex;
+  gap: 1.2rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.holiday-featured-image {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 14px;
+  flex-shrink: 0;
+}
+/* עדכון (משוב המשתמש): תיקון באג - בעמוד הארכיון (.digest-columns, עמודות CSS מרובות) כותרות חג
+   היו עלולות "להישבר" חזותית בין שתי העמודות כי לדפדפן היה מותר לפצל כרטיס לשתיים. break-inside
+   מונע את זה - כרטיס שלם נשאר תמיד בעמודה אחת, הכותרת לא נחתכת יותר */
+.holiday-card {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  break-inside: avoid-column;
+  -webkit-column-break-inside: avoid;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.holiday-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
 .holiday-card h3 {
   margin-top: 0;
+  color: var(--color-primary);
+}
+.holiday-card-image {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 0.6rem;
+}
+.holiday-section-icon {
+  margin-left: 0.3rem;
+}
+.holiday-detail-image {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin-bottom: 1rem;
 }
 
 /* ===== טבלת הרשאות (עמוד /permissions) ===== */
@@ -1707,4 +1753,219 @@ html[data-font-size="xlarge"] {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: #fff;
+}
+
+/* =====================================================================
+   עמוד "מעקב לימוד אישי" - עיצוב מחודש לפי משוב המשתמש (אוקטובר 2026)
+   server/views/learning/index.ejs, server/views/learning/edit.ejs
+   ===================================================================== */
+.success-message {
+  color: var(--color-secondary-dark);
+  font-weight: bold;
+}
+
+.learning-hero {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  color: #fff;
+  padding: 1.6rem 1.8rem;
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-soft);
+}
+.learning-hero h1 {
+  margin: 0 0 0.4rem;
+}
+.learning-hero .meta {
+  color: rgba(255, 255, 255, 0.9);
+}
+.learning-hero .btn-secondary {
+  margin-top: 0.4rem;
+  display: inline-block;
+}
+
+.learning-log-heading {
+  margin-top: 1.8rem;
+}
+
+/* ===== יעדי לימוד (צ'קליסט) ===== */
+.goals-card h2,
+.new-log-card h2 {
+  margin-top: 0;
+}
+
+.goal-progress {
+  margin: 0.8rem 0 1rem;
+}
+.goal-progress-bar {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  height: 14px;
+  overflow: hidden;
+}
+.goal-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+.goal-progress-label {
+  margin: 0.4rem 0 0;
+}
+
+.goal-add-form {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.goal-add-form input {
+  flex: 1;
+  padding: 0.55rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.goal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.goal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  transition: background-color 0.2s ease;
+}
+.goal-item.done {
+  opacity: 0.65;
+}
+.goal-item.done .goal-checkbox-label span {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.goal-toggle-form {
+  flex: 1;
+}
+.goal-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+.goal-checkbox-label input[type="checkbox"] {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.goal-delete-form .btn-link {
+  background: none;
+  color: var(--color-text-muted);
+  padding: 0.2rem 0.4rem;
+}
+.goal-delete-form .btn-link:hover {
+  color: #b3261e;
+}
+
+/* ===== טופס רישום חדש - תיבת טקסט מעוצבת ומושכת יותר (לבקשת המשתמש) ===== */
+.learning-form textarea {
+  min-height: 120px;
+  background: var(--color-bg);
+  border: 1.5px solid var(--color-border);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.learning-form textarea:focus,
+.learning-form input:focus,
+.learning-form select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(201, 123, 60, 0.15);
+}
+
+/* ===== רשימת רישומי הלימוד - כרטיסים ===== */
+.learning-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.learning-log-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+.learning-log-date {
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.2rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: bold;
+}
+.learning-log-group {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+.learning-log-unit {
+  font-size: 1.08rem;
+  margin: 0.2rem 0;
+}
+.learning-log-notes {
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+}
+
+.learning-log-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--color-border);
+}
+.learning-log-actions {
+  margin: 0;
+}
+
+.log-share-form {
+  display: flex;
+  gap: 0.4rem;
+}
+.log-share-form select {
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+.btn-share {
+  background: var(--color-secondary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.btn-share:hover {
+  background: var(--color-secondary-dark);
 }

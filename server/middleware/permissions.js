@@ -6,6 +6,7 @@ const Group = require("../models/Group");
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
 const LearningLog = require("../models/LearningLog");
+const LearningGoal = require("../models/LearningGoal");
 const { canModifyContent } = require("../utils/permissionRules"); // לוגיקה טהורה, נבדקת אוטומטית ב-server/test/permissionRules.test.js
 
 // בודק שהמשתמש המחובר הוא המנהל של הקבוצה הספציפית הזו (לא סתם "מנהל" באופן כללי)
@@ -83,6 +84,21 @@ async function canModifyLearningLog(req, res, next) {
   next();
 }
 
+// בודק שהמשתמש הוא הבעלים של יעד הלימוד - אותו עיקרון בדיוק כמו canModifyLearningLog (מידע אישי, הבעלים בלבד)
+async function canModifyLearningGoal(req, res, next) {
+  const goal = await LearningGoal.findById(req.params.id);
+  if (!goal) {
+    res.status(404);
+    return next(new Error("היעד לא נמצא"));
+  }
+  if (goal.userId !== req.session.userId) {
+    res.status(403);
+    return next(new Error("אין לך הרשאה לערוך יעד לימוד של משתמש אחר"));
+  }
+  req.learningGoal = goal;
+  next();
+}
+
 // בודק שהמשתמש הוא מנהל מערכת (role === "admin") - למשל לניהול תוכן "מעגל השנה" (BR-012)
 function isAdminUser(req, res, next) {
   if (!req.session || req.session.userRole !== "admin") {
@@ -92,4 +108,11 @@ function isAdminUser(req, res, next) {
   next();
 }
 
-module.exports = { isGroupManagerOf, canModifyPost, canModifyComment, canModifyLearningLog, isAdminUser };
+module.exports = {
+  isGroupManagerOf,
+  canModifyPost,
+  canModifyComment,
+  canModifyLearningLog,
+  canModifyLearningGoal,
+  isAdminUser,
+};

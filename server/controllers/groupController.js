@@ -3,10 +3,19 @@
 // תואם ל-FR-006..FR-011 ולהרשאות בסעיף 3 ב-SRS
 // שכבת הנתונים (Group/Post/Comment models) עובדת מול Firestore
 
+const sanitizeHtml = require("sanitize-html");
 const Group = require("../models/Group");
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
 const User = require("../models/User"); // עדכון: עיצוב קבוצות בהשראת וואטסאפ - צריך פרטי משתמשים (שם+אווטאר) לכל חבר בקבוצה
+
+// ניקוי HTML/סקריפטים משדות טקסט חופשי של קבוצה (הגנה מפני XSS - NFR-006) -
+// עדכון מביקורת האבטחה (סעיף 12.5 ב-SRS): שם/תיאור/נושא הקבוצה לא עברו ניקוי כמו שאר התוכן
+// (פוסטים/תגובות/ביוגרפיה/יומן לימוד) - גם אם ה-EJS כבר עושה escape אוטומטי ב-<%= %> (הגנה ראשונה
+// שעבדה כל הזמן), מוסיפים כאן הגנת-כפל זהה לשאר המערכת, כדי לא להישען רק על שכבה אחת.
+function sanitizeField(text) {
+  return sanitizeHtml(text || "", { allowedTags: [], allowedAttributes: {} }).trim();
+}
 
 // GET /groups - רשימת/עיון בכל הקבוצות (FR-010), פתוח גם לאורח
 async function listGroups(req, res) {
@@ -36,10 +45,10 @@ async function createGroup(req, res) {
     }
 
     const group = await Group.create({
-      name,
-      description,
+      name: sanitizeField(name),
+      description: sanitizeField(description),
       category,
-      topic,
+      topic: sanitizeField(topic),
       dayOfWeek,
       time,
       level,
@@ -101,7 +110,15 @@ async function updateGroup(req, res) {
     return res.render("groups/edit", { group: req.group, error: "שם הקבוצה חייב להכיל לפחות 2 תווים" });
   }
 
-  const group = await Group.update(req.group.id, { name, description, topic, dayOfWeek, time, level, category });
+  const group = await Group.update(req.group.id, {
+    name: sanitizeField(name),
+    description: sanitizeField(description),
+    topic: sanitizeField(topic),
+    dayOfWeek,
+    time,
+    level,
+    category,
+  });
   res.redirect(`/groups/${group.id}`);
 }
 

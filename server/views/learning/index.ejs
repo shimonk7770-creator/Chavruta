@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <!-- server/views/learning/index.ejs - מעקב לימוד אישי: רשימת רישומים + טופס הוספה (FR-018, FR-019) -->
+<!-- עוצב מחדש לפי משוב המשתמש (אוקטובר 2026): כרטיסים ברורים, יעדי לימוד (צ'קליסט), ושיתוף רישום עם קבוצה -->
 <html lang="he" dir="rtl">
 <head>
   <%- include('../partials/head') %>
@@ -7,54 +8,118 @@
 <body>
   <%- include('../partials/header') %>
 
-  <main class="container">
-    <h1>מעקב לימוד אישי</h1>
-    <p><a class="btn btn-secondary" href="/study-room">צפייה בלוח ההתקדמות (Canvas)</a></p>
+  <main class="container learning-page">
+    <div class="learning-hero">
+      <h1>📖 מעקב לימוד אישי</h1>
+      <p class="meta">כל יחידת לימוד שאתה רושם נשמרת כאן, מוצגת בלוח ההתקדמות, ותורמת למגמת הלימוד הקהילתית.</p>
+      <p><a class="btn btn-secondary" href="/study-room">צפייה בלוח ההתקדמות (Canvas) ←</a></p>
+    </div>
 
     <% if (error) { %><p class="error-message"><%= error %></p><% } %>
+    <% if (shareMessage) { %><p class="success-message"><%= shareMessage %></p><% } %>
 
-    <h2>רישום לימוד חדש</h2>
-    <form action="/learning" method="POST" class="auth-form">
-      <label for="date">תאריך</label>
-      <input type="date" id="date" name="date" required />
+    <!-- ===== יעדי לימוד אישיים (צ'קליסט) - תוספת לפי בקשת המשתמש: "להגדיר יעדים בעצמו" + סימון וי ===== -->
+    <section class="card goals-card">
+      <h2>🎯 יעדי לימוד שלי</h2>
+      <p class="meta">הגדר לעצמך יעד (למשל "לסיים מסכת ברכות עד חנוכה") וסמן אותו כשתסיים.</p>
 
-      <label for="unit">מה נלמד (למשל: "בבא מציעא דף י&quot;ב")</label>
-      <input type="text" id="unit" name="unit" required maxlength="150" />
+      <% if (goalProgress.total > 0) { %>
+        <div class="goal-progress">
+          <div class="goal-progress-bar">
+            <div class="goal-progress-fill" style="width: <%= goalProgress.percent %>%"></div>
+          </div>
+          <p class="meta goal-progress-label"><%= goalProgress.done %> מתוך <%= goalProgress.total %> יעדים הושלמו (<%= goalProgress.percent %>%)</p>
+        </div>
+      <% } %>
 
-      <label for="groupId">קבוצה (אופציונלי)</label>
-      <select id="groupId" name="groupId">
-        <option value="">ללא קבוצה</option>
-        <% myGroups.forEach(function(g) { %>
-          <option value="<%= g.id %>"><%= g.name %></option>
-        <% }) %>
-      </select>
+      <form action="/learning/goals" method="POST" class="goal-add-form">
+        <input type="text" name="text" maxlength="150" placeholder="הוסף יעד לימוד חדש..." required />
+        <button type="submit">+ הוספה</button>
+      </form>
 
-      <label for="notes">הערות (אופציונלי)</label>
-      <textarea id="notes" name="notes" maxlength="500"></textarea>
+      <% if (goals.length === 0) { %>
+        <p class="meta">עדיין לא הגדרת יעדי לימוד. הוסף את היעד הראשון שלך למעלה!</p>
+      <% } else { %>
+        <ul class="goal-list">
+          <% goals.forEach(function(goal) { %>
+            <li class="goal-item<%= goal.done ? ' done' : '' %>">
+              <form action="/learning/goals/<%= goal.id %>?_method=PUT" method="POST" class="goal-toggle-form">
+                <label class="goal-checkbox-label">
+                  <input type="checkbox" name="done" value="true" <%= goal.done ? 'checked' : '' %> onchange="this.form.submit()" />
+                  <span><%= goal.text %></span>
+                </label>
+              </form>
+              <form action="/learning/goals/<%= goal.id %>?_method=DELETE" method="POST" class="goal-delete-form">
+                <button type="submit" class="btn-link" title="מחיקת יעד">✕</button>
+              </form>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </section>
 
-      <button type="submit">רישום</button>
-    </form>
+    <!-- ===== טופס רישום לימוד חדש ===== -->
+    <section class="card new-log-card">
+      <h2>✍️ רישום לימוד חדש</h2>
+      <form action="/learning" method="POST" class="auth-form learning-form">
+        <label for="date">תאריך</label>
+        <input type="date" id="date" name="date" required />
 
-    <h2>הרישומים שלי</h2>
+        <label for="unit">מה נלמד (למשל: "בבא מציעא דף י&quot;ב")</label>
+        <input type="text" id="unit" name="unit" required maxlength="150" />
+
+        <label for="groupId">קבוצה (אופציונלי)</label>
+        <select id="groupId" name="groupId">
+          <option value="">ללא קבוצה</option>
+          <% myGroups.forEach(function(g) { %>
+            <option value="<%= g.id %>"><%= g.name %></option>
+          <% }) %>
+        </select>
+
+        <label for="notes">הערות (אופציונלי)</label>
+        <textarea id="notes" name="notes" maxlength="500" placeholder="מה למדת? תובנות, קושיות, סיכום קצר..."></textarea>
+
+        <button type="submit">רישום</button>
+      </form>
+    </section>
+
+    <!-- ===== רשימת הרישומים - כרטיס לכל רישום, כולל שיתוף עם קבוצה ===== -->
+    <h2 class="learning-log-heading">הרישומים שלי</h2>
     <% if (logs.length === 0) { %>
       <div class="card"><p>עדיין לא רשמת יחידות לימוד. התחל עכשיו!</p></div>
     <% } %>
-    <% logs.forEach(function(log) { %>
-      <div class="card">
-        <p class="meta">
-          <%= new Date(log.date.toDate ? log.date.toDate() : log.date).toLocaleDateString('he-IL') %>
-          <% if (log.groupName) { %> | קבוצה: <%= log.groupName %><% } %>
-        </p>
-        <p><strong><%= log.unit %></strong></p>
-        <% if (log.notes) { %><p><%= log.notes %></p><% } %>
-        <p class="meta">
-          <a href="/learning/<%= log.id %>/edit">עריכה</a>
-          <form action="/learning/<%= log.id %>?_method=DELETE" method="POST" style="display:inline">
-            <button type="submit" class="btn-link">מחיקה</button>
-          </form>
-        </p>
-      </div>
-    <% }) %>
+    <div class="learning-log-list">
+      <% logs.forEach(function(log) { %>
+        <div class="card learning-log-card">
+          <div class="learning-log-card-header">
+            <span class="learning-log-date"><%= new Date(log.date.toDate ? log.date.toDate() : log.date).toLocaleDateString('he-IL') %></span>
+            <% if (log.groupName) { %><span class="learning-log-group">👥 <%= log.groupName %></span><% } %>
+          </div>
+          <p class="learning-log-unit"><strong><%= log.unit %></strong></p>
+          <% if (log.notes) { %><p class="learning-log-notes"><%= log.notes %></p><% } %>
+
+          <div class="learning-log-card-footer">
+            <p class="meta learning-log-actions">
+              <a href="/learning/<%= log.id %>/edit">עריכה</a>
+              <form action="/learning/<%= log.id %>?_method=DELETE" method="POST" style="display:inline">
+                <button type="submit" class="btn-link">מחיקה</button>
+              </form>
+            </p>
+            <% if (myGroups.length) { %>
+              <form action="/learning/<%= log.id %>/share" method="POST" class="log-share-form">
+                <select name="groupId" required aria-label="בחירת קבוצה לשיתוף">
+                  <option value="">שתף עם קבוצה...</option>
+                  <% myGroups.forEach(function(g) { %>
+                    <option value="<%= g.id %>" <%= log.groupId === g.id ? 'selected' : '' %>><%= g.name %></option>
+                  <% }) %>
+                </select>
+                <button type="submit" class="btn-share">📤 שיתוף</button>
+              </form>
+            <% } %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
   </main>
 
   <%- include('../partials/footer') %>

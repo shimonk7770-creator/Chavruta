@@ -180,7 +180,10 @@ async function seed() {
     await db.collection("comments").add({ ...c, isArchived: false, createdAt: now });
   }
 
-  // "מעגל השנה" - FR-028/FR-029: כמה מאמרי חג לדוגמה, אחד מהם מסומן כ"מועד הקרוב" (isFeatured)
+  // "מעגל השנה" - FR-028/FR-029: מאמרי חג לדוגמה, ממוינים ב-order לפי סדר השנה העברית (תשרי -> ניסן).
+  // עדכון (משוב המשתמש): "המועד הקרוב" כבר לא מסומן ידנית (isFeatured הוסר) - הוא מחושב אוטומטית
+  // בקונטרולר לפי gregorianDate הקרוב ביותר שעוד לא עבר (ראו holidayController.findUpcomingHoliday).
+  // עדכון נוסף: נוספו חנוכה ופורים שהיו חסרים לגמרי מהלוח.
   const holidaysData = [
     {
       holidayName: "ראש השנה",
@@ -190,7 +193,6 @@ async function seed() {
       whatWePray: "תפילות מיוחדות הכוללות מלכויות, זכרונות ושופרות.",
       customs: "שולחים ברכות \"שנה טובה\", עורכים תשליך ליד מקור מים.",
       order: 1,
-      isFeatured: true,
       authorId: admin,
     },
     {
@@ -201,7 +203,6 @@ async function seed() {
       whatWePray: "כל היום בבית הכנסת - כולל כל נדרי, נעילה ותפילת יזכור.",
       customs: "מבקשים ומעניקים סליחה, לובשים לבן.",
       order: 2,
-      isFeatured: false,
       authorId: admin,
     },
     {
@@ -212,9 +213,28 @@ async function seed() {
       whatWePray: "הלל בכל ימי החג, הקפות עם ארבעת המינים.",
       customs: "מקשטים את הסוכה, מארחים אושפיזין.",
       order: 3,
-      isFeatured: false,
       authorId: admin,
       linkedGroupId: groupIds.chesed,
+    },
+    {
+      holidayName: "חנוכה",
+      dateHint: "כ\"ה כסלו - ג' טבת (שמונה ימים)",
+      gregorianDate: "2026-12-05", // תשפ"ז - יום ראשון של החג (מקור: hebcal.com)
+      whatWeDo: "מדליקים נרות חנוכה בכל אחד משמונת לילות החג (נר נוסף בכל לילה), אוכלים מאכלים מטוגנים בשמן כמו סופגניות ולביבות, ומשחקים בסביבון.",
+      whatWePray: "אומרים \"הלל\" ו\"על הנסים\" בתפילה ובברכת המזון, לציון נס פך השמן ונצחון המכבים.",
+      customs: "מדליקים בפתח הבית או בחלון לפרסום הנס, מתנות חנוכה לילדים, משחקי סביבון עם \"דמי חנוכה\".",
+      order: 4,
+      authorId: admin,
+    },
+    {
+      holidayName: "פורים",
+      dateHint: "י\"ד אדר",
+      gregorianDate: "2027-03-23", // תשפ"ז (מקור: hebcal.com)
+      whatWeDo: "קוראים את מגילת אסתר בלילה וביום, מתחפשים, עורכים סעודת פורים חגיגית.",
+      whatWePray: "קריאת המגילה פעמיים (ערבית ושחרית) היא עיקר מצוות היום.",
+      customs: "משלוח מנות לחברים, מתנות לאביונים (צדקה), תחפושות, רעשנים בזמן הזכרת שם המן.",
+      order: 5,
+      authorId: admin,
     },
     {
       holidayName: "פסח",
@@ -223,8 +243,7 @@ async function seed() {
       whatWeDo: "עורכים סדר פסח, אוכלים מצה ונמנעים מחמץ כל החג.",
       whatWePray: "הלל בליל הסדר, תפילת טל ביום הראשון.",
       customs: "קוראים את ההגדה, מחפשים חמץ בליל שלפני החג (בדיקת חמץ).",
-      order: 4,
-      isFeatured: false,
+      order: 6,
       authorId: admin,
     },
   ];
