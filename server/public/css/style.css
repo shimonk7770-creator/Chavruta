@@ -89,8 +89,10 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease; /* מעבר חלק בין מצב בהיר לכהה */
 }
 
+/* הוספת גופני אימוג'י בסוף המחסנית - כדי שאימוג'י בתוך כותרות (🎯/✍️/📖 וכו') יוצגו בצבע האמיתי שלהם
+   ולא כגלגל/ריבוע מוזר שנגרם מנפילה חזרה לגופן serif שלא תומך בהם (באג שהתגלה במשוב המשתמש) */
 h1, h2, h3 {
-  font-family: "ChavrutaDisplay", "Frank Ruhl Libre", Georgia, serif;
+  font-family: "ChavrutaDisplay", "Frank Ruhl Libre", Georgia, serif, "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji";
   color: var(--color-secondary-dark);
 }
 
@@ -411,7 +413,8 @@ button:hover {
 }
 
 .auth-form input,
-.auth-form textarea {
+.auth-form textarea,
+.auth-form select {
   padding: 0.65rem;
   margin-bottom: 0.8rem;
   border-radius: 8px;
@@ -423,6 +426,14 @@ button:hover {
 
 .auth-form textarea {
   min-height: 80px;
+}
+
+/* תיקון לפי משוב המשתמש: ל-select לא הייתה הגדרת רוחב/עיצוב כלל (רק ברירת המחדל של הדפדפן) -
+   כך שהוא נראה קטן ולא פרופורציונלי מול שאר שדות הטופס (ראו למשל "קבוצה" ב-/learning וב-/groups/new) */
+.auth-form select {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
 }
 
 /* עטיפת שדה סיסמה + כפתור "עין" להצגה/הסתרה (server/public/js/passwordToggle.js) */
@@ -588,6 +599,90 @@ button:hover {
   color: #b3261e;
 }
 
+/* =====================================================================
+   צ'אט קבוצתי - תמונות ואימוג'י - תוספת לפי משוב המשתמש (אוקטובר 2026): "ממש מעולה. צריך
+   שיהיה אופציה להוסיף תמונות ואימוג'י" (server/views/groups/chat.ejs, server/public/js/chat.js)
+   ===================================================================== */
+.chat-image {
+  display: block;
+  max-width: 220px;
+  max-height: 220px;
+  border-radius: 10px;
+  margin-bottom: 0.3rem;
+  object-fit: cover;
+}
+
+.chat-input-row {
+  position: relative;
+  align-items: center;
+}
+
+.chat-icon-btn {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  width: 2.3rem;
+  height: 2.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background-color 0.2s ease;
+}
+.chat-icon-btn:hover {
+  background: var(--color-border);
+}
+
+/* פופאפ בחירת אימוג'י - רשת קבועה, נבנית דינמית ע"י chat.js מתוך CHAT_EMOJIS */
+.chat-emoji-picker {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 0.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-hover);
+  padding: 0.6rem;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.2rem;
+  z-index: 20;
+}
+.chat-emoji-option {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 8px;
+  line-height: 1;
+}
+.chat-emoji-option:hover {
+  background: var(--color-bg);
+}
+
+/* תצוגה מקדימה לתמונה שנבחרה, לפני לחיצה על "שליחה" */
+.chat-pending-image {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0.4rem 0.7rem;
+  margin-bottom: 0.5rem;
+}
+.chat-pending-image img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
 /* ===== גרפי D3 קהילתיים (שבוע 4 - FR-025, FR-026, FR-027) ===== */
 .stats-grid {
   display: grid;
@@ -625,6 +720,102 @@ button:hover {
 
 .gallery-thumb:hover {
   transform: scale(1.03);
+}
+
+/* =====================================================================
+   טופס "פרסום פוסט חדש" ועיצוב כרטיסי פוסטים - עודכן לפי משוב המשתמש (אוקטובר 2026)
+   server/views/groups/show.ejs - "לא כיף לעלות פוסט... לא 'מוכר' כל כך"
+   ===================================================================== */
+.new-post-card h2 {
+  margin-top: 0;
+}
+
+.new-post-form textarea {
+  min-height: 130px;
+  background: var(--color-surface);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  line-height: 1.7;
+  box-shadow: inset 0 1px 4px rgba(43, 38, 32, 0.05);
+}
+.new-post-form textarea::placeholder {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* בוחר סוג הפוסט כפתורי-פיל ניתנים ללחיצה, במקום select משעמם - מבוסס על .option-pill הקיים */
+.post-category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.3rem 0 1rem;
+}
+.category-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.category-pill input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.category-pill:has(input:checked) {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+/* תצוגה מקדימה לתמונות שנבחרו לפני פרסום (server/public/js/postForm.js) */
+.post-image-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0.8rem;
+}
+.post-image-preview-thumb {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: var(--shadow-soft);
+}
+
+/* כרטיסי פוסטים - תגית קטגוריה צבעונית + שם מחבר בשורה אחת, במקום טקסט "meta" שטוח */
+.post-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+}
+.post-category-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: bold;
+}
+.post-category-dvarTorah {
+  background: rgba(201, 123, 60, 0.15);
+  color: var(--color-primary-dark);
+}
+.post-category-question {
+  background: rgba(31, 111, 92, 0.15);
+  color: var(--color-secondary-dark);
+}
+.post-category-update {
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+.post-author {
+  font-weight: 600;
+}
+.post-content {
+  white-space: pre-wrap;
 }
 
 /* תמונת פרופיל (אווטאר) קטנה - מוצגת בתפריט העליון ליד שם המשתמש (server/views/partials/header.ejs) */
@@ -1764,23 +1955,54 @@ html[data-font-size="xlarge"] {
   font-weight: bold;
 }
 
+/* עודכן לפי משוב המשתמש: "יותר מדי צבעים" - במקום גרדיאנט דו-גוני (כתום+ירוק) שיצר מראה "מוזר",
+   עבר לגוון ירוק אחד נקי (עם גרסה כהה קלה לעומק עדין בלבד, לא שני צבעים שונים) */
 .learning-hero {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
   color: #fff;
-  padding: 1.6rem 1.8rem;
+  padding: 2.2rem 1.8rem;
   border-radius: var(--radius);
   margin-bottom: 1.5rem;
   box-shadow: var(--shadow-soft);
+  text-align: center;
 }
+/* חשוב: מאפסים כאן את אפקט "כותרת בגרדיאנט" הגלובלי (h1 { background-clip:text; -webkit-text-fill-color:transparent })
+   כי זה בדיוק מה שגרם לכותרת (וגם לאימוג'י) להיראות "שקופה"/מוזרה מעל רקע הגיבור הצבעוני -
+   כאן הרקע כבר צבעוני בעצמו, אז הכותרת צריכה להיות טקסט לבן מלא ופשוט */
 .learning-hero h1 {
-  margin: 0 0 0.4rem;
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: #fff;
+  color: #fff;
+  margin: 0 0 0.5rem;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.learning-hero h1::after {
+  display: none; /* הפס הצבעוני שמתחת לכותרות לא נחוץ כאן - הרקע כבר צבעוני */
 }
 .learning-hero .meta {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  max-width: 560px;
+  margin: 0 auto 1.2rem;
 }
-.learning-hero .btn-secondary {
-  margin-top: 0.4rem;
+/* כפתור "צפייה בלוח ההתקדמות" - ממורכז מתחת לכותרת, בולט ומזמין (לא תקוע בצד ימין כמו קודם) */
+.learning-hero-cta {
   display: inline-block;
+  background: #fff;
+  color: var(--color-secondary-dark);
+  font-weight: bold;
+  font-size: 1.02rem;
+  padding: 0.75rem 1.8rem;
+  border-radius: 999px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.learning-hero-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
 
 .learning-log-heading {
@@ -1880,19 +2102,27 @@ html[data-font-size="xlarge"] {
   color: #b3261e;
 }
 
-/* ===== טופס רישום חדש - תיבת טקסט מעוצבת ומושכת יותר (לבקשת המשתמש) ===== */
+/* ===== טופס רישום חדש - תיבת טקסט מעוצבת ומושכת יותר (עודכן לפי משוב נוסף של המשתמש - "לא אהבתי את הצורה") ===== */
 .learning-form textarea {
-  min-height: 120px;
-  background: var(--color-bg);
+  min-height: 130px;
+  background: var(--color-surface);
   border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  line-height: 1.7;
+  box-shadow: inset 0 1px 4px rgba(43, 38, 32, 0.05);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.learning-form textarea::placeholder {
+  color: var(--color-text-muted);
+  font-style: italic;
 }
 .learning-form textarea:focus,
 .learning-form input:focus,
 .learning-form select:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(201, 123, 60, 0.15);
+  box-shadow: 0 0 0 3px rgba(201, 123, 60, 0.18);
 }
 
 /* ===== רשימת רישומי הלימוד - כרטיסים ===== */
