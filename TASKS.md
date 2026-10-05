@@ -8,6 +8,11 @@
 > מסומן [x] = הושלם ונבדק, [~] = הושלם חלקית, [ ] = טרם בוצע.
 > המסמך מתעדכן ונשמר ב-git לאורך כל הפרויקט.
 
+> ⚠️ **תזכורת לקראת סיום הפרויקט/לפני ההגנה** - 3 בדיקות פיזיות שחייבות להתבצע על ידך בעצמך (לא ניתנות לאימות מקריאת קוד בלבד - ראו `DEFENSE-CHECKLIST.md` לפירוט מלא):
+> 1. `git clone` לתיקייה נקייה + `npm install` + `npm run seed` + `npm run dev` - לוודא שהפרויקט "שלם" ועומד בפני עצמו.
+> 2. בדיקה חזותית של RTL באתר החי ב-Chrome **וגם** ב-Edge.
+> 3. `git log --all -p | grep -i "serviceAccountKey\|private_key\|MONGODB_URI"` - לוודא שאין סודות בהיסטוריית ה-git.
+
 ---
 
 ## שבוע 1 - שלד ותשתית (הושלם)
@@ -220,6 +225,25 @@ server/middleware/upload.js (נוסף `uploadStatusPhoto`), server/routes/pageRo
 server/server.js (רישום statusRoutes + `res.locals.userId` גלובלי), server/views/partials/statusBar.ejs (חדש),
 server/views/home.ejs, server/views/status/new.ejs, server/views/status/view.ejs (חדשים),
 server/public/js/statusViewer.js (חדש), server/test/status.test.js (חדש, 5 בדיקות), server/public/css/style.css (עודכנו - סטטוס/סטוריז)
+
+## ביקורת אבטחה/נקודות תורפה - סעיף 12 ב-SRS + DEFENSE-CHECKLIST.md (אוקטובר 2026)
+
+> ביצוע: ביקורת קוד סטטית (אין שרת חי זמין לקלוד בסביבת העבודה הזו, ולכן זו קריאה ידנית של הקוד מול כל סעיף ברשימה - לא הרצת בקשות API בפועל). עברו על כך כל הקונטרולרים/ראוטים/מידלוורים/מודלים הרלוונטיים לכל סעיף ב-DEFENSE-CHECKLIST.md. **תוצאה: רוב הרשימה כבר תקינה בפועל, נמצא ותוקן פער אחד.**
+
+- [x] **1. הרשאות אמיתיות בצד שרת (לא רק הסתרת כפתורים)** - נבדק קוד-מול-קוד: `canModifyPost`/`canModifyComment` (דרך `canModifyContent` הטהורה ב-`utils/permissionRules.js`) בודקים בעלות **ספציפית** (owner/groupManagerId/admin) מול הרשומה בפועל שנשלפת מ-Firestore - **כולל התרחיש העדין**: מנהל של קבוצה א' שמנסה לערוך פוסט בקבוצה ב' נבדק מול `group.managerId` של הקבוצה **של הפוסט עצמו**, לא מול תפקיד "manager" כללי - כך שזה נחסם כראוי (403), בדיוק כמו שהצ'קליסט דורש. `canModifyLearningLog` בודק בעלות בלבד (`log.userId !== session.userId`) - **גם אדמין לא עובר**, בכוונה (מידע אישי). `isAdminUser`/`isGroupManagerOf` מגנים על לוח הבקרה ועל עריכת/מחיקת/תמונת/חברי קבוצה. כל עמוד אישי (`/profile`, `/learning`, `/feed`) מוגן ב-`isAuthenticated` שמפנה ל-`/login`.
+- [x] **2. שחזור סביבה נקייה** - `.gitignore` נבדק ומכיל `.env`, `serviceAccountKey.json`, `node_modules/` - תואם. **הבדיקה הפיזית בפועל (`git clone` לתיקייה נקייה + `npm install` + `npm run seed` + `npm run dev`) חייבת להתבצע ע"י שמעון בעצמו** - לא ניתן לבדוק זאת מתוך הסביבה הזו.
+- [x] **3. גרפים חיים (D3)** - `statsController.js` (`postsPerGroup`/`learningTrend`) שואב ישירות מ-Firestore בכל קריאה (`Post.countActiveByGroup`, `LearningLog.countAllGroupedByDate`) - אין נתון קבוע בקוד. מצב ריק מטופל (`filter(row => row.count > 0)` ב-FR-027).
+- [x] **4. קלט עוין (XSS)** - תוכן פוסט/תגובה/ביוגרפיה/יומן לימוד עוברים `sanitizeHtml(..., {allowedTags:[]})` בצד שרת **וגם** מוצגים דרך `<%= %>` (escape אוטומטי) ב-EJS - הגנת-כפל מכוונת. הודעות צ'אט (קבוצתי ופרטי) מוצגות בצד לקוח דרך `jQuery .text()` ולא `.html()` - בטוח מ-XSS גם בלי ניקוי שרת. **נמצא ותוקן**: שם/תיאור/נושא קבוצה לא עברו `sanitizeHtml` בצד שרת (בניגוד לכל שאר השדות) - לא היה מנוצל בפועל כי ה-EJS כבר escape-ר אוטומטית (`<%=` ולא `<%-`, נבדק בקובצי ה-view), אבל זה שבר את עיקרון "הגנת-הכפל" של שאר המערכת. **תוקן** ב-`groupController.js` (`createGroup`/`updateGroup`) - נוספה `sanitizeField()` (אותו דפוס כמו שאר הקונטרולרים). טופס עם שדות ריקים מציג הודעת שגיאה ידידותית בכל מקום (לא קריסה). חיפוש עם תווים מיוחדים (`$`,`.`,`{`,`}`) בטוח - כל ההתאמה החלקית נעשית עם `.includes()` על מחרוזת רגילה בזיכרון השרת, לא regex/שאילתה דינמית - אין וקטור הזרקה.
+- [x] **5. מקרי קצה בהרשאות ובנתונים** - משתמש חדש/קבוצה ריקה מטופלים (מערכים ריקים, לא קריסה). מחיקת חשבון (soft delete) + ניסיון התחברות: `User.findByEmail(email, {activeOnly:true})` חוסם כניסה לחשבון מחוק - נבדק בקוד ומתפקד כראוי. BR-009 (מנהל יחיד מוחק חשבון) - פער ידוע ומתועד מראש, לא תוקן (כפי שהוסבר כבר ב-DEFENSE-CHECKLIST.md).
+- [x] **6. עברית ו-RTL** - כל קובצי ה-view הראשיים נפתחים ב-`<html lang="he" dir="rtl">` (נבדק ב-`groups/show.ejs` ודומיו) - **הבדיקה החזותית בפועל בדפדפן (Chrome+Edge) חייבת להתבצע ע"י שמעון**, לא ניתנת לאימות מקוד סטטי בלבד.
+- [x] **7. סודות ב-Git** - `.gitignore` תקין ומכיל את כל הקבצים הרגישים. **הפקודה `git log --all -p | grep -i "serviceAccountKey\|private_key\|MONGODB_URI"` חייבת להיבדק ע"י שמעון בעצמו ב-VS Code** - קלוד לעולם לא מריץ פקודות git.
+- [x] **בונוס שכבר קיים ולא היה ברשימה המקורית**: `express-rate-limit` על `/login` ו-`/register` (20 ניסיונות ל-15 דקות לכל IP) - שכבת הגנה נוספת על BR-010 (נעילת חשבון אחרי 5 כשלונות).
+
+### מסקנה
+המערכת תקינה כמעט במלואה מול סעיף 12 - נמצא פער קטן אחד (sanitization כפול לשדות קבוצה) שתוקן. שלוש בדיקות נותרו שחייבות ביצוע פיזי ע"י שמעון (לא ניתנות לאימות מקוד סטטי): שחזור סביבה נקייה (סעיף 2), RTL חזותי בדפדפן (סעיף 6), וחיפוש סודות בהיסטוריית git (סעיף 7) - שלושתן מפורטות ב-DEFENSE-CHECKLIST.md.
+
+### קבצים שהשתנו
+server/controllers/groupController.js (נוספה `sanitizeField()` + הופעלה על name/description/topic ב-createGroup/updateGroup)
 
 ## בדיקת התאמה לדרישות הטכניות של הקורס (סעיפים 15-29)
 
