@@ -33,6 +33,7 @@ const statsRoutes = require("./routes/statsRoutes"); // שבוע 4 - נתוני 
 const holidayRoutes = require("./routes/holidayRoutes"); // "מעגל השנה" - FR-028, FR-029
 const adminRoutes = require("./routes/adminRoutes"); // לוח בקרה למנהל מערכת
 const notificationRoutes = require("./routes/notificationRoutes"); // פעמון התראות בזמן אמת
+const mobileRoutes = require("./routes/mobileRoutes"); // API לאפליקציית המובייל (React Native/Expo) - דרישת המרצה
 
 const app = express();
 
@@ -106,6 +107,7 @@ app.use("/", statsRoutes); // שבוע 4
 app.use("/", holidayRoutes); // מעגל השנה
 app.use("/", adminRoutes); // לוח בקרה למנהל
 app.use("/", notificationRoutes); // פעמון התראות
+app.use("/", mobileRoutes); // API לאפליקציית המובייל
 
 // טיפול בשגיאות - חייב להיות אחרון (סעיף 8 ב-SRS)
 app.use(notFound);

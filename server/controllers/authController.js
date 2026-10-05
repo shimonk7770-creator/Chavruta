@@ -8,9 +8,9 @@ const sanitizeHtml = require("sanitize-html");
 const User = require("../models/User");
 const { isValidPassword } = require("../utils/validators"); // BR-002, נבדק גם אוטומטית ב-server/test/validators.test.js
 const shabbatTimes = require("../utils/shabbatTimes"); // כרטיס "זמני שבת" בדף הבית - צריך לדעת את עיר המשתמש
-
-const MAX_FAILED_ATTEMPTS = 5; // BR-010
-const LOCK_TIME_MS = 15 * 60 * 1000; // 15 דקות
+// עדכון (אפליקציית המובייל, אוקטובר 2026): לוגיקת בדיקת אימייל+סיסמה+נעילת חשבון (BR-010) הוצאה
+// לשירות משותף כדי שתהיה זהה בדיוק בין ההתחברות באתר (כאן) לבין ההתחברות באפליקציה (mobileController.js)
+const { verifyCredentials } = require("../services/loginService");
 
 // GET /register - מציג את טופס ההרשמה
 function showRegisterForm(req, res) {
@@ -87,42 +87,22 @@ async function login(req, res) {
   const keepEmail = { email: email || "" };
 
   try {
-    // activeOnly: משתמש שמחק את חשבונו (FR-005) לא יכול להתחבר יותר
-    const user = await User.findByEmail(email, { activeOnly: true });
+    // הבדיקה עצמה (כולל BR-010 נעילת חשבון ומניעת enumeration) נמצאת ב-services/loginService.js -
+    // משותפת בין האתר לאפליקציית המובייל, ראו הערה למעלה
+    const result = await verifyCredentials(email, password);
 
-    // הודעת שגיאה כללית - לא חושפים אם האימייל קיים או שהסיסמה שגויה (מניעת enumeration)
-    const genericError = "אימייל או סיסמה שגויים";
-
-    if (!user) {
-      return res.render("login", { error: genericError, ...keepEmail });
-    }
-
-    // BR-010: בדיקת נעילת חשבון זמנית
-    if (User.isLocked(user)) {
-      const minutesLeft = Math.ceil((new Date(user.lockUntil) - Date.now()) / 60000);
-      return res.render("login", {
-        error: `החשבון נעול זמנית עקב ניסיונות כושלים רבים. נסה שוב בעוד כ-${minutesLeft} דקות`,
-        ...keepEmail,
-      });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
-
-    if (!isMatch) {
-      // עדכון מונה ניסיונות כושלים
-      const failedLoginAttempts = user.failedLoginAttempts + 1;
-      const patch = { failedLoginAttempts };
-      if (failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
-        patch.lockUntil = new Date(Date.now() + LOCK_TIME_MS);
-        patch.failedLoginAttempts = 0;
+    if (!result.ok) {
+      if (result.reason === "locked") {
+        return res.render("login", {
+          error: `החשבון נעול זמנית עקב ניסיונות כושלים רבים. נסה שוב בעוד כ-${result.minutesLeft} דקות`,
+          ...keepEmail,
+        });
       }
-      await User.update(user.id, patch);
-      return res.render("login", { error: genericError, ...keepEmail });
+      // "invalid" - לא חושפים אם האימייל קיים או שהסיסמה שגויה (מניעת enumeration)
+      return res.render("login", { error: "אימייל או סיסמה שגויים", ...keepEmail });
     }
 
-    // התחברות מוצלחת - איפוס מונה הכשלונות
-    await User.update(user.id, { failedLoginAttempts: 0, lockUntil: null });
-
+    const user = result.user;
     req.session.userId = user.id;
     req.session.userRole = user.role;
     req.session.userName = user.fullName;
