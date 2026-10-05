@@ -21,7 +21,11 @@
       <% messages.forEach(function(msg) { %>
         <div class="chat-message<%= msg.senderId === userId ? ' mine' : '' %>">
           <span class="chat-sender"><%= msg.senderName %></span>
-          <span class="chat-content"><%= msg.content %></span>
+          <!-- תוספת לפי משוב המשתמש (אוקטובר 2026): תמונה בהודעת צ'אט - אופציונלי, יכול להופיע גם בלי טקסט -->
+          <% if (msg.imageUrl) { %>
+            <a href="<%= msg.imageUrl %>" target="_blank" rel="noopener"><img src="<%= msg.imageUrl %>" class="chat-image" alt="תמונה בצ'אט" /></a>
+          <% } %>
+          <% if (msg.content) { %><span class="chat-content"><%= msg.content %></span><% } %>
         </div>
       <% }) %>
     </div>
@@ -29,10 +33,21 @@
     <p id="chat-typing-indicator" class="meta chat-typing" style="display:none"></p>
     <p id="chat-connection-status" class="meta chat-status"></p>
 
-    <form id="chat-form" class="comment-form">
-      <input type="text" id="chat-input" placeholder="כתבו הודעה..." maxlength="1000" autocomplete="off" required />
+    <!-- תצוגה מקדימה לתמונה שנבחרה לפני שליחה (server/public/js/chat.js) -->
+    <div id="chat-pending-image" class="chat-pending-image" style="display:none">
+      <img id="chat-pending-image-thumb" src="" alt="תצוגה מקדימה" />
+      <button type="button" id="chat-pending-image-remove" class="btn-link" title="הסרת התמונה">✕</button>
+    </div>
+
+    <form id="chat-form" class="comment-form chat-input-row">
+      <button type="button" id="chat-emoji-btn" class="chat-icon-btn" title="הוספת אימוג'י">😀</button>
+      <label for="chat-image-input" class="chat-icon-btn" title="שליחת תמונה">📷</label>
+      <input type="file" id="chat-image-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" />
+      <input type="text" id="chat-input" placeholder="כתבו הודעה..." maxlength="1000" autocomplete="off" />
       <button type="submit">שליחה</button>
     </form>
+    <!-- פופאפ בחירת אימוג'י - רשימה סגורה וקבועה (בלי ספרייה/תלות חיצונית חדשה), מוצג/מוסתר ע"י chat.js -->
+    <div id="chat-emoji-picker" class="chat-emoji-picker" style="display:none"></div>
 
     <p><a href="/groups/<%= group.id %>">חזרה לעמוד הקבוצה</a></p>
   </main>

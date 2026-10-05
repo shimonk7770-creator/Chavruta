@@ -73,6 +73,14 @@ const uploadHolidayPhoto = multer({
   limits: { fileSize: IMAGE_MAX_SIZE_BYTES, files: 1 },
 });
 
+// תמונה בהודעת צ'אט קבוצתי (עדכון: בקשת המשתמש - "אופציה להוסיף תמונות") - קובץ בודד, אותו דפוס בדיוק.
+// מועלית דרך נתיב REST ייעודי (לא Socket.io, שלא מטפל בקבצים בעצמו) - ראו chatController.uploadChatImage
+const uploadChatImage = multer({
+  storage,
+  fileFilter: makeFileFilter(IMAGE_MIME_TYPES, "התמונה חייבת להיות בפורמט JPG, PNG, WEBP או GIF"),
+  limits: { fileSize: IMAGE_MAX_SIZE_BYTES, files: 1 },
+});
+
 module.exports = {
   uploadVideo,
   uploadImages,
@@ -80,5 +88,6 @@ module.exports = {
   uploadGroupPhoto,
   uploadStatusPhoto,
   uploadHolidayPhoto,
+  uploadChatImage,
   UPLOAD_DIR,
 };

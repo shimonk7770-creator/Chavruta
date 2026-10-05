@@ -31,9 +31,11 @@ function toMillis(v) {
 }
 
 // FR-021: שמירת הודעה חדשה - נקרא מ-server/sockets/chatSocket.js אחרי אימות חברות בקבוצה
-async function create({ groupId, senderId, senderName, content }) {
+// תוספת לפי משוב המשתמש (אוקטובר 2026): הודעה יכולה לכלול תמונה (imageUrl) - מותר גם הודעה עם תמונה בלבד,
+// בלי טקסט בכלל (בדיוק כמו בוואטסאפ) - ולכן הבדיקה היא "אין טקסט וגם אין תמונה", לא רק "אין טקסט"
+async function create({ groupId, senderId, senderName, content, imageUrl }) {
   const trimmed = (content || "").trim();
-  if (!trimmed) {
+  if (!trimmed && !imageUrl) {
     throw new Error("לא ניתן לשלוח הודעה ריקה");
   }
   if (!groupId || !senderId) {
@@ -46,6 +48,7 @@ async function create({ groupId, senderId, senderName, content }) {
     senderId,
     senderName: senderName || "",
     content: trimmed.slice(0, MAX_CONTENT_LENGTH),
+    imageUrl: imageUrl || "",
     createdAt: new Date(),
   });
   return findById(docRef.id);

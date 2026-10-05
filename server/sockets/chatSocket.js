@@ -59,7 +59,9 @@ module.exports = function initChatSocket(io) {
 
     // FR-021: שליחת הודעה - נשמרת ב-Firestore ואז משודרת (broadcast) לכל חברי החדר, כולל השולח עצמו
     // (כך גם השולח רואה את ההודעה שלו באותו נתיב קוד בדיוק כמו כולם - פחות מקרי קצה בצד הלקוח)
-    socket.on("chat:send", async ({ groupId, content }) => {
+    // עדכון (בקשת המשתמש): imageUrl אופציונלי - התמונה עצמה כבר הועלתה קודם דרך REST (chatController.uploadChatImage),
+    // וכאן רק מעבירים את הנתיב שלה הלאה יחד עם ההודעה, באותו אירוע socket בדיוק כמו הודעת טקסט רגילה
+    socket.on("chat:send", async ({ groupId, content, imageUrl }) => {
       try {
         if (socket.currentGroupId !== groupId) {
           socket.emit("chat:error", "יש להצטרף לחדר הצ'אט לפני שליחת הודעה");
@@ -76,6 +78,7 @@ module.exports = function initChatSocket(io) {
           senderId: userId,
           senderName: userName,
           content,
+          imageUrl,
         });
 
         io.to(groupId).emit("chat:message", message);

@@ -53,4 +53,19 @@ async function chatHistorySince(req, res, next) {
   }
 }
 
-module.exports = { showChat, chatHistorySince };
+// POST /api/groups/:id/chat/image - תוספת לפי משוב המשתמש (אוקטובר 2026): העלאת תמונה לצ'אט הקבוצתי.
+// Socket.io לא מטפל בקבצים בעצמו - לכן התמונה עולה קודם דרך נתיב REST רגיל (multer, אותו דפוס בדיוק
+// כמו תמונת פוסט/סטטוס/חג), ומחזירה imageUrl; הלקוח (chat.js) אז שולח chat:send עם imageUrl דרך ה-socket
+// הקיים, בדיוק כמו הודעת טקסט רגילה - בלי לשנות את פרוטוקול ה-socket עצמו.
+async function uploadChatImage(req, res) {
+  const group = await Group.findById(req.params.id);
+  if (!group || !group.members.includes(req.session.userId)) {
+    return res.status(403).json({ success: false, message: "אין הרשאה לשלוח תמונה לצ'אט זה" });
+  }
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: "יש לבחור תמונה" });
+  }
+  res.json({ success: true, imageUrl: `/uploads/${req.file.filename}` });
+}
+
+module.exports = { showChat, chatHistorySince, uploadChatImage };
