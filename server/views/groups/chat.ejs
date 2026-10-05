@@ -41,13 +41,15 @@
 
     <form id="chat-form" class="comment-form chat-input-row">
       <button type="button" id="chat-emoji-btn" class="chat-icon-btn" title="הוספת אימוג'י">😀</button>
+      <!-- פופאפ בחירת אימוג'י - רשימה סגורה וקבועה (בלי ספרייה/תלות חיצונית חדשה), מוצג/מוסתר ע"י chat.js.
+           חייב להיות בתוך .chat-input-row (לא מחוץ ל-form!) כדי ש-position:absolute יתמקם ביחס אליה (position:relative) -
+           זה בדיוק מה שהיה שבור קודם: הפופאפ היה מחוץ לטופס ולכן התמקם מחוץ למסך ולא היה נראה בכלל -->
+      <div id="chat-emoji-picker" class="chat-emoji-picker" style="display:none"></div>
       <label for="chat-image-input" class="chat-icon-btn" title="שליחת תמונה">📷</label>
       <input type="file" id="chat-image-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" />
       <input type="text" id="chat-input" placeholder="כתבו הודעה..." maxlength="1000" autocomplete="off" />
       <button type="submit">שליחה</button>
     </form>
-    <!-- פופאפ בחירת אימוג'י - רשימה סגורה וקבועה (בלי ספרייה/תלות חיצונית חדשה), מוצג/מוסתר ע"י chat.js -->
-    <div id="chat-emoji-picker" class="chat-emoji-picker" style="display:none"></div>
 
     <p><a href="/groups/<%= group.id %>">חזרה לעמוד הקבוצה</a></p>
   </main>
