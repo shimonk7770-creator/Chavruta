@@ -167,6 +167,60 @@ server/test/validators.test.js, server/test/permissionRules.test.js, server/util
 server/models/Notification.js, server/sockets/ioInstance.js, server/controllers/notificationController.js, server/routes/notificationRoutes.js,
 server/public/js/notifications.js, server/utils/notificationRecipients.js, server/test/notificationRecipients.test.js
 
+## שיפורים שהועברו מפרויקט React אישי נפרד ("חת"ת יומי", github.com/shimonk7770-creator/REACTWORK)
+
+> המשתמש ביקש לקחת מפרויקט אחר שבנה בעצמו רעיונות עיצוב/פיצ'רים - נבחרו ואושרו שלושה: זמני שבת, נגישות (גודל טקסט), עיצוב "hero-card".
+
+- [x] **כרטיס "זמני שבת" בדף הבית** (`server/utils/shabbatTimes.js`) - חישוב אסטרונומי **אמיתי** (הדלקת נרות/צאת שבת/פרשת השבוע) לפי ספריית קוד-פתוח מוכרת `@hebcal/core`, **לא** חישוב עצמאי - בדיוק כמו ש-bcrypt משמש להצפנה במקום לכתוב הצפנה בעצמנו. חשוב להבדיל מדרישת "מעגל השנה" (למעלה) שנשארת **במפורש** מחוץ להיקף (SRS 2.2, אין חישוב תאריך עברי) - שני דברים שונים לגמרי.
+  - הספרייה היא ESM טהורה (אין תמיכת CommonJS) - נטענת עם `import()` דינמי בתוך שאר הקוד שכתוב CommonJS, בדיוק כפי שהספרייה עצמה ממליצה לפרויקטי Node ישנים יותר.
+  - במקום טופס טקסט חופשי (שנכשל בשקט על רוב הערים בישראל בבדיקה ידנית - `Location.lookup` המובנה מזהה "Tel Aviv" אבל לא "Bnei Brak"/"Petah Tikva" למשל) - נבחר תפריט נפתח סגור עם 21 ערים נתמכות (`shabbatTimes.CITIES`, קואורדינטות אמיתיות) בעברית, ב-`GET /profile`. עדיין 100% חישוב אמיתי של הספרייה - רק שהאיתור של הקואורדינטות לעיר נעשה דרך רשימה סגורה במקום מנוע חיפוש חלקי.
+  - `User.shabbatCity` (ברירת מחדל: ירושלים), מתעדכן בהרשמה/התחברות/עדכון פרופיל (`req.session.shabbatCity`, אותו דפוס בדיוק כמו `userAvatarUrl`).
+  - `GET /` (`pageRoutes.js`) הפך ל-async ומחשב את הכרטיס עם try/catch - אם החישוב נכשל מכל סיבה, הכרטיס פשוט לא מוצג (לא נופל דף הבית כולו).
+  - 7 בדיקות `node:test` חדשות (`server/test/shabbatTimes.test.js`) - כולל בדיקה שערים שונות מחזירות תוצאה שונה, ושמפתח עיר לא תקין נופל בחזרה לברירת המחדל בלי לזרוק שגיאה.
+- [x] **נגישות - גודל טקסט** (`server/public/js/fontSize.js`, כפתורי "רגיל/גדול/גדול מאוד" ב-`GET /profile`) - העדפה שנשמרת ב-`localStorage` של הדפדפן בלבד (לא ב-Firestore - זו העדפת תצוגה של המכשיר, לא נתון עסקי שצריך סנכרון בין מכשירים), עם סקריפט מניעת-הבהוב מוקדם ב-`partials/head.ejs` (אותו דפוס בדיוק כמו מצב כהה/בהיר הקיים).
+- [x] **עיצוב "hero-card"** - כרטיס זמני השבת בדף הבית עוצב כ"hero-card" בולט (גרדיאנט + כרטיסי הדגשה `accent-card` פנימיים להדלקת-נרות/צאת-שבת) בהשראת עיצוב הפרויקט האחר, מותאם לפלטת הצבעים הקיימת של האתר (כתום-חום + טורקיז) במקום שכפול צבעי המקור.
+
+### קבצים חדשים/שהשתנו עבור שיפורים אלו
+server/utils/shabbatTimes.js, server/test/shabbatTimes.test.js, server/public/js/fontSize.js (חדשים) ·
+package.json (נוספה תלות `@hebcal/core`), server/models/User.js, server/controllers/authController.js, server/routes/pageRoutes.js,
+server/views/home.ejs, server/views/profile.ejs, server/views/partials/head.ejs, server/public/css/style.css (עודכנו)
+
+## שיפורי UX/תוכן בעקבות סבב משוב נוסף של המשתמש (אוקטובר 2026)
+
+> בקשה מרוכזת של 8 שיפורים - **כל 8 השיפורים הושלמו** (פוטר, ניווט לאורח, סרטון דף הבית, קישורי הרשמה/התחברות הדדיים, מעגל השנה בחודש נוכחי, עיצוב קבוצות בהשראת וואטסאפ, צ'אט פרטי 1-על-1, ופיצ'ר "סטטוס"/סטוריז). הפריט השמיני ("עוד דברים שהמרצה ביקש") טרם פורט במדויק - ממתין לפירוט נוסף מהמשתמש.
+
+- [x] **פוטר "אודות" בכל עמוד** - `server/views/partials/footer.ejs` חדש (שם האתר + "כל הזכויות שמורות &lt;שנה נוכחית&gt;"), מוכל (`include`) בכל 22 קובצי ה-views הקיימים (כולל דף שגיאה) כדי שיופיע בתחתית כל עמוד באתר באופן עקבי.
+- [x] **ניווט מצומצם לאורח** - לפני התחברות, התפריט העליון מציג רק בית/הרשמה/התחברות/מצב כהה-בהיר. קבוצות/חיפוש/מעגל השנה/הרשאות עברו לבלוק `isLoggedIn` ב-`partials/header.ejs` ומוצגים רק למשתמש מחובר. **חשוב**: הראוטים עצמם (`GET /holidays`, `GET /permissions` וכו') נשארו ציבוריים בכתובת ישירה - רק קישור הניווט הוסתר, כדי לשמר תאימות ל-FR-029 שדורשת גישת אורח לעמוד מעגל השנה.
+- [x] **תיקון סרטון דף הבית** - הוחלף מ-iframe סטטי ל-YouTube IFrame Player API הרשמי: נגינה אוטומטית מושתקת (כדי שדפדפנים יאפשרו autoplay), לולאה אינסופית אמיתית (`loop:1` + `playlist:<videoId>` - נדרש ע"י YouTube כדי שלולאה תעבוד על סרטון בודד), וכפתור "הפעלת קול" ייעודי שקורא ל-`player.unMute()/mute()`.
+- [x] **קישורי הרשמה/התחברות הדדיים** - `login.ejs`: "עוד לא נרשמת? להרשמה". `register.ejs`: "נרשמתם כבר? להתחברות".
+- [x] **מעגל השנה - חודש נוכחי בלבד + ניווט + הדגשת חגים** - `GET /holidays` עבר מהצגת 12 חודשים יחד לחודש בודד (ברירת מחדל: החודש הנוכחי), עם קישורי "חודש קודם"/"חודש הבא" (`?year=YYYY&month=M`, תומך גם במעבר בין שנים בקצוות ינואר/דצמבר) וקישור "חזרה לחודש הנוכחי" כשצופים בחודש אחר. ימי חג מודגשים ברקע כתום בולט (`--color-primary`) + שם החג מוצג בתוך התא, עם מקרא (`legend`) מתחת ללוח המסביר את הסימון. מימוש: `calendarGrid.js` פוצל לפונקציית `buildMonth(holidays, year, monthIndex)` חדשה לחודש בודד, כאשר `buildYearGrid` הישנה (עדיין נבדקת) כעת רק קוראת לה בלולאה - כך שהבדיקות הקיימות נשארו תקפות ונוספו 4 בדיקות חדשות ל-`buildMonth`.
+
+- [x] **עמוד קבוצות - עיצוב מחדש בהשראת וואטסאפ** - `/groups` עבר לרשימת שורות ("רשימת שיחות") עם תמונת קבוצה עגולה (או אות ראשונה כברירת מחדל), תיאור קצר ותגית מספר חברים, וכפתור "+" צף (FAB) ליצירת קבוצה. עמוד קבוצה בודדת (`/groups/:id`) קיבל כותרת עם תמונת קבוצה גדולה, ורשימת "חברי הקבוצה" עם אווטאר+שם לכל חבר (בתגית/chip), כולל תגית "מנהל". **תמונת קבוצה**: `POST /groups/:id/photo` (מנהל הקבוצה בלבד, `multer`, עד 5MB) - אותו דפוס בדיוק כמו תמונת פרופיל משתמש. **הוספת/הסרת חברים ע"י מנהל** (בנוסף להצטרפות העצמית הקיימת): `POST /groups/:id/members` (לפי שם משתמש) ו-`POST /groups/:id/members/:userId/remove` - שני הראוטים מוגנים ב-`isGroupManagerOf` (מנהל הקבוצה הספציפית או אדמין בלבד), ולא ניתן להסיר את המנהל עצמו.
+
+- [x] **צ'אט פרטי (1-על-1) בין משתמשים** - בנוסף לצ'אט הקבוצתי הקיים (FR-021..FR-024), נוסף צ'אט פרטי מלא בין כל שני משתמשים, עם אותה תשתית Socket.io בדיוק (אותו `server/sockets/chatSocket.js`, אירועי `dm:join`/`dm:send`/`dm:typing` במקביל ל-`chat:*` הקיימים). עמוד חדש **"הודעות"** (`GET /messages`, קישור ניווט חדש בתפריט העליון למשתמש מחובר) מציג רשימת שיחות קיימות (preview של ההודעה האחרונה, בהשראת רשימת הצ'אטים בוואטסאפ) + חיפוש משתמש לפי שם/שם משתמש להתחלת שיחה חדשה (`User.search`, סינון בזיכרון כמו בשאר חיפושי המערכת). עמוד השיחה עצמו (`GET /messages/:userId`) זהה במבנה לצ'אט הקבוצתי (אותם CSS classes, היסטוריה + REST fallback לחיבור מחדש + מחוון "מקליד..."). **מודל**: `Message.js` הורחב עם `dmRoomId` דטרמיניסטי לזוג משתמשים (`dmRoomIdFor`, לא תלוי מי פתח את השיחה ראשון) ופונקציות `createDm`/`listByDm`/`listDmSince`/`listConversationsForUser`, בלי לשנות את ה-collection הקיים. התראת פעמון חדשה מסוג `"dm"` נשלחת לנמען (אם אינו פעיל כרגע באותה שיחה), באותו מנגנון בדיוק כמו התראת הודעת קבוצה.
+
+- [x] **פיצ'ר "סטטוס" מלא (סטוריז)** - היקף מאושר במפורש ע"י המשתמש (לא סטטוס טקסט פשוט): תמונה או טקסט (עם בחירת צבע רקע מ-5 גוונים קבועים), נעלם אוטומטית אחרי 24 שעות, עם רשימת "נצפה ע"י" (גלויה רק לבעל הסטטוס - לא חושפים מי צפה למי אחר). שורת עיגולים חדשה בראש דף הבית (`partials/statusBar.ejs`, רק למשתמש מחובר) מציגה את "הסטטוס שלי" + כל שאר המשתמשים עם סטטוס פעיל, עם טבעת צבעונית (יש חדש שלא נצפה) מול טבעת אפורה (כבר נצפה הכל) - בדיוק כמו ההבחנה בוואטסאפ. עמוד הצפייה (`GET /status/u/:userId`) הוא "ויואר" מסך-מלא עם סרגלי התקדמות (מתקדם אוטומטית כל 5 שניות), אזורי הקשה ימין/שמאל למעבר ידני, ורישום צפייה אוטומטי (`POST /status/:id/view` דרך `fetch`, לא נספר כצפייה עצמית של הבעלים). **"נעלמת" אחרי 24 שעות**: ללא מחיקה פיזית בפועל (כמו ארכוב קבוצות/פוסטים, BR-011) - פשוט מסוננת בשאילתות הקריאה (`Status.isExpired`, נבדק ב-5 בדיקות `node:test` חדשות). מחיקה מוקדמת ע"י הבעלים אפשרית (`POST /status/:id/delete`).
+
+### קבצים חדשים/שהשתנו עבור השיפורים שהושלמו
+server/views/partials/footer.ejs (חדש) ·
+server/views/partials/header.ejs, server/views/home.ejs, server/views/login.ejs, server/views/register.ejs,
+server/public/css/style.css, וכל שאר קובצי ה-views (הוספת include לפוטר בלבד) (עודכנו) ·
+server/utils/calendarGrid.js (נוספה `buildMonth`), server/controllers/holidayController.js, server/views/holidays/index.ejs,
+server/test/calendarGrid.test.js (4 בדיקות חדשות) (עודכנו - מעגל השנה) ·
+server/middleware/upload.js (נוסף `uploadGroupPhoto`), server/models/Group.js (שדה `groupPhotoUrl`),
+server/controllers/groupController.js (`uploadGroupPhoto`/`addMemberByManager`/`removeMemberByManager`),
+server/routes/groupRoutes.js, server/views/groups/index.ejs, server/views/groups/show.ejs (עודכנו - קבוצות בהשראת וואטסאפ) ·
+server/models/Message.js (dmRoomId/createDm/listByDm/listDmSince/listConversationsForUser),
+server/models/User.js (נוספה `search`), server/controllers/messageController.js (חדש), server/routes/messageRoutes.js (חדש),
+server/sockets/chatSocket.js (אירועי dm:*), server/server.js (רישום messageRoutes), server/public/js/dmChat.js (חדש),
+server/views/messages/inbox.ejs, server/views/messages/chat.ejs (חדשים), server/views/partials/header.ejs,
+server/public/css/style.css (עודכנו - צ'אט פרטי 1-על-1) ·
+server/models/Status.js (חדש), server/controllers/statusController.js (חדש), server/routes/statusRoutes.js (חדש),
+server/middleware/upload.js (נוסף `uploadStatusPhoto`), server/routes/pageRoutes.js (טעינת שורת הסטטוס לדף הבית),
+server/server.js (רישום statusRoutes + `res.locals.userId` גלובלי), server/views/partials/statusBar.ejs (חדש),
+server/views/home.ejs, server/views/status/new.ejs, server/views/status/view.ejs (חדשים),
+server/public/js/statusViewer.js (חדש), server/test/status.test.js (חדש, 5 בדיקות), server/public/css/style.css (עודכנו - סטטוס/סטוריז)
+
 ## בדיקת התאמה לדרישות הטכניות של הקורס (סעיפים 15-29)
 
 > הושוו במדויק מול הקוד בפועל (לא רק מול ה-SRS) - ראו את הטבלה המלאה בהודעה ששלח קלוד לשמעון בצ'אט בתאריך 22.09.2026, ותועד כאן לצורכי הגנה.

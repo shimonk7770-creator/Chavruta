@@ -6,6 +6,7 @@
 const Group = require("../models/Group");
 const Message = require("../models/Message");
 const Notification = require("../models/Notification"); // התראות פעמון בזמן אמת
+const User = require("../models/User"); // עדכון: צ'אט פרטי - ולידציה שהנמען קיים ופעיל
 const { pickNotificationRecipients } = require("../utils/notificationRecipients");
 
 // מי (userId) נמצא כרגע (active) בחדר צ'אט מסוים - נבדק לפי אילו sockets מחוברים ל-room הזה כרגע.
@@ -103,6 +104,79 @@ module.exports = function initChatSocket(io) {
     socket.on("chat:typing", (groupId) => {
       if (socket.currentGroupId !== groupId) return;
       socket.to(groupId).emit("chat:typing", { userName }); // socket.to (לא io.to) - לא חוזר לשולח עצמו
+    });
+
+    // ===== עדכון: צ'אט פרטי (1-על-1) - אותו רעיון בדיוק כמו chat:join/chat:send/chat:typing למעלה,
+    // רק שה-"room" הוא dmRoomId דטרמיניסטי לזוג המשתמשים (Message.dmRoomIdFor) ולא groupId =====
+
+    // dm:join - הצטרפות לחדר הצ'אט הפרטי מול משתמש ספציפי
+    socket.on("dm:join", async (otherUserId) => {
+      try {
+        if (!otherUserId || otherUserId === userId) {
+          socket.emit("chat:error", "בקשת שיחה פרטית לא תקינה");
+          return;
+        }
+        const otherUser = await User.findById(otherUserId);
+        if (!otherUser || !otherUser.isActive) {
+          socket.emit("chat:error", "המשתמש המבוקש לא נמצא");
+          return;
+        }
+        const dmRoomId = Message.dmRoomIdFor(userId, otherUserId);
+        socket.join(dmRoomId);
+        socket.currentDmRoomId = dmRoomId;
+        socket.currentDmOtherUserId = otherUserId;
+      } catch (error) {
+        console.error("שגיאה בהצטרפות לחדר צ'אט פרטי:", error.message);
+        socket.emit("chat:error", "שגיאה בהתחברות לצ'אט הפרטי");
+      }
+    });
+
+    // dm:send - שליחת הודעה פרטית, נשמרת ב-Firestore ומשודרת רק לשני הצדדים (room ייעודי לזוג)
+    socket.on("dm:send", async ({ recipientId, content }) => {
+      try {
+        const dmRoomId = Message.dmRoomIdFor(userId, recipientId);
+        if (socket.currentDmRoomId !== dmRoomId) {
+          socket.emit("chat:error", "יש להצטרף לחדר הצ'אט לפני שליחת הודעה");
+          return;
+        }
+        const recipient = await User.findById(recipientId);
+        if (!recipient || !recipient.isActive) {
+          socket.emit("chat:error", "המשתמש המבוקש לא נמצא");
+          return;
+        }
+
+        const message = await Message.createDm({
+          dmRoomId,
+          senderId: userId,
+          senderName: userName,
+          recipientId,
+          content,
+        });
+
+        io.to(dmRoomId).emit("dm:message", message);
+
+        // התראת פעמון לנמען - רק אם הוא לא כרגע active באותו חדר צ'אט (כלומר לא צופה בהודעה החיה)
+        const activeUserIds = getUserIdsInRoom(io, dmRoomId);
+        if (!activeUserIds.has(recipientId)) {
+          const notif = await Notification.create({
+            userId: recipientId,
+            type: "dm",
+            text: `${userName} שלח לך הודעה פרטית`,
+            link: `/messages/${userId}`,
+          });
+          io.to("user:" + recipientId).emit("notification:new", notif);
+        }
+      } catch (error) {
+        console.error("שגיאה בשליחת הודעה פרטית:", error.message);
+        socket.emit("chat:error", error.message || "שגיאה בשליחת ההודעה");
+      }
+    });
+
+    // dm:typing - מחוון "מקליד..." לצ'אט הפרטי, אותו רעיון בדיוק כמו chat:typing
+    socket.on("dm:typing", (recipientId) => {
+      const dmRoomId = Message.dmRoomIdFor(userId, recipientId);
+      if (socket.currentDmRoomId !== dmRoomId) return;
+      socket.to(dmRoomId).emit("dm:typing", { userName });
     });
 
     // FR-024: טיפול בניתוק - Socket.io דואג אוטומטית ל-reconnect בצד הלקוח (socket.io-client).

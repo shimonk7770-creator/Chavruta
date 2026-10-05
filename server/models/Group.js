@@ -30,6 +30,7 @@ async function create(data) {
     level: VALID_LEVELS.includes(data.level) ? data.level : "",
     managerId: data.managerId,
     managerName: data.managerName || "",
+    groupPhotoUrl: data.groupPhotoUrl || "", // תמונת קבוצה (עדכון: עיצוב בהשראת וואטסאפ) - מוגדרת אחרי היצירה דרך POST /groups/:id/photo
     members: [data.managerId],
     createdAt: now,
     updatedAt: now,

@@ -6,6 +6,7 @@
 const Group = require("../models/Group");
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
+const User = require("../models/User"); // עדכון: עיצוב קבוצות בהשראת וואטסאפ - צריך פרטי משתמשים (שם+אווטאר) לכל חבר בקבוצה
 
 // GET /groups - רשימת/עיון בכל הקבוצות (FR-010), פתוח גם לאורח
 async function listGroups(req, res) {
@@ -67,7 +68,21 @@ async function showGroup(req, res, next) {
     const isMember = group.members.includes(req.session.userId);
     const isManager = group.managerId === req.session.userId;
 
-    res.render("groups/show", { group, posts, isMember, isManager, userId: req.session.userId });
+    // עדכון (עיצוב בהשראת וואטסאפ): Group.members הוא רק מערך מזהי משתמשים (אין populate ב-Firestore) -
+    // שולפים כאן את הפרטים המלאים (שם+אווטאר) של כל חבר כדי להציג "רשימת חברים" עם תמונות, כמו בקבוצת וואטסאפ.
+    // משתמש שנמחק בינתיים (soft-delete) פשוט לא יופיע ברשימה (filter(Boolean)).
+    const memberUserDocs = await Promise.all(group.members.map((id) => User.findById(id)));
+    const memberUsers = memberUserDocs.filter(Boolean).map(User.toPublicUser);
+
+    res.render("groups/show", {
+      group,
+      posts,
+      isMember,
+      isManager,
+      userId: req.session.userId,
+      memberUsers,
+      memberError: req.query.memberError || null,
+    });
   } catch (error) {
     next(error);
   }
@@ -131,6 +146,52 @@ async function leaveGroup(req, res, next) {
   }
 }
 
+// POST /groups/:id/photo - עדכון: תמונת קבוצה (עיצוב בהשראת וואטסאפ) - מנהל הקבוצה בלבד (req.group מגיע מ-isGroupManagerOf)
+// אותו דפוס בדיוק כמו authController.uploadAvatar - קובץ נשמר ע"י multer, רק הנתיב נשמר במסמך הקבוצה
+async function uploadGroupPhoto(req, res) {
+  if (!req.file) {
+    return res.redirect(`/groups/${req.group.id}?memberError=${encodeURIComponent("יש לבחור קובץ תמונה")}`);
+  }
+  const groupPhotoUrl = `/uploads/${req.file.filename}`;
+  await Group.update(req.group.id, { groupPhotoUrl });
+  res.redirect(`/groups/${req.group.id}`);
+}
+
+// POST /groups/:id/members - עדכון: הוספת חבר ע"י מנהל הקבוצה (בנוסף להצטרפות עצמית הקיימת - FR-009) -
+// לפי שם משתמש (username), כי זה מה שחברי הקבוצה מכירים ולא מזהה Firestore פנימי
+async function addMemberByManager(req, res, next) {
+  try {
+    const username = (req.body.username || "").trim();
+    if (!username) {
+      return res.redirect(`/groups/${req.group.id}?memberError=${encodeURIComponent("יש להזין שם משתמש")}`);
+    }
+    const user = await User.findByUsername(username);
+    if (!user || !user.isActive) {
+      return res.redirect(`/groups/${req.group.id}?memberError=${encodeURIComponent("לא נמצא משתמש פעיל עם שם המשתמש הזה")}`);
+    }
+    if (req.group.members.includes(user.id)) {
+      return res.redirect(`/groups/${req.group.id}?memberError=${encodeURIComponent("המשתמש כבר חבר בקבוצה")}`);
+    }
+    await Group.addMember(req.group.id, user.id);
+    res.redirect(`/groups/${req.group.id}`);
+  } catch (error) {
+    next(error);
+  }
+}
+
+// POST /groups/:id/members/:userId/remove - הסרת חבר ע"י מנהל הקבוצה - אסור להסיר את המנהל עצמו (ראו הגנה גם ב-view)
+async function removeMemberByManager(req, res, next) {
+  try {
+    if (req.params.userId === req.group.managerId) {
+      return res.redirect(`/groups/${req.group.id}?memberError=${encodeURIComponent("לא ניתן להסיר את מנהל הקבוצה")}`);
+    }
+    await Group.removeMember(req.group.id, req.params.userId);
+    res.redirect(`/groups/${req.group.id}`);
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   listGroups,
   searchGroups,
@@ -142,4 +203,7 @@ module.exports = {
   deleteGroup,
   joinGroup,
   leaveGroup,
+  uploadGroupPhoto,
+  addMemberByManager,
+  removeMemberByManager,
 };

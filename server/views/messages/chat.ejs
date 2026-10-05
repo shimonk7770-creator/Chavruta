@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- server/views/groups/chat.ejs - צ'אט קבוצתי בזמן אמת (FR-021..FR-024) -->
+<!-- server/views/messages/chat.ejs - צ'אט פרטי (1-על-1) בזמן אמת - אותו רעיון בדיוק כמו groups/chat.ejs -->
 <html lang="he" dir="rtl">
 <head>
   <%- include('../partials/head') %>
@@ -10,13 +10,19 @@
   <%- include('../partials/header') %>
 
   <main class="container">
-    <h1>צ'אט - <%= group.name %></h1>
-    <p class="meta">הצ'אט פתוח לחברי הקבוצה בלבד. הודעות נשמרות ונטענות מחדש בכל כניסה.</p>
+    <div class="dm-chat-header">
+      <% if (otherUser.avatarUrl) { %>
+        <img class="avatar-thumb" src="<%= otherUser.avatarUrl %>" alt="<%= otherUser.fullName %>" style="width:40px;height:40px" />
+      <% } else { %>
+        <span class="avatar-thumb avatar-thumb-fallback" style="width:40px;height:40px"><%= (otherUser.fullName || '?').trim().charAt(0) %></span>
+      <% } %>
+      <h1>שיחה עם <%= otherUser.fullName %></h1>
+    </div>
+    <p class="meta">הודעות נשמרות ונטענות מחדש בכל כניסה - רק שני הצדדים רואים את השיחה הזו.</p>
 
-    <div id="chat-messages" class="card chat-box" data-group-id="<%= group.id %>" data-user-id="<%= userId %>">
+    <div id="chat-messages" class="card chat-box" data-other-user-id="<%= otherUser.id %>" data-user-id="<%= userId %>">
       <% if (!messages.length) { %>
-        <!-- מצב ריק ידידותי - גם בצ'אט, לא רק בגרפים (ברוח FR-027) -->
-        <p class="meta chat-empty">עדיין אין הודעות בקבוצה הזו. היו הראשונים לכתוב!</p>
+        <p class="meta chat-empty">עדיין אין הודעות בשיחה הזו. כתבו משהו!</p>
       <% } %>
       <% messages.forEach(function(msg) { %>
         <div class="chat-message<%= msg.senderId === userId ? ' mine' : '' %>">
@@ -34,11 +40,11 @@
       <button type="submit">שליחה</button>
     </form>
 
-    <p><a href="/groups/<%= group.id %>">חזרה לעמוד הקבוצה</a></p>
+    <p><a href="/messages">חזרה לתיבת ההודעות</a></p>
   </main>
 
   <%- include('../partials/footer') %>
 
-  <script src="/js/chat.js"></script>
+  <script src="/js/dmChat.js"></script>
 </body>
 </html>

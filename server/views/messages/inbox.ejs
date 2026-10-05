@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<!-- server/views/messages/inbox.ejs - תיבת הודעות פרטיות (עדכון: צ'אט פרטי 1-על-1, "וואטסאפ-ification") -->
+<!-- העיצוב משתמש באותם מחלקות CSS של רשימת הקבוצות (group-list/group-row/group-avatar) - אותה תבנית
+     ויזואלית בדיוק (תמונה עגולה + שם + שורת משנה), בלי לשכפל CSS מיותר -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <h1>הודעות</h1>
+    <p class="meta">שיחות פרטיות 1-על-1 בינך לבין חברים אחרים באתר - בנפרד מהצ'אט הקבוצתי.</p>
+
+    <!-- חיפוש משתמש להתחלת שיחה חדשה -->
+    <form action="/messages" method="GET" class="search-form">
+      <input type="text" name="q" placeholder="חיפוש משתמש לפי שם/שם משתמש" value="<%= q %>" />
+      <button type="submit">חיפוש</button>
+    </form>
+
+    <% if (q) { %>
+      <h2>תוצאות חיפוש</h2>
+      <% if (!searchResults.length) { %>
+        <p class="meta">לא נמצאו משתמשים פעילים התואמים את החיפוש.</p>
+      <% } else { %>
+        <div class="group-list">
+          <% searchResults.forEach(function (u) { %>
+            <a class="group-row" href="/messages/<%= u.id %>">
+              <% if (u.avatarUrl) { %>
+                <img class="group-avatar" src="<%= u.avatarUrl %>" alt="<%= u.fullName %>" />
+              <% } else { %>
+                <span class="group-avatar group-avatar-fallback"><%= (u.fullName || '?').trim().charAt(0) %></span>
+              <% } %>
+              <span class="group-row-info">
+                <span class="group-row-name"><%= u.fullName %></span>
+                <span class="group-row-sub">@<%= u.username %></span>
+              </span>
+              <span class="group-row-badge">שליחת הודעה</span>
+            </a>
+          <% }) %>
+        </div>
+      <% } %>
+      <hr />
+    <% } %>
+
+    <h2>השיחות שלי</h2>
+    <% if (!conversations.length) { %>
+      <p class="meta">עדיין אין לך שיחות פרטיות. חפשו משתמש למעלה כדי להתחיל שיחה חדשה.</p>
+    <% } else { %>
+      <div class="group-list">
+        <% conversations.forEach(function (c) { %>
+          <a class="group-row" href="/messages/<%= c.otherUser.id %>">
+            <% if (c.otherUser.avatarUrl) { %>
+              <img class="group-avatar" src="<%= c.otherUser.avatarUrl %>" alt="<%= c.otherUser.fullName %>" />
+            <% } else { %>
+              <span class="group-avatar group-avatar-fallback"><%= (c.otherUser.fullName || '?').trim().charAt(0) %></span>
+            <% } %>
+            <span class="group-row-info">
+              <span class="group-row-name"><%= c.otherUser.fullName %></span>
+              <span class="group-row-sub">
+                <% if (c.lastMessage.senderId === c.otherUser.id) { %><%= c.otherUser.fullName %>: <% } else { %>אתה: <% } %><%= c.lastMessage.content %>
+              </span>
+            </span>
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
+  </main>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

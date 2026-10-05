@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <!-- server/views/groups/show.ejs - עמוד קבוצה: פרטים, הצטרפות, פוסטים ותגובות (Ajax) -->
+<!-- עדכון (בקשת המשתמש): עיצוב מחדש בהשראת וואטסאפ - כותרת עם תמונת קבוצה גדולה, רשימת חברים עם אווטארים,
+     והוספת חברים ע"י מנהל הקבוצה (לא רק הצטרפות עצמית) -->
 <html lang="he" dir="rtl">
 <head>
   <%- include('../partials/head') %>
@@ -8,12 +10,30 @@
   <%- include('../partials/header') %>
 
   <main class="container">
-    <h1><%= group.name %></h1>
-    <p><%= group.description %></p>
-    <p class="meta">מנהל: <%= group.managerName %> | חברים: <%= group.members.length %></p>
+    <% if (memberError) { %><p class="error-message"><%= memberError %></p><% } %>
+
+    <!-- כותרת הקבוצה - תמונה עגולה גדולה + שם + מספר חברים, בהשראת כותרת קבוצה בוואטסאפ -->
+    <section class="group-header">
+      <% if (group.groupPhotoUrl) { %>
+        <img class="group-avatar-lg" src="<%= group.groupPhotoUrl %>" alt="תמונת הקבוצה <%= group.name %>" />
+      <% } else { %>
+        <span class="group-avatar-lg group-avatar-fallback"><%= (group.name || '?').trim().charAt(0) %></span>
+      <% } %>
+      <div class="group-header-info">
+        <h1><%= group.name %></h1>
+        <p class="meta"><%= group.description %></p>
+        <p class="meta">מנהל: <%= group.managerName %> | <%= group.members.length %> חברים</p>
+      </div>
+    </section>
 
     <% if (isManager) { %>
-      <p><a href="/groups/<%= group.id %>/edit">עריכת הקבוצה</a></p>
+      <!-- העלאת/החלפת תמונת קבוצה - מנהל הקבוצה בלבד, אותו דפוס בדיוק כמו תמונת פרופיל -->
+      <form action="/groups/<%= group.id %>/photo" method="POST" enctype="multipart/form-data" class="group-photo-form">
+        <label for="groupPhoto">תמונת קבוצה (JPG/PNG/WEBP/GIF, עד 5MB)</label>
+        <input type="file" id="groupPhoto" name="groupPhoto" accept="image/jpeg,image/png,image/webp,image/gif" required />
+        <button type="submit">עדכון תמונת קבוצה</button>
+      </form>
+      <p><a href="/groups/<%= group.id %>/edit">עריכת פרטי הקבוצה</a></p>
     <% } %>
 
     <% if (isMember) { %>
@@ -25,6 +45,34 @@
     <% } else { %>
       <form action="/groups/<%= group.id %>/join" method="POST" style="display:inline">
         <button type="submit">הצטרפות לקבוצה</button>
+      </form>
+    <% } %>
+
+    <!-- רשימת חברי הקבוצה עם אווטארים - בהשראת "פרטי קבוצה" בוואטסאפ -->
+    <h2>חברי הקבוצה</h2>
+    <div class="member-list">
+      <% memberUsers.forEach(function (m) { %>
+        <span class="member-chip">
+          <% if (m.avatarUrl) { %>
+            <img class="avatar-thumb" src="<%= m.avatarUrl %>" alt="<%= m.fullName %>" />
+          <% } else { %>
+            <span class="avatar-thumb avatar-thumb-fallback"><%= (m.fullName || '?').trim().charAt(0) %></span>
+          <% } %>
+          <span><%= m.fullName %><% if (m.id === group.managerId) { %> <span class="role-badge">מנהל</span><% } %></span>
+          <% if (isManager && m.id !== group.managerId) { %>
+            <form action="/groups/<%= group.id %>/members/<%= m.id %>/remove" method="POST" onsubmit="return confirm('להסיר את <%= m.fullName %> מהקבוצה?')">
+              <button type="submit" class="member-remove-btn" title="הסרה מהקבוצה">&times;</button>
+            </form>
+          <% } %>
+        </span>
+      <% }) %>
+    </div>
+
+    <% if (isManager) { %>
+      <!-- הוספת חבר ע"י מנהל הקבוצה (בנוסף להצטרפות העצמית למעלה) - לפי שם משתמש -->
+      <form action="/groups/<%= group.id %>/members" method="POST" class="add-member-form">
+        <input type="text" name="username" placeholder="שם משתמש להוספה" required />
+        <button type="submit">+ הוספת חבר</button>
       </form>
     <% } %>
 
@@ -82,6 +130,8 @@
       </div>
     <% }) %>
   </main>
+
+  <%- include('../partials/footer') %>
 
   <script src="/js/comments.js"></script>
 </body>

@@ -16,41 +16,48 @@
     <% } %>
 
     <!--
-      ===== לוח שנה גרגוריאני ויזואלי (עדכון לפי בקשת המשתמש - לוח גריד אמיתי, לא רק רשימת מאמרים) =====
+      ===== לוח שנה גרגוריאני ויזואלי (עדכון לפי בקשת המשתמש - חודש נוכחי בודד + ניווט, במקום 12 חודשים יחד) =====
       חשוב: זהו לוח לועזי רגיל בלבד (server/utils/calendarGrid.js) - בלי שום חישוב אסטרונומי של הלוח העברי
-      (מחוץ להיקף המערכת, סעיף 2.2 ב-SRS). חג מסומן בלוח רק אם הוגדר לו ידנית תאריך לועזי (gregorianDate).
+      (מחוץ להיקף המערכת, סעיף 2.2 ב-SRS). חג מסומן בלוח רק אם הוגדר לו ידנית תאריך לועזי (gregorianDate),
+      ומודגש בצבע מיוחד (רקע כתום + מסגרת) כדי שיהיה קל לזהות אותו בלוח.
     -->
-    <h2>לוח שנה - 12 החודשים הקרובים</h2>
-    <div class="year-grid">
-      <% calendarMonths.forEach(function (m) { %>
-        <div class="mini-calendar">
-          <h4><%= m.monthName %> <%= m.year %></h4>
-          <table class="mini-calendar-table">
-            <thead>
-              <tr>
-                <% ['א','ב','ג','ד','ה','ו','ש'].forEach(function (letter) { %><th><%= letter %></th><% }) %>
-              </tr>
-            </thead>
-            <tbody>
-              <% m.weeks.forEach(function (week) { %>
-                <tr>
-                  <% week.forEach(function (cell) { %>
-                    <% if (!cell) { %>
-                      <td></td>
-                    <% } else if (cell.holidays.length) { %>
-                      <td class="cal-day has-holiday<%= cell.isToday ? ' is-today' : '' %>">
-                        <a href="/holidays/<%= cell.holidays[0].id %>" title="<%= cell.holidays.map(function (h) { return h.holidayName; }).join(', ') %>"><%= cell.day %></a>
-                      </td>
-                    <% } else { %>
-                      <td class="cal-day<%= cell.isToday ? ' is-today' : '' %>"><%= cell.day %></td>
-                    <% } %>
-                  <% }) %>
-                </tr>
+    <div class="calendar-card">
+      <div class="calendar-nav">
+        <a class="calendar-nav-btn" href="/holidays?year=<%= prev.year %>&month=<%= prev.month %>">‹ חודש קודם</a>
+        <h2 class="calendar-title"><%= calendarMonth.monthName %> <%= calendarMonth.year %></h2>
+        <a class="calendar-nav-btn" href="/holidays?year=<%= next.year %>&month=<%= next.month %>">חודש הבא ›</a>
+      </div>
+      <% if (!isCurrentMonth) { %>
+        <p class="calendar-today-link"><a href="/holidays?year=<%= todayYear %>&month=<%= todayMonth1based %>">↺ חזרה לחודש הנוכחי</a></p>
+      <% } %>
+      <table class="full-calendar-table">
+        <thead>
+          <tr>
+            <% ['א','ב','ג','ד','ה','ו','ש'].forEach(function (letter) { %><th><%= letter %></th><% }) %>
+          </tr>
+        </thead>
+        <tbody>
+          <% calendarMonth.weeks.forEach(function (week) { %>
+            <tr>
+              <% week.forEach(function (cell) { %>
+                <% if (!cell) { %>
+                  <td></td>
+                <% } else if (cell.holidays.length) { %>
+                  <td class="cal-day-full has-holiday<%= cell.isToday ? ' is-today' : '' %>">
+                    <a href="/holidays/<%= cell.holidays[0].id %>" title="<%= cell.holidays.map(function (h) { return h.holidayName; }).join(', ') %>">
+                      <span class="cal-day-num"><%= cell.day %></span>
+                      <span class="cal-day-holiday-label"><%= cell.holidays[0].holidayName %></span>
+                    </a>
+                  </td>
+                <% } else { %>
+                  <td class="cal-day-full<%= cell.isToday ? ' is-today' : '' %>"><span class="cal-day-num"><%= cell.day %></span></td>
+                <% } %>
               <% }) %>
-            </tbody>
-          </table>
-        </div>
-      <% }) %>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <p class="calendar-legend"><span class="legend-swatch legend-holiday"></span> יום עם חג/מועד מסומן &nbsp;&nbsp; <span class="legend-swatch legend-today"></span> היום</p>
     </div>
 
     <% if (featured) { %>
@@ -79,5 +86,7 @@
       </div>
     <% } %>
   </main>
+
+  <%- include('../partials/footer') %>
 </body>
 </html>

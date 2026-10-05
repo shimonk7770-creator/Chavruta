@@ -27,6 +27,8 @@ const postRoutes = require("./routes/postRoutes");
 const commentRoutes = require("./routes/commentRoutes");
 const learningLogRoutes = require("./routes/learningLogRoutes");
 const chatRoutes = require("./routes/chatRoutes"); // שבוע 4 - צ'אט קבוצתי
+const messageRoutes = require("./routes/messageRoutes"); // עדכון: צ'אט פרטי 1-על-1 ("וואטסאפ-ification")
+const statusRoutes = require("./routes/statusRoutes"); // עדכון: פיצ'ר "סטטוס" (סטוריז) - "וואטסאפ-ification"
 const statsRoutes = require("./routes/statsRoutes"); // שבוע 4 - נתוני גרפי D3
 const holidayRoutes = require("./routes/holidayRoutes"); // "מעגל השנה" - FR-028, FR-029
 const adminRoutes = require("./routes/adminRoutes"); // לוח בקרה למנהל מערכת
@@ -85,6 +87,8 @@ app.use((req, res, next) => {
   res.locals.userName = (req.session && req.session.userName) || null;
   res.locals.userRole = (req.session && req.session.userRole) || null;
   res.locals.userAvatarUrl = (req.session && req.session.userAvatarUrl) || "";
+  // עדכון: userId גלובלי לכל תבנית - נדרש ע"י partials/statusBar.ejs כדי לבנות את קישור "הסטטוס שלי"
+  res.locals.userId = (req.session && req.session.userId) || null;
   next();
 });
 
@@ -96,6 +100,8 @@ app.use("/", postRoutes);
 app.use("/", commentRoutes);
 app.use("/", learningLogRoutes);
 app.use("/", chatRoutes); // שבוע 4
+app.use("/", messageRoutes); // צ'אט פרטי 1-על-1
+app.use("/", statusRoutes); // סטטוס (סטוריז)
 app.use("/", statsRoutes); // שבוע 4
 app.use("/", holidayRoutes); // מעגל השנה
 app.use("/", adminRoutes); // לוח בקרה למנהל

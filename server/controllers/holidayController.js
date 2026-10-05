@@ -4,7 +4,7 @@
 const Holiday = require("../models/Holiday");
 const Group = require("../models/Group");
 const sanitizeHtml = require("sanitize-html"); // ניקוי HTML נגד XSS (NFR-006), כמו בפוסטים/פרופיל
-const { buildYearGrid } = require("../utils/calendarGrid"); // לוח שנה גרגוריאני ויזואלי (עדכון: בקשת המשתמש ללוח אמיתי, לא רק רשימת מאמרים)
+const { buildMonth } = require("../utils/calendarGrid"); // לוח שנה גרגוריאני ויזואלי (עדכון: בקשת המשתמש ללוח אמיתי, לא רק רשימת מאמרים)
 
 function clean(text) {
   return sanitizeHtml(text || "", { allowedTags: [], allowedAttributes: {} }).trim();
@@ -16,12 +16,41 @@ function cleanGregorianDate(value) {
 }
 
 // GET /holidays - FR-029: עמוד ציבורי, כולל לאורחים - לוח שנה ויזואלי + המועד המובלט + ארכיון שאר המועדים
+// עדכון (בקשת המשתמש): קודם הוצגו 12 חודשים קדימה יחד - עכשיו מוצג רק החודש הנוכחי (ברירת מחדל),
+// עם אפשרות ניווט לחודש/שנה אחרים דרך query params ?year=YYYY&month=M (M הוא 1-12, לא 0-11, לנוחות ב-URL).
 async function listHolidays(req, res) {
   const all = await Holiday.listAll();
   const featured = all.find((h) => h.isFeatured) || null;
   const archive = all.filter((h) => !featured || h.id !== featured.id);
-  const calendarMonths = buildYearGrid(all, new Date(), 12); // 12 חודשים קדימה מהיום, ראו server/utils/calendarGrid.js
-  res.render("holidays/index", { featured, archive, calendarMonths });
+
+  const today = new Date();
+  let year = parseInt(req.query.year, 10);
+  let month1based = parseInt(req.query.month, 10); // כפי שמגיע מה-URL: 1=ינואר ... 12=דצמבר
+
+  // ולידציה - אם חסר/לא תקין, חוזרים לחודש הנוכחי (ברירת המחדל שהמשתמש ביקש)
+  if (!Number.isInteger(year) || year < 1900 || year > 2200) year = today.getFullYear();
+  if (!Number.isInteger(month1based) || month1based < 1 || month1based > 12) {
+    month1based = today.getMonth() + 1;
+  }
+  const monthIndex = month1based - 1; // buildMonth מצפה ל-0-11
+
+  const calendarMonth = buildMonth(all, year, monthIndex);
+
+  // חישוב "חודש קודם"/"חודש הבא" לקישורי הניווט (כולל מעבר בין שנים בקצוות ינואר/דצמבר)
+  const prev = monthIndex === 0 ? { year: year - 1, month: 12 } : { year, month: month1based - 1 };
+  const next = monthIndex === 11 ? { year: year + 1, month: 1 } : { year, month: month1based + 1 };
+  const isCurrentMonth = year === today.getFullYear() && monthIndex === today.getMonth();
+
+  res.render("holidays/index", {
+    featured,
+    archive,
+    calendarMonth,
+    prev,
+    next,
+    isCurrentMonth,
+    todayYear: today.getFullYear(),
+    todayMonth1based: today.getMonth() + 1,
+  });
 }
 
 // GET /holidays/:id - צפייה במאמר בודד, כולל קישור לקבוצת ה"ועד" הרלוונטי אם הוגדר

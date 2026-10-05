@@ -9,6 +9,11 @@
 
   <main class="container">
 
+    <!-- ===== שורת "סטטוס" (סטוריז) - עדכון בעקבות בקשת המשתמש ("וואטסאפ-ification") - רק למשתמש מחובר ===== -->
+    <% if (isLoggedIn) { %>
+      <%- include('partials/statusBar') %>
+    <% } %>
+
     <!-- ===== אזור פתיחה - כותרת, טקסט הסבר ואיור SVG מוטמע (בלי תלות בקבצי תמונה חיצוניים) ===== -->
     <section class="hero">
       <div class="hero-text">
@@ -40,19 +45,56 @@
       </div>
     </section>
 
-    <!-- ===== סרטון השראה - מוצג לכולם, גם אורחים, כדי שהעמוד ירגיש "חי" מהרגע הראשון ===== -->
+    <!--
+      ===== כרטיס "זמני שבת" - מוצג לכולם, גם אורחים (ירושלים כברירת מחדל) =====
+      רעיון + חלק מהעיצוב הועברו מפרויקט React נפרד ("חת"ת יומי") שהמשתמש בנה בעבר - ראו הסבר מלא
+      על ההבחנה מדרישת "מעגל השנה" (SRS 2.2) בתחילת server/utils/shabbatTimes.js.
+      shabbat מגיע מ-server/routes/pageRoutes.js (GET "/") - יכול להיות null אם החישוב נכשל, ואז לא
+      מציגים את הכרטיס בכלל (עדיף להסתיר מאשר להראות מידע חלקי/שגוי).
+    -->
+    <% if (typeof shabbat !== 'undefined' && shabbat) { %>
+      <section class="hero-card">
+        <div class="hero-card-top">
+          <span class="hero-card-pill">📍 <%= shabbat.cityHe %></span>
+          <% if (!isLoggedIn) { %>
+            <span class="hero-card-pill">להתאמת עיר - <a href="/register">הרשמה</a></span>
+          <% } else { %>
+            <span class="hero-card-pill">לשינוי עיר - <a href="/profile">הפרופיל שלי</a></span>
+          <% } %>
+        </div>
+        <h2 class="hero-card-title">
+          שבת שלום<% if (shabbat.parashaHe) { %> - פרשת <%= shabbat.parashaHe %><% } %>
+        </h2>
+        <div class="accent-card-row">
+          <div class="accent-card accent-teal">
+            <span class="accent-card-label">הדלקת נרות</span>
+            <span class="accent-card-value"><%= shabbat.candleLighting || "—" %></span>
+          </div>
+          <div class="accent-card accent-gold">
+            <span class="accent-card-label">צאת השבת</span>
+            <span class="accent-card-value"><%= shabbat.havdalah || "—" %></span>
+          </div>
+        </div>
+        <% if (shabbat.upcoming && shabbat.upcoming.length) { %>
+          <p class="hero-card-upcoming">בקרוב: <%= shabbat.upcoming.join(" · ") %></p>
+        <% } %>
+        <p class="hero-card-note">חישוב אסטרונומי אמיתי לפי מיקום (ספריית @hebcal/core) - לא תאריך משוער.</p>
+      </section>
+    <% } %>
+
+    <!--
+      ===== סרטון השראה - מוצג לכולם, גם אורחים, כדי שהעמוד ירגיש "חי" מהרגע הראשון =====
+      עדכון (בעקבות בקשת המשתמש): נגינה אוטומטית בלולאה אינסופית (ברגע שהסרטון מסתיים הוא חוזר
+      אוטומטית להתחלה), עם קול מושתק כברירת מחדל (כך דפדפנים מאפשרים autoplay בלי אינטראקציה
+      מהמשתמש) וכפתור ייעודי להפעלת/כיבוי קול. ממומש עם YouTube IFrame Player API הרשמי (לא src
+      סטטי) כי שליטה אמיתית על mute/unmute וזיהוי "האם מושתק" דורשים את ה-API, לא רק פרמטרים ב-URL.
+    -->
     <section class="card video-feature">
       <h2>רגע של השראה</h2>
       <div class="video-embed-wrap">
-        <iframe
-          src="https://www.youtube.com/embed/ormF3yMohnI"
-          title="סרטון השראה"
-          frameborder="0"
-          referrerpolicy="strict-origin-when-cross-origin"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen
-        ></iframe>
+        <div id="yt-inspiration-player"></div>
       </div>
+      <button type="button" id="yt-sound-toggle" class="btn btn-secondary video-sound-btn">🔇 הפעלת קול</button>
     </section>
 
     <!--
@@ -126,6 +168,59 @@
 
   </main>
 
-  <footer class="site-footer">חברותא &middot; פרויקט מסכם בפיתוח אתרים</footer>
+  <%- include('partials/footer') %>
+
+  <!-- נגן סרטון ההשראה (autoplay+loop+muted+כפתור קול) - ראו הסבר בהערת ה-EJS למעלה -->
+  <script>
+    (function () {
+      var VIDEO_ID = "ormF3yMohnI";
+      var player = null;
+      var toggleBtn = document.getElementById("yt-sound-toggle");
+
+      function createPlayer() {
+        if (!document.getElementById("yt-inspiration-player") || !window.YT || !window.YT.Player) return;
+        player = new YT.Player("yt-inspiration-player", {
+          videoId: VIDEO_ID,
+          playerVars: {
+            autoplay: 1,
+            mute: 1,
+            loop: 1,
+            playlist: VIDEO_ID, // נדרש ע"י YouTube כדי ש-loop:1 יעבוד על סרטון בודד (לא פלייליסט אמיתי)
+            controls: 1,
+            rel: 0,
+          },
+          events: {
+            onReady: function (event) {
+              event.target.playVideo();
+            },
+          },
+        });
+      }
+
+      // טוענים את YouTube IFrame Player API פעם אחת בלבד (גם אם כבר נטען קודם בעמוד - לא נטען שוב)
+      if (!window.YT) {
+        var tag = document.createElement("script");
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.head.appendChild(tag);
+      }
+      // YouTube קוראת לפונקציה הגלובלית הזו אוטומטית ברגע שה-API סיימה להיטען
+      window.onYouTubeIframeAPIReady = createPlayer;
+      // אם ה-API כבר הייתה טעונה קודם (לדוגמה טעינה חוזרת/ניווט חזרה) - יוצרים את הנגן מיד
+      if (window.YT && window.YT.Player) createPlayer();
+
+      if (toggleBtn) {
+        toggleBtn.addEventListener("click", function () {
+          if (!player || typeof player.isMuted !== "function") return;
+          if (player.isMuted()) {
+            player.unMute();
+            toggleBtn.textContent = "🔊 השתקת קול";
+          } else {
+            player.mute();
+            toggleBtn.textContent = "🔇 הפעלת קול";
+          }
+        });
+      }
+    })();
+  </script>
 </body>
 </html>

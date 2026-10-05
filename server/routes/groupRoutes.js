@@ -7,6 +7,7 @@ const groupController = require("../controllers/groupController");
 const postController = require("../controllers/postController");
 const { isAuthenticated, hasRole } = require("../middleware/auth");
 const { isGroupManagerOf } = require("../middleware/permissions");
+const { uploadGroupPhoto } = require("../middleware/upload"); // עדכון: תמונת קבוצה (עיצוב בהשראת וואטסאפ)
 
 router.get("/groups", groupController.listGroups);
 router.get("/groups/search", groupController.searchGroups); // FR-011
@@ -25,6 +26,11 @@ router.delete("/groups/:id", isAuthenticated, isGroupManagerOf, groupController.
 // הצטרפות/עזיבה (FR-009)
 router.post("/groups/:id/join", isAuthenticated, groupController.joinGroup);
 router.post("/groups/:id/leave", isAuthenticated, groupController.leaveGroup);
+
+// עדכון (עיצוב בהשראת וואטסאפ): תמונת קבוצה + ניהול חברים ע"י מנהל הקבוצה הספציפית בלבד
+router.post("/groups/:id/photo", isAuthenticated, isGroupManagerOf, uploadGroupPhoto.single("groupPhoto"), groupController.uploadGroupPhoto);
+router.post("/groups/:id/members", isAuthenticated, isGroupManagerOf, groupController.addMemberByManager);
+router.post("/groups/:id/members/:userId/remove", isAuthenticated, isGroupManagerOf, groupController.removeMemberByManager);
 
 // יצירת פוסט בתוך קבוצה מסוימת (FR-013)
 router.post("/groups/:groupId/posts", isAuthenticated, postController.createPost);

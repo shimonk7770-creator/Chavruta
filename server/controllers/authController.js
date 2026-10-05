@@ -7,6 +7,7 @@ const bcrypt = require("bcryptjs");
 const sanitizeHtml = require("sanitize-html");
 const User = require("../models/User");
 const { isValidPassword } = require("../utils/validators"); // BR-002, נבדק גם אוטומטית ב-server/test/validators.test.js
+const shabbatTimes = require("../utils/shabbatTimes"); // כרטיס "זמני שבת" בדף הבית - צריך לדעת את עיר המשתמש
 
 const MAX_FAILED_ATTEMPTS = 5; // BR-010
 const LOCK_TIME_MS = 15 * 60 * 1000; // 15 דקות
@@ -65,6 +66,7 @@ async function register(req, res) {
     req.session.userRole = newUser.role;
     req.session.userName = newUser.fullName;
     req.session.userAvatarUrl = newUser.avatarUrl || ""; // כדי שהתפריט העליון יוכל להציג אווטאר בלי לשלוף מהDB בכל בקשה
+    req.session.shabbatCity = newUser.shabbatCity || shabbatTimes.DEFAULT_CITY_KEY; // כרטיס "זמני שבת" בדף הבית
 
     res.redirect("/");
   } catch (error) {
@@ -125,6 +127,7 @@ async function login(req, res) {
     req.session.userRole = user.role;
     req.session.userName = user.fullName;
     req.session.userAvatarUrl = user.avatarUrl || "";
+    req.session.shabbatCity = user.shabbatCity || shabbatTimes.DEFAULT_CITY_KEY; // כרטיס "זמני שבת" בדף הבית
 
     res.redirect("/");
   } catch (error) {
@@ -153,30 +156,42 @@ async function checkUsername(req, res) {
 // GET /profile - FR-004: מסך עריכת פרופיל אישי
 async function showProfileForm(req, res) {
   const user = await User.findById(req.session.userId);
-  res.render("profile", { profileUser: User.toPublicUser(user), error: null, success: null });
+  // cityOptions - רשימת הערים הנתמכות לתפריט "עיר לזמני שבת" (server/utils/shabbatTimes.js)
+  res.render("profile", {
+    profileUser: User.toPublicUser(user),
+    cityOptions: shabbatTimes.getCityOptions(),
+    error: null,
+    success: null,
+  });
 }
 
 // POST /profile - FR-004: עדכון פרופיל אישי (שם, ביוגרפיה, אווטאר, ולחלופין סיסמה חדשה)
 async function updateProfile(req, res) {
   try {
     const user = await User.findById(req.session.userId);
-    const { fullName, bio, avatarUrl, currentPassword, newPassword } = req.body;
+    const { fullName, bio, avatarUrl, shabbatCity, currentPassword, newPassword } = req.body;
+    const cityOptions = shabbatTimes.getCityOptions();
 
     const patch = {};
     if (fullName && fullName.trim()) patch.fullName = fullName.trim();
     // ניקוי HTML מהביוגרפיה - הגנה מפני XSS (NFR-006)
     patch.bio = sanitizeHtml(bio || "", { allowedTags: [], allowedAttributes: {} }).trim();
     if (avatarUrl !== undefined) patch.avatarUrl = avatarUrl.trim();
+    // עיר לזמני שבת - מאמתים שהמפתח שנבחר קיים ברשימה הסגורה (shabbatTimes.CITIES), אחרת מתעלמים ומשאירים כמו שהיה
+    if (shabbatCity !== undefined && shabbatTimes.isValidCityKey(shabbatCity)) {
+      patch.shabbatCity = shabbatCity;
+    }
 
     // שינוי סיסמה - דורש הזנת הסיסמה הנוכחית לאימות (FR-004)
     if (newPassword) {
       const isMatch = await bcrypt.compare(currentPassword || "", user.passwordHash);
       if (!isMatch) {
-        return res.render("profile", { profileUser: User.toPublicUser(user), error: "הסיסמה הנוכחית שגויה", success: null });
+        return res.render("profile", { profileUser: User.toPublicUser(user), cityOptions, error: "הסיסמה הנוכחית שגויה", success: null });
       }
       if (!isValidPassword(newPassword)) {
         return res.render("profile", {
           profileUser: User.toPublicUser(user),
+          cityOptions,
           error: "הסיסמה החדשה חייבת לכלול לפחות 8 תווים, אות גדולה וספרה",
           success: null,
         });
@@ -187,10 +202,11 @@ async function updateProfile(req, res) {
     const updated = await User.update(user.id, patch);
     req.session.userName = updated.fullName;
     req.session.userAvatarUrl = updated.avatarUrl || "";
-    res.render("profile", { profileUser: User.toPublicUser(updated), error: null, success: "הפרטים עודכנו בהצלחה" });
+    req.session.shabbatCity = updated.shabbatCity || shabbatTimes.DEFAULT_CITY_KEY;
+    res.render("profile", { profileUser: User.toPublicUser(updated), cityOptions, error: null, success: "הפרטים עודכנו בהצלחה" });
   } catch (error) {
     console.error("שגיאה בעדכון פרופיל:", error);
-    res.render("profile", { profileUser: req.body, error: "אירעה שגיאה, נסה שוב", success: null });
+    res.render("profile", { profileUser: req.body, cityOptions: shabbatTimes.getCityOptions(), error: "אירעה שגיאה, נסה שוב", success: null });
   }
 }
 
@@ -198,13 +214,14 @@ async function updateProfile(req, res) {
 // postController.uploadVideo/uploadImages, רק שכאן מעדכנים את מסמך המשתמש במקום מסמך פוסט
 async function uploadAvatar(req, res) {
   const user = await User.findById(req.session.userId);
+  const cityOptions = shabbatTimes.getCityOptions();
   if (!req.file) {
-    return res.render("profile", { profileUser: User.toPublicUser(user), error: "יש לבחור קובץ תמונה", success: null });
+    return res.render("profile", { profileUser: User.toPublicUser(user), cityOptions, error: "יש לבחור קובץ תמונה", success: null });
   }
   const avatarUrl = `/uploads/${req.file.filename}`;
   const updated = await User.update(user.id, { avatarUrl });
   req.session.userAvatarUrl = avatarUrl; // מעדכנים גם את ה-session כדי שהתפריט העליון יציג את התמונה החדשה מיד
-  res.render("profile", { profileUser: User.toPublicUser(updated), error: null, success: "תמונת הפרופיל עודכנה בהצלחה" });
+  res.render("profile", { profileUser: User.toPublicUser(updated), cityOptions, error: null, success: "תמונת הפרופיל עודכנה בהצלחה" });
 }
 
 // POST /profile/delete - FR-005: מחיקת חשבון (רכה - isActive:false, לא מחיקה פיזית - BR-011)

@@ -35,6 +35,7 @@ async function create(data) {
     role: data.role || "member",
     avatarUrl: data.avatarUrl || "",
     bio: data.bio || "",
+    shabbatCity: data.shabbatCity || "jerusalem", // כרטיס "זמני שבת" בדף הבית - server/utils/shabbatTimes.js
     isActive: true,
     failedLoginAttempts: 0,
     lockUntil: null,
@@ -90,6 +91,25 @@ function isLocked(user) {
   return !!(user.lockUntil && new Date(user.lockUntil) > new Date());
 }
 
+// עדכון (בקשת המשתמש - צ'אט פרטי 1-על-1): חיפוש משתמשים פעילים כדי להתחיל איתם שיחה חדשה ב-/messages.
+// Firestore לא תומך בחיפוש טקסט חלקי מובנה - לכן שולפים את כל המשתמשים הפעילים ומסננים בזיכרון
+// (אותו פתרון בדיוק כמו Group.search/Post.search - סביר לגמרי לגודל פרויקט לימודי).
+async function search(query, { excludeUserId } = {}) {
+  const db = getDb();
+  const snaps = await db.collection(COLLECTION).where("isActive", "==", true).get();
+  let users = snaps.docs.map(toUser);
+  if (excludeUserId) users = users.filter((u) => u.id !== excludeUserId);
+
+  const needle = (query || "").trim().toLowerCase();
+  if (needle) {
+    users = users.filter(
+      (u) => (u.username || "").toLowerCase().includes(needle) || (u.fullName || "").toLowerCase().includes(needle)
+    );
+  }
+  users.sort((a, b) => (a.fullName || "").localeCompare(b.fullName || "", "he"));
+  return users.slice(0, 20); // די בתוצאה מוגבלת לבחירת משתמש להתחלת שיחה
+}
+
 module.exports = {
   create,
   findById,
@@ -99,4 +119,5 @@ module.exports = {
   update,
   isLocked,
   toPublicUser,
+  search,
 };

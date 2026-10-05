@@ -22,6 +22,24 @@
   })();
 </script>
 
+<!--
+  קביעת גודל טקסט (נגישות) *לפני* טעינת ה-CSS - אותו טעם בדיוק כמו סקריפט מצב כהה/בהיר למעלה:
+  מונע הבהוב של גודל טקסט שגוי ברגע הטעינה. הלחיצה על הכפתורים בעמוד הפרופיל מטופלת ב-fontSize.js.
+  רעיון הועבר מפרויקט React נפרד ("חת"ת יומי") שהמשתמש בנה בעבר.
+-->
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem("chavruta-font-size");
+      if (saved === "large" || saved === "xlarge") {
+        document.documentElement.setAttribute("data-font-size", saved);
+      }
+    } catch (e) {
+      // localStorage חסום - נשארים בגודל הרגיל, לא קריטי
+    }
+  })();
+</script>
+
 <!-- PWA - הופך את האתר לניתן ל"התקנה" כאפליקציה במחשב/בנייד (ראו manifest.json, service-worker.js) -->
 <link rel="manifest" href="/manifest.json" />
 <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />

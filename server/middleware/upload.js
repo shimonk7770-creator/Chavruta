@@ -52,4 +52,18 @@ const uploadAvatar = multer({
   limits: { fileSize: IMAGE_MAX_SIZE_BYTES, files: 1 },
 });
 
-module.exports = { uploadVideo, uploadImages, uploadAvatar, UPLOAD_DIR };
+// תמונת קבוצה (עדכון: בקשת המשתמש לעיצוב קבוצות בהשראת וואטסאפ - תמונה לקבוצה) - קובץ בודד, אותו דפוס בדיוק כמו האווטאר
+const uploadGroupPhoto = multer({
+  storage,
+  fileFilter: makeFileFilter(IMAGE_MIME_TYPES, "תמונת הקבוצה חייבת להיות בפורמט JPG, PNG, WEBP או GIF"),
+  limits: { fileSize: IMAGE_MAX_SIZE_BYTES, files: 1 },
+});
+
+// תמונה לסטטוס (עדכון: בקשת המשתמש - פיצ'ר "סטטוס" מלא כמו וואטסאפ) - קובץ בודד, אותו דפוס בדיוק
+const uploadStatusPhoto = multer({
+  storage,
+  fileFilter: makeFileFilter(IMAGE_MIME_TYPES, "תמונת הסטטוס חייבת להיות בפורמט JPG, PNG, WEBP או GIF"),
+  limits: { fileSize: IMAGE_MAX_SIZE_BYTES, files: 1 },
+});
+
+module.exports = { uploadVideo, uploadImages, uploadAvatar, uploadGroupPhoto, uploadStatusPhoto, UPLOAD_DIR };

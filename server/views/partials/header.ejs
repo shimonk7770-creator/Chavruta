@@ -21,28 +21,34 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
       בית
     </a>
-    <!-- קטגוריית ניווט: קבוצות ושיעורים -->
-    <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/groups') ? ' active' : '' %>" href="/groups">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/><circle cx="17" cy="8" r="2.5"/><path d="M16 14.2c2.8.4 5 2.6 5 5.8"/></svg>
-      קבוצות
-    </a>
-    <!-- קטגוריית ניווט: חיפוש גלובלי (קבוצות + פוסטים יחד) -->
-    <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/search') ? ' active' : '' %>" href="/search">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      חיפוש
-    </a>
-    <!-- קטגוריית ניווט: מעגל השנה -->
-    <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/holidays') ? ' active' : '' %>" href="/holidays">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
-      מעגל השנה
-    </a>
-    <!-- קטגוריית ניווט: הרשאות - מוצג לכולם (גם אורחים) ובכל עמוד, כדי שאפשר יהיה להגיע אליו מכל מקום באתר -->
-    <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/permissions') ? ' active' : '' %>" href="/permissions">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-      הרשאות
-    </a>
-
     <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
+      <!--
+        עדכון (בעקבות בקשת המשתמש): קבוצות/חיפוש/מעגל השנה/הרשאות מוצגים בניווט רק למשתמש מחובר -
+        לפני התחברות רואים רק בית/הרשמה/התחברות/מצב כהה-בהיר, כדי שמסך הכניסה לאתר יהיה נקי וממוקד.
+        שימו לב: הראוטים עצמם (GET /holidays, GET /permissions) נשארים נגישים בכתובת ישירה גם לאורח
+        (FR-029 ב-SRS) - רק קישור הניווט מוסתר, לא הדף עצמו.
+      -->
+      <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/groups') ? ' active' : '' %>" href="/groups">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/><circle cx="17" cy="8" r="2.5"/><path d="M16 14.2c2.8.4 5 2.6 5 5.8"/></svg>
+        קבוצות
+      </a>
+      <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/search') ? ' active' : '' %>" href="/search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        חיפוש
+      </a>
+      <!-- עדכון (בקשת המשתמש - "וואטסאפ-ification"): צ'אט פרטי 1-על-1, בנוסף לצ'אט הקבוצתי הקיים -->
+      <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/messages') ? ' active' : '' %>" href="/messages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        הודעות
+      </a>
+      <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/holidays') ? ' active' : '' %>" href="/holidays">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+        מעגל השנה
+      </a>
+      <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/permissions') ? ' active' : '' %>" href="/permissions">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        הרשאות
+      </a>
       <!-- קטגוריית ניווט: מעקב לימוד + בית מדרש אישי (FR-020) - מוצג רק למשתמש מחובר -->
       <a class="nav-pill<%= typeof currentPath !== 'undefined' && (currentPath.startsWith('/learning') || currentPath.startsWith('/study-room')) ? ' active' : '' %>" href="/learning">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>

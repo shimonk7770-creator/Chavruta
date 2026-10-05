@@ -1,0 +1,33 @@
+<!-- server/views/partials/statusBar.ejs - שורת "סטטוס" (סטוריז) בדף הבית, בהשראת וואטסאפ -->
+<!-- נתונים (statusFeed, myActiveStatusCount) מגיעים מ-server/routes/pageRoutes.js (GET "/") -->
+<section class="status-bar">
+  <!-- "הסטטוס שלי" - תמיד ראשון. אם יש לי סטטוס פעיל, לחיצה פותחת צפייה בו; תמיד יש גם קישור "+" נפרד להוספה -->
+  <div class="status-item status-item-mine">
+    <a class="status-circle<%= typeof myActiveStatusCount !== 'undefined' && myActiveStatusCount > 0 ? ' has-status status-mine-ring' : ' no-status' %>"
+       href="<%= typeof myActiveStatusCount !== 'undefined' && myActiveStatusCount > 0 ? '/status/u/' + userId : '/status/new' %>">
+      <% if (typeof userAvatarUrl !== 'undefined' && userAvatarUrl) { %>
+        <img src="<%= userAvatarUrl %>" alt="הסטטוס שלי" />
+      <% } else { %>
+        <span class="status-avatar-fallback"><%= (userName || '?').trim().charAt(0) %></span>
+      <% } %>
+      <span class="status-add-badge">+</span>
+    </a>
+    <span class="status-label">הסטטוס שלי</span>
+  </div>
+
+  <!-- שאר המשתמשים עם סטטוס פעיל (לא כולל אותי) - טבעת צבעונית = יש חדש שלא צפיתי בו, טבעת אפורה = כבר צפיתי בהכל -->
+  <% if (typeof statusFeed !== 'undefined') { %>
+    <% statusFeed.forEach(function (entry) { %>
+      <div class="status-item">
+        <a class="status-circle<%= entry.seenByMe ? ' status-seen-ring' : ' has-status' %>" href="/status/u/<%= entry.userId %>">
+          <% if (entry.avatarUrl) { %>
+            <img src="<%= entry.avatarUrl %>" alt="<%= entry.userName %>" />
+          <% } else { %>
+            <span class="status-avatar-fallback"><%= (entry.userName || '?').trim().charAt(0) %></span>
+          <% } %>
+        </a>
+        <span class="status-label"><%= entry.userName %></span>
+      </div>
+    <% }) %>
+  <% } %>
+</section>

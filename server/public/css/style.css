@@ -467,6 +467,16 @@ button:hover {
   font-weight: bold;
 }
 
+.auth-switch {
+  margin-top: 1.2rem;
+  font-size: 0.92rem;
+  color: var(--color-text-muted);
+}
+.auth-switch a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
 #username-status.available {
   color: var(--color-secondary);
 }
@@ -637,6 +647,444 @@ button:hover {
   display: block;
 }
 
+/* "אווטאר ברירת מחדל" - עיגול עם האות הראשונה של השם, כשאין תמונה (קבוצה/משתמש) - משותף לכל הגדלים */
+.avatar-thumb-fallback,
+.group-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ===== עדכון (בקשת המשתמש): עמוד קבוצות בעיצוב בהשראת וואטסאפ - רשימת שורות + תמונות עגולות ===== */
+.group-list {
+  display: flex;
+  flex-direction: column;
+  margin: 16px 0 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+}
+.group-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+  transition: background 0.15s ease;
+}
+.group-row:last-child {
+  border-bottom: none;
+}
+.group-row:hover {
+  background: var(--color-bg);
+}
+.group-avatar {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  font-size: 1.4rem;
+}
+.group-row-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.group-row-name {
+  font-weight: 700;
+}
+.group-row-sub {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.group-row-badge {
+  flex: 0 0 auto;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* כפתור "יצירת קבוצה" צף (FAB) - פינה קבועה, בהשראת כפתור הצ'אט החדש בוואטסאפ */
+.fab-new-group {
+  position: fixed;
+  inset-inline-end: 24px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-secondary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: var(--shadow-hover);
+  transition: transform 0.15s ease, background 0.15s ease;
+  z-index: 50;
+}
+.fab-new-group:hover {
+  background: var(--color-secondary-dark);
+  transform: scale(1.06);
+}
+
+/* כותרת עמוד קבוצה בודדת - תמונה עגולה גדולה + שם, בהשראת כותרת קבוצה בוואטסאפ */
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 16px 0 20px;
+}
+.group-avatar-lg {
+  flex: 0 0 auto;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  font-size: 2.2rem;
+  box-shadow: var(--shadow-soft);
+}
+.group-header-info h1 {
+  margin: 0 0 4px;
+}
+.group-header-info .meta {
+  margin: 2px 0;
+}
+.group-photo-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+  font-size: 0.85rem;
+}
+
+/* רשימת חברי קבוצה - "צ'יפים" עם אווטאר עגול קטן + שם, בהשראת "פרטי קבוצה" בוואטסאפ */
+.member-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 16px;
+}
+.member-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 4px 10px 4px 4px;
+  font-size: 0.85rem;
+}
+.member-chip .avatar-thumb,
+.member-chip .avatar-thumb-fallback {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+.member-chip .avatar-thumb-fallback {
+  font-size: 0.8rem;
+}
+.member-remove-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 2px;
+}
+.member-remove-btn:hover {
+  color: #b3261e;
+}
+.add-member-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 16px;
+}
+.add-member-form input {
+  flex: 1 1 220px;
+}
+
+/* ===== עדכון: צ'אט פרטי (1-על-1) - כותרת עמוד השיחה (server/views/messages/chat.ejs) ===== */
+.dm-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.dm-chat-header h1 {
+  margin: 0;
+}
+
+/* ===== עדכון: פיצ'ר "סטטוס" (סטוריז) בהשראת וואטסאפ - שורת עיגולים בדף הבית ===== */
+.status-bar {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 16px 4px;
+  margin-bottom: 20px;
+}
+.status-item {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 68px;
+}
+.status-circle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  padding: 3px;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+.status-circle.has-status,
+.status-circle.status-mine-ring {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+}
+.status-circle.status-seen-ring {
+  background: var(--color-border);
+}
+.status-circle.no-status {
+  background: var(--color-border);
+}
+.status-circle img,
+.status-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-surface);
+  box-sizing: border-box;
+}
+.status-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+.status-add-badge {
+  position: absolute;
+  bottom: -2px;
+  left: -2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-secondary);
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  border: 2px solid var(--color-surface);
+}
+.status-label {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  max-width: 68px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* בחירת צבע רקע לסטטוס טקסט (server/views/status/new.ejs) - 5 גוונים קבועים, בהשראת צבעי "סטטוס" בוואטסאפ */
+.status-bg-picker {
+  display: flex;
+  gap: 10px;
+  margin: 6px 0 14px;
+}
+.status-bg-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-block;
+  box-shadow: var(--shadow-soft);
+  border: 2px solid transparent;
+}
+.status-bg-swatch input {
+  display: none;
+}
+.status-bg-swatch:has(input:checked) {
+  border-color: var(--color-text);
+}
+.status-bg-teal,
+.story-slide.status-bg-teal {
+  background: linear-gradient(135deg, #1f6f5c, #16503f);
+}
+.status-bg-gold,
+.story-slide.status-bg-gold {
+  background: linear-gradient(135deg, #c97b3c, #a85f27);
+}
+.status-bg-rose,
+.story-slide.status-bg-rose {
+  background: linear-gradient(135deg, #b3426e, #7a2a49);
+}
+.status-bg-indigo,
+.story-slide.status-bg-indigo {
+  background: linear-gradient(135deg, #3b4db3, #27336f);
+}
+.status-bg-forest,
+.story-slide.status-bg-forest {
+  background: linear-gradient(135deg, #3f7d3a, #2a5527);
+}
+
+/* ===== צפיית סטורי - מסך מלא, בהשראת וואטסאפ/אינסטגרם (server/views/status/view.ejs + statusViewer.js) ===== */
+.story-viewer {
+  position: fixed;
+  inset: 0;
+  background: #111;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+}
+.story-progress-row {
+  display: flex;
+  gap: 4px;
+  padding: 10px 12px 0;
+}
+.story-progress-track {
+  flex: 1 1 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.story-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: #fff;
+}
+.story-progress-track.is-filling .story-progress-fill {
+  transition: width 5s linear;
+}
+.story-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+}
+.story-header-name {
+  font-weight: 700;
+  flex: 1 1 auto;
+}
+.story-close-btn {
+  color: #fff;
+  font-size: 1.8rem;
+  line-height: 1;
+  text-decoration: none;
+  padding: 0 6px;
+}
+.story-slides {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+}
+.story-slide {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  gap: 12px;
+}
+.story-slide-text {
+  color: #fff;
+}
+.story-text-content {
+  font-size: 1.6rem;
+  font-weight: 700;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 90%;
+}
+.story-image {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: var(--radius);
+  object-fit: contain;
+}
+.story-caption {
+  font-size: 1rem;
+}
+.story-viewers {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  left: 16px;
+  text-align: center;
+}
+.story-viewers-toggle {
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.story-viewers-list {
+  background: rgba(0, 0, 0, 0.75);
+  border-radius: var(--radius);
+  padding: 10px;
+  margin: 8px auto 0;
+  max-width: 260px;
+  max-height: 160px;
+  overflow-y: auto;
+  list-style: none;
+}
+.story-viewers-list li {
+  padding: 3px 0;
+  font-size: 0.85rem;
+}
+.story-tap-zone {
+  position: absolute;
+  top: 60px;
+  bottom: 0;
+  width: 35%;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.story-tap-prev {
+  left: 0;
+}
+.story-tap-next {
+  right: 0;
+}
+
 /* נגן הוידאו בפוסטים - עיצוב אחיד לכל מקום שמוצג בו וידאו מצורף (BR-008), במקום style מוטמע ב-EJS */
 .post-video {
   display: block;
@@ -671,8 +1119,18 @@ button:hover {
 .site-footer {
   text-align: center;
   padding: 1.5rem;
+  margin-top: 2rem;
+  border-top: 1px solid var(--color-border);
   color: var(--color-text-muted);
   font-size: 0.85rem;
+}
+.site-footer-about {
+  margin: 0 0 0.3rem;
+}
+.site-footer-copy {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
 }
 
 /* ===== אנימציות נוספות - כדי שהאתר ירגיש "חי" ומרשים יותר ===== */
@@ -735,6 +1193,10 @@ button:hover {
   width: 100%;
   height: 100%;
   border: 0;
+}
+.video-sound-btn {
+  display: block;
+  margin: 0.9rem auto 0;
 }
 
 /* ===== מעגל השנה ===== */
@@ -847,6 +1309,135 @@ button:hover {
 .cal-day.has-holiday.is-today {
   outline: 2px solid var(--color-secondary-dark);
   outline-offset: -2px;
+}
+
+/* ===== עדכון בעקבות בקשת המשתמש: לוח שנה בתצוגת חודש-נוכחי בודד + ניווט קדימה/אחורה =====
+   (במקום year-grid/mini-calendar למעלה שהציגו 12 חודשים יחד - עדיין נשארים בקובץ כי buildYearGrid
+   עדיין קיים ונבדק ב-calendarGrid.test.js, אבל עמוד /holidays עצמו כבר לא משתמש בהם) */
+.calendar-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-soft);
+  margin: 20px 0 32px;
+}
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.calendar-nav-btn {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+.calendar-nav-btn:hover {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: var(--shadow-hover);
+}
+.calendar-title {
+  flex: 1 1 auto;
+  text-align: center;
+  margin: 0;
+  color: var(--color-secondary-dark);
+  font-size: 1.4rem;
+}
+.calendar-today-link {
+  text-align: center;
+  margin: 0 0 12px;
+}
+.calendar-today-link a {
+  color: var(--color-secondary);
+  font-weight: 600;
+}
+.full-calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.full-calendar-table th {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  padding: 6px 0;
+  text-align: center;
+}
+.cal-day-full {
+  vertical-align: top;
+  height: 64px;
+  text-align: center;
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  border-radius: 6px;
+}
+.cal-day-full .cal-day-num {
+  display: block;
+  font-weight: 600;
+}
+.cal-day-full .cal-day-holiday-label {
+  display: block;
+  font-size: 0.68rem;
+  line-height: 1.1;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cal-day-full.is-today {
+  background: var(--color-border);
+  color: var(--color-text);
+  font-weight: 700;
+}
+/* "צבע מיוחד" לחגים - רקע כתום בולט (--color-primary), כפי שהמשתמש ביקש שיהיה מזוהה בבירור */
+.cal-day-full.has-holiday {
+  background: var(--color-primary);
+}
+.cal-day-full.has-holiday a {
+  display: block;
+  color: #fff;
+}
+.cal-day-full.has-holiday.is-today {
+  outline: 3px solid var(--color-secondary-dark);
+  outline-offset: -3px;
+}
+.calendar-legend {
+  margin: 14px 0 0;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+.legend-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  vertical-align: middle;
+  margin-inline-end: 4px;
+}
+.legend-swatch.legend-holiday {
+  background: var(--color-primary);
+}
+.legend-swatch.legend-today {
+  background: var(--color-border);
+}
+@media (max-width: 640px) {
+  .cal-day-full {
+    height: 48px;
+  }
+  .cal-day-full .cal-day-holiday-label {
+    display: none; /* במובייל התא קטן מדי לטקסט - משאירים רק את המספר + הרקע הצבעוני */
+  }
 }
 
 /* ===== "הספרייה שלי" - נגן וידאו הנשלט ע"י React ב-/study-room (דרישה 26) ===== */
@@ -975,4 +1566,145 @@ button:hover {
 .notif-empty {
   padding: 10px;
   text-align: center;
+}
+
+/* =====================================================================
+   כרטיס "זמני שבת" בדף הבית + כרטיסי הדגשה (accent-card) - server/views/home.ejs
+   רעיון + סגנון הושראו מפרויקט React נפרד ("חת"ת יומי") שהמשתמש בנה בעבר, מותאם כאן לפלטת
+   הצבעים הקיימת של האתר (כתום-חום חם + טורקיז) במקום לצבעים המקוריים של הפרויקט האחר.
+   ===================================================================== */
+.hero-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 1.8rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-hover);
+}
+/* עיגול דקורטיבי שקוף חלקית ברקע - מוסיף עומק ויזואלי בלי תמונה חיצונית */
+.hero-card::before {
+  content: "";
+  position: absolute;
+  top: -60px;
+  left: -60px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+.hero-card-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+  position: relative;
+}
+.hero-card-pill {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.85rem;
+}
+.hero-card-pill a {
+  color: #fff;
+  text-decoration: underline;
+}
+.hero-card-title {
+  position: relative;
+  margin: 0 0 1.1rem;
+  font-size: 1.5rem;
+}
+.accent-card-row {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+.accent-card {
+  flex: 1 1 140px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--color-text);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  border-right: 5px solid transparent;
+  transition: transform 0.2s ease;
+}
+.accent-card:hover {
+  transform: translateY(-2px);
+}
+.accent-card.accent-teal {
+  border-right-color: var(--color-secondary);
+}
+.accent-card.accent-gold {
+  border-right-color: #d6a13c;
+}
+.accent-card-label {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+.accent-card-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+.hero-card-upcoming {
+  position: relative;
+  font-size: 0.88rem;
+  opacity: 0.92;
+  margin: 0 0 0.3rem;
+}
+.hero-card-note {
+  position: relative;
+  font-size: 0.72rem;
+  opacity: 0.75;
+  margin: 0;
+}
+[data-theme="dark"] .hero-card {
+  background: linear-gradient(135deg, #1f4d40 0%, #163a30 100%);
+}
+[data-theme="dark"] .accent-card {
+  background: rgba(42, 39, 35, 0.92);
+  color: var(--color-text);
+}
+
+/* =====================================================================
+   התאמה אישית - גודל טקסט (נגישות) - server/views/profile.ejs, server/public/js/fontSize.js
+   [data-font-size] מתווסף ל-<html> ע"י fontSize.js / הסקריפט המוקדם ב-head.ejs.
+   רעיון הועבר מפרויקט React נפרד ("חת"ת יומי") שהמשתמש בנה בעבר.
+   ===================================================================== */
+html[data-font-size="large"] {
+  font-size: 18px;
+}
+html[data-font-size="xlarge"] {
+  font-size: 20px;
+}
+.option-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.6rem 0 1rem;
+}
+.option-pill {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 999px;
+  padding: 0.4rem 1rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.option-pill:hover {
+  background: var(--color-bg);
+}
+.option-pill.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
 }

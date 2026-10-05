@@ -38,6 +38,18 @@
       <label for="avatarUrl">קישור לתמונת פרופיל (אופציונלי - חלופה להעלאת קובץ למעלה)</label>
       <input type="text" id="avatarUrl" name="avatarUrl" value="<%= profileUser.avatarUrl %>" />
 
+      <!--
+        עיר לזמני שבת - כרטיס "זמני שבת" בדף הבית (server/utils/shabbatTimes.js).
+        תפריט נפתח סגור (לא טופס טקסט חופשי) כדי שכל בחירה תהיה עיר אמיתית עם קואורדינטות תקינות -
+        ראו הסבר מפורט בהערות בראש shabbatTimes.js לגבי הסיבה לבחירה הזו.
+      -->
+      <label for="shabbatCity">עיר לזמני שבת</label>
+      <select id="shabbatCity" name="shabbatCity">
+        <% (typeof cityOptions !== 'undefined' ? cityOptions : []).forEach(function(city) { %>
+          <option value="<%= city.key %>" <%= profileUser.shabbatCity === city.key ? "selected" : "" %>><%= city.label %></option>
+        <% }) %>
+      </select>
+
       <hr />
       <p class="meta">שינוי סיסמה (השאר ריק אם אינך רוצה לשנות):</p>
       <label for="currentPassword">סיסמה נוכחית</label>
@@ -50,11 +62,31 @@
     </form>
 
     <hr />
+    <!--
+      ===== התאמה אישית - גודל טקסט =====
+      רעיון הועבר מפרויקט React נפרד ("חת"ת יומי") שהמשתמש בנה בעבר. נשמר בדפדפן (localStorage) בלבד -
+      זו העדפת תצוגה אישית של המכשיר, לא נתון שצריך לסנכרן בין מכשירים דרך השרת/Firestore.
+      server/public/js/fontSize.js מטפל בלחיצות ובשמירה; partials/head.ejs מיישם את הגודל השמור
+      מוקדם ככל האפשר (לפני טעינת ה-CSS) כדי למנוע הבהוב של גודל טקסט שגוי ברגע הטעינה.
+    -->
+    <h2>התאמה אישית - גודל טקסט</h2>
+    <p class="meta">הבחירה נשמרת במכשיר הזה בלבד, ומשפיעה על גודל הטקסט בכל האתר.</p>
+    <div class="option-pill-row" id="font-size-row">
+      <button type="button" class="option-pill" data-font-size="normal">רגיל</button>
+      <button type="button" class="option-pill" data-font-size="large">גדול</button>
+      <button type="button" class="option-pill" data-font-size="xlarge">גדול מאוד</button>
+    </div>
+
+    <hr />
     <h2>מחיקת חשבון</h2>
     <p class="meta">מחיקת החשבון היא רכה - הפרופיל יושבת, אך תוכן שפרסמת (פוסטים/תגובות) יישאר קיים לצורך שלמות ההיסטוריה של אחרים.</p>
     <form action="/profile/delete" method="POST" onsubmit="return confirm('האם אתה בטוח שברצונך למחוק את החשבון?')">
       <button type="submit" style="background-color:#b3261e">מחיקת החשבון שלי</button>
     </form>
   </main>
+
+  <%- include('partials/footer') %>
+
+  <script src="/js/fontSize.js"></script>
 </body>
 </html>

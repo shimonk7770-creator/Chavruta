@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!-- server/views/status/new.ejs - יצירת סטטוס חדש (טקסט או תמונה) - עדכון: פיצ'ר "סטטוס" (וואטסאפ-ification) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <h1>הוספת סטטוס</h1>
+    <p class="meta">הסטטוס יוצג לכל חברי הקהילה למשך 24 שעות ואז ייעלם אוטומטית - בדיוק כמו בוואטסאפ.</p>
+    <% if (error) { %><p class="error-message"><%= error %></p><% } %>
+
+    <h2>סטטוס טקסט</h2>
+    <form action="/status/text" method="POST" class="auth-form">
+      <label for="content">מה בא לך לשתף?</label>
+      <textarea id="content" name="content" maxlength="300" required placeholder="כתבו כאן..."></textarea>
+
+      <label>צבע רקע</label>
+      <div class="status-bg-picker">
+        <% bgColors.forEach(function (color, i) { %>
+          <label class="status-bg-swatch status-bg-<%= color %>">
+            <input type="radio" name="bgColor" value="<%= color %>" <%= i === 0 ? 'checked' : '' %> />
+          </label>
+        <% }) %>
+      </div>
+
+      <button type="submit">פרסום סטטוס טקסט</button>
+    </form>
+
+    <hr />
+
+    <h2>סטטוס תמונה</h2>
+    <form action="/status/image" method="POST" enctype="multipart/form-data" class="auth-form">
+      <label for="statusImage">בחירת תמונה (JPG/PNG/WEBP/GIF, עד 5MB)</label>
+      <input type="file" id="statusImage" name="statusImage" accept="image/jpeg,image/png,image/webp,image/gif" required />
+
+      <label for="caption">כיתוב (אופציונלי)</label>
+      <input type="text" id="caption" name="caption" maxlength="300" placeholder="כיתוב קצר לתמונה..." />
+
+      <button type="submit">פרסום סטטוס תמונה</button>
+    </form>
+
+    <p><a href="/">חזרה לדף הבית</a></p>
+  </main>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

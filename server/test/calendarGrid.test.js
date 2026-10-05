@@ -3,7 +3,7 @@
 
 const { test, describe } = require("node:test");
 const assert = require("node:assert");
-const { buildYearGrid } = require("../utils/calendarGrid");
+const { buildYearGrid, buildMonth } = require("../utils/calendarGrid");
 
 describe("buildYearGrid", () => {
   test("מחזיר 12 חודשים כברירת מחדל, החל מהחודש של תאריך הייחוס", () => {
@@ -47,5 +47,35 @@ describe("buildYearGrid", () => {
     const months = buildYearGrid(holidays, new Date(2026, 8, 1), 1); // רק ספטמבר 2026
     const allHolidaysInGrid = months[0].weeks.flat().filter(Boolean).flatMap((c) => c.holidays);
     assert.strictEqual(allHolidaysInGrid.length, 0);
+  });
+});
+
+// עדכון (בקשת המשתמש): עמוד /holidays עבר מ-12 חודשים יחד לחודש בודד + ניווט - buildMonth היא הפונקציה שמממשת זאת
+describe("buildMonth", () => {
+  test("מחזיר חודש בודד עם year/monthIndex/monthName נכונים", () => {
+    const m = buildMonth([], 2026, 9); // אוקטובר 2026 (monthIndex 9)
+    assert.strictEqual(m.year, 2026);
+    assert.strictEqual(m.monthIndex, 9);
+    assert.strictEqual(m.monthName, "אוקטובר");
+  });
+
+  test("כל שבוע בחודש הבודד מכיל בדיוק 7 תאים", () => {
+    const m = buildMonth([], 2026, 9);
+    m.weeks.forEach((week) => assert.strictEqual(week.length, 7));
+  });
+
+  test("חג עם gregorianDate תקין מופיע בתא הנכון בחודש הבודד", () => {
+    const holidays = [{ id: "h1", holidayName: "יום כיפור", gregorianDate: "2026-09-21" }];
+    const m = buildMonth(holidays, 2026, 8); // ספטמבר (monthIndex 8)
+    const cell = m.weeks.flat().filter(Boolean).find((c) => c.day === 21);
+    assert.ok(cell);
+    assert.strictEqual(cell.holidays[0].holidayName, "יום כיפור");
+  });
+
+  test("buildYearGrid עם monthsCount=1 זהה לתוצאה של buildMonth על אותו חודש", () => {
+    const holidays = [{ id: "h1", holidayName: "חג", gregorianDate: "2026-10-05" }];
+    const viaYearGrid = buildYearGrid(holidays, new Date(2026, 9, 1), 1)[0];
+    const viaMonth = buildMonth(holidays, 2026, 9);
+    assert.deepStrictEqual(viaYearGrid, viaMonth);
   });
 });

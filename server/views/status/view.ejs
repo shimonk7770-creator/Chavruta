@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!-- server/views/status/view.ejs - צפייה ב"סטוריז" של משתמש - עדכון: פיצ'ר "סטטוס" (וואטסאפ-ification) -->
+<!-- רצף סטוריז מתקדם אוטומטית (5 שניות לכל שקופית), עם סרגלי התקדמות למעלה ואזורי הקשה שמאל/ימין
+     למעבר ידני - בדיוק כמו "סטוריז" בוואטסאפ/אינסטגרם. ראו server/public/js/statusViewer.js -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <div id="story-viewer" class="story-viewer" data-target-user-id="<%= targetUser.id %>" data-my-user-id="<%= myUserId %>" data-is-owner="<%= isOwner ? '1' : '0' %>">
+      <div class="story-progress-row">
+        <% statuses.forEach(function (s, i) { %>
+          <div class="story-progress-track" data-index="<%= i %>"><div class="story-progress-fill"></div></div>
+        <% }) %>
+      </div>
+
+      <div class="story-header">
+        <% if (targetUser.avatarUrl) { %>
+          <img class="avatar-thumb" src="<%= targetUser.avatarUrl %>" alt="" />
+        <% } else { %>
+          <span class="avatar-thumb avatar-thumb-fallback"><%= (targetUser.fullName || '?').trim().charAt(0) %></span>
+        <% } %>
+        <span class="story-header-name"><%= targetUser.fullName %></span>
+        <a class="story-close-btn" href="/" aria-label="סגירה">&times;</a>
+      </div>
+
+      <div class="story-slides">
+        <% statuses.forEach(function (s, i) { %>
+          <div class="story-slide<%= s.type === 'text' ? ' story-slide-text status-bg-' + (s.bgColor || 'teal') : '' %>" data-index="<%= i %>" data-status-id="<%= s.id %>" style="display:<%= i === 0 ? 'flex' : 'none' %>">
+            <% if (s.type === 'image') { %>
+              <img class="story-image" src="<%= s.mediaUrl %>" alt="" />
+              <% if (s.content) { %><p class="story-caption"><%= s.content %></p><% } %>
+            <% } else { %>
+              <p class="story-text-content"><%= s.content %></p>
+            <% } %>
+
+            <% if (isOwner) { %>
+              <!-- רשימת "נצפה ע"י" - מוצגת רק לבעל הסטטוס (לא חושפים מי צפה למי אחר) -->
+              <div class="story-viewers">
+                <button type="button" class="story-viewers-toggle">נצפה ע"י <%= s.viewers.length %></button>
+                <ul class="story-viewers-list" style="display:none">
+                  <% if (!s.viewers.length) { %>
+                    <li class="meta">עדיין אף אחד לא צפה</li>
+                  <% } %>
+                  <% s.viewers.forEach(function (v) { %>
+                    <li><%= v.userName %></li>
+                  <% }) %>
+                </ul>
+                <form action="/status/<%= s.id %>/delete" method="POST" onsubmit="return confirm('למחוק את הסטטוס הזה?')">
+                  <button type="submit" class="btn-link">מחיקת הסטטוס</button>
+                </form>
+              </div>
+            <% } %>
+          </div>
+        <% }) %>
+      </div>
+
+      <!-- אזורי הקשה שקופים - חצי ימני = הבא, חצי שמאלי = הקודם (dir="rtl" אז "הבא" מבחינת הקריאה הוא הצד השמאלי במסך - ראו ה-JS) -->
+      <button type="button" class="story-tap-zone story-tap-prev" aria-label="הקודם"></button>
+      <button type="button" class="story-tap-zone story-tap-next" aria-label="הבא"></button>
+    </div>
+  </main>
+
+  <%- include('../partials/footer') %>
+
+  <script src="/js/statusViewer.js"></script>
+</body>
+</html>
