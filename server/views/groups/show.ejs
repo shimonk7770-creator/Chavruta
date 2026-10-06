@@ -5,6 +5,8 @@
 <html lang="he" dir="rtl">
 <head>
   <%- include('../partials/head') %>
+  <!-- עיצוב רכיבי ה-AI (סיכום פוסט + שאלות) -->
+  <link rel="stylesheet" href="/css/ai.css" />
 </head>
 <body>
   <%- include('../partials/header') %>
@@ -111,6 +113,19 @@
       </section>
     <% } %>
 
+    <% if (userId) { %>
+      <!-- פיצ'ר AI (דרישת המרצה #2): שאלה על תוכן הקבוצה כולה - נשלחת לשרת, שפונה ל-Gemini (המפתח לעולם לא מגיע לדפדפן) -->
+      <section class="card ai-group-card">
+        <h2>🤖 שאל את ה-AI על הקבוצה</h2>
+        <p class="meta">ה-AI עונה לפי הפוסטים האחרונים בקבוצה הזו.</p>
+        <form class="ai-ask-form ai-group-form" data-group-id="<%= group.id %>">
+          <input type="text" name="question" placeholder="למשל: על מה למדנו לאחרונה?" maxlength="500" required />
+          <button type="submit" class="ai-summary-btn">שאל</button>
+        </form>
+        <div class="ai-answer" id="ai-group-box" role="status" aria-live="polite"></div>
+      </section>
+    <% } %>
+
     <h2>פוסטים בקבוצה</h2>
     <% posts.forEach(function(post) { %>
       <div class="card post-card" data-post-id="<%= post.id %>">
@@ -132,6 +147,20 @@
             <% post.imageUrls.forEach(function (url) { %>
               <a href="<%= url %>" target="_blank" rel="noopener"><img src="<%= url %>" class="gallery-thumb" alt="תמונה מצורפת לפוסט" /></a>
             <% }) %>
+          </div>
+        <% } %>
+
+        <% if (userId) { %>
+          <!-- כלי AI לפוסט: סיכום (נשמר ב-DB אחרי הפעם הראשונה) + שאלה על הפוסט. התשובה מוצגת בתיבה מתחת (public/js/ai.js) -->
+          <div class="ai-tools">
+            <div class="ai-row">
+              <button type="button" class="ai-summary-btn" data-post-id="<%= post.id %>">✨ סכם</button>
+              <form class="ai-ask-form ai-post-form" data-post-id="<%= post.id %>">
+                <input type="text" name="question" placeholder="שאל את ה-AI על הפוסט..." maxlength="500" required />
+                <button type="submit" class="ai-summary-btn">שאל</button>
+              </form>
+            </div>
+            <div class="ai-answer" id="ai-box-<%= post.id %>" role="status" aria-live="polite"></div>
           </div>
         <% } %>
 
@@ -159,5 +188,6 @@
 
   <script src="/js/comments.js"></script>
   <script src="/js/postForm.js"></script>
+  <script src="/js/ai.js"></script>
 </body>
 </html>

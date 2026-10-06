@@ -115,6 +115,14 @@ async function update(id, patch) {
   return findById(id);
 }
 
+// פיצ'ר ה-AI: שמירת סיכום שנוצר ע"י ה-AI על מסמך הפוסט (cache) - כך שלא פונים ל-Gemini שוב ושוב על אותו תוכן.
+// hash = טביעת אצבע של הכותרת+התוכן; אם הפוסט נערך, ה-hash לא יתאים והסיכום ייווצר מחדש.
+// בכוונה לא משתמשים ב-update() כי הוא מעדכן את updatedAt, ופעולת AI אינה "עריכה" של הפוסט.
+async function setAiSummary(id, summary, hash) {
+  const db = getDb();
+  await db.collection(COLLECTION).doc(id).update({ aiSummary: summary, aiSummaryHash: hash });
+}
+
 // הוספת תמונות לגלריית פוסט קיים - מצרפים למערך הקיים (לא מחליפים), עד מקסימום 6 תמונות בסה"כ לפוסט
 async function addImages(id, newUrls) {
   const post = await findById(id);
@@ -170,6 +178,7 @@ module.exports = {
   search,
   update,
   addImages,
+  setAiSummary,
   remove,
   archiveByGroup,
   countActiveByGroup,

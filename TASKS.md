@@ -145,7 +145,7 @@ server/public/js/pwaRegister.js, server/public/js/themeToggle.js
       instance ל-commentController.js), `server/utils/notificationRecipients.js` (פונקציה טהורה + 5 בדיקות
       `node:test` - למי לשלוח התראה ולמי לא), `GET/POST /api/notifications*`, `server/public/js/notifications.js`.
       כל socket שנפתח באתר מצטרף אוטומטית ל-room אישי (`user:<id>`) כדי שאפשר יהיה לשדר אליו מכל עמוד, לא רק מהצ'אט.
-- [ ] כלי AI מובנה - שאלות לפי תוכן הקבוצה/פוסט + סיכום אוטומטי של שיעור (Gemini API, ממתין למפתח מהמשתמש)
+- [x] כלי AI מובנה - שאלות לפי תוכן הקבוצה/פוסט + סיכום אוטומטי של שיעור (Gemini API) - נבנה, ראו סעיף "פיצ'ר AI" למטה. **נדרש מפתח ב-`.env` לבדיקה חיה**
 - [x] רכיב React עם `<video>` אמיתי - **הושלם**, ראו סעיף 26 ב"בדיקת התאמה לדרישות הטכניות" למטה
 
 ## שבוע 5 - מעגל השנה, הרשאות, לוח בקרה, בדיקה להגנה
@@ -370,6 +370,23 @@ server/server.js (חיבור הנתיבים החדשים)
   - קבצים: server/utils/compassLogic.js, server/controllers/compassController.js, server/routes/compassRoutes.js, server/views/compass/index.ejs, server/public/css/compass.css, server/public/js/compass.js, server/test/compassLogic.test.js (7 בדיקות) - חדשים
 - [x] **תפריט נפתח "תפילה"** בסרגל הניווט (זמני היום / נוסח תפילה / מניינים / מצפן) - `<details>` ללא JS + סגירה בלחיצה בחוץ/Escape. קבצים: server/public/css/navMenu.css, server/public/js/navMenu.js (חדשים), server/views/partials/header.ejs + head.ejs, server/server.js (חיבור 3 הנתיבים)
 - [ ] **נותר לקטגוריות**: בדיקת הרצה אמיתית אצל שמעון (Sefaria + Nominatim חיים), ואחר כך העברת כל הקטגוריות לאפליקציית הנייד.
+
+## פיצ'ר AI בתוך האתר (אוקטובר 2026) - דרישת המרצה #2
+
+> החלטת המשתמש: "שאלות וסיכום". שלוש יכולות בעמוד הקבוצה (`/groups/:id`), למשתמשים מחוברים בלבד.
+
+- [x] **✨ סיכום פוסט/שיעור** - כפתור ליד כל פוסט: 3-5 נקודות + "בקצרה". הסיכום נשמר על מסמך הפוסט (`aiSummary` + `aiSummaryHash`) ונוצר מחדש רק אם הפוסט נערך - חיסכון במכסת ה-API.
+- [x] **💬 שאלה על פוסט** - שאלה חופשית (3-500 תווים); ה-AI עונה לפי הפוסט + 10 התגובות האחרונות.
+- [x] **🤖 שאלה על הקבוצה** - לפי 8 הפוסטים האחרונים של הקבוצה.
+- **אבטחה (מוסבר גם להגנה)**:
+  - מפתח `GEMINI_API_KEY` נקרא רק מ-`.env` בצד השרת, נשלח ב-header (`x-goog-api-key`) ולא ב-URL, ולא מופיע בלוגים/בהודעות שגיאה (בדיקה אוטומטית). `.env` לא עולה ל-git.
+  - הגבלת קצב: 8 בקשות AI בדקה למשתמש (`express-rate-limit`, מפתח = מזהה משתמש); דורש התחברות (401 JSON אחרת).
+  - **הגנה מפני prompt injection**: תוכן פוסטים/תגובות נשלח בתוך תגיות כ"נתונים בלבד", תווי `<` `>` מנוטרלים, והוראת המערכת אוסרת על ה-AI לבצע הוראות מתוך התוכן; חיתוך אורך.
+  - תשובת ה-AI מוצגת ב-`.text()` (לא `.html()`) - אין XSS. ליד כל תשובה כתוב שה-AI עלול לטעות ושבהלכה למעשה שואלים רב.
+  - שגיאות (אין מפתח/מכסה/חסימת בטיחות/רשת/timeout 30 שניות) מתורגמות להודעה ידידותית בעברית ו-HTTP status מתאים.
+- **הגדרה**: מפתח חינמי ב-https://aistudio.google.com/apikey -> `GEMINI_API_KEY=...` ב-`.env`. שם המודל ברירת מחדל `gemini-3.6-flash`, ניתן לשינוי ב-`GEMINI_MODEL` (Google מחליפה שמות מודלים - אם יש שגיאת "מודל לא נמצא", מחליפים שם).
+- **מגבלות**: הקריאה החיה ל-Gemini נבדקה רק עם fetch מדומה (אין לי מפתח); אין עדיין AI באפליקציית הנייד (יתווסף בשלב ההעברה למובייל).
+- קבצים: server/services/aiService.js, server/utils/aiPrompts.js, server/controllers/aiController.js, server/routes/aiRoutes.js, server/public/js/ai.js, server/public/css/ai.css, server/test/aiService.test.js + aiPrompts.test.js + aiController.test.js (חדשים, 18 בדיקות); server/models/Post.js (`setAiSummary`), server/server.js, server/views/groups/show.ejs, .env.example
 
 ## בדיקת התאמה לדרישות הטכניות של הקורס (סעיפים 15-29)
 

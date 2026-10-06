@@ -35,6 +35,7 @@ const zmanimRoutes = require("./routes/zmanimRoutes"); // "זמני היום" - 
 const prayerRoutes = require("./routes/prayerRoutes"); // "נוסח תפילה" - שחרית/מנחה/ערבית מ-Sefaria (ציבורי)
 const minyanRoutes = require("./routes/minyanRoutes"); // "מניינים" - חיפוש מניינים קרובים (צפייה ציבורית, הוספה למחוברים)
 const compassRoutes = require("./routes/compassRoutes"); // "מצפן" - כיוון תפילה לירושלים (ציבורי)
+const aiRoutes = require("./routes/aiRoutes"); // פיצ'ר AI (Gemini) - סיכום פוסטים ושאלות על פוסט/קבוצה (דרישת המרצה #2)
 const adminRoutes = require("./routes/adminRoutes"); // לוח בקרה למנהל מערכת
 const notificationRoutes = require("./routes/notificationRoutes"); // פעמון התראות בזמן אמת
 const mobileRoutes = require("./routes/mobileRoutes"); // API לאפליקציית המובייל (React Native/Expo) - דרישת המרצה
@@ -113,6 +114,7 @@ app.use("/", zmanimRoutes); // זמני היום
 app.use("/", prayerRoutes); // נוסח תפילה
 app.use("/", minyanRoutes); // מניינים
 app.use("/", compassRoutes); // מצפן
+app.use("/", aiRoutes); // AI - סיכום ושאלות (POST /api/ai/...)
 app.use("/", adminRoutes); // לוח בקרה למנהל
 app.use("/", notificationRoutes); // פעמון התראות
 app.use("/", mobileRoutes); // API לאפליקציית המובייל
