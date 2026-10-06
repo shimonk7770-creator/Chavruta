@@ -39,7 +39,7 @@ npm run make-admin -- your@email.com
 npm test
 ```
 
-מריץ את כל הבדיקות תחת `server/test/` עם `node:test` המובנה ב-Node (לא דורש ספריית בדיקות נוספת) - כ-106 בדיקות בסה"כ.
+מריץ את כל הבדיקות תחת `server/test/` עם `node:test` המובנה ב-Node (לא דורש ספריית בדיקות נוספת) - 97 בדיקות בסה"כ.
 מכסה ולידציית הרשמה (BR-001/002/003), לוגיקת הרשאות (AC-002/AC-003), בניית לוח השנה (`calendarGrid.js`),
 לוגיקת נמעני התראות הפעמון (`notificationRecipients.js`), חישוב זמני שבת אמיתי (`shabbatTimes.js`, ספריית `@hebcal/core`),
 תפוגת 24 השעות של פיצ'ר "סטטוס" (`status.test.js`), חישוב "המועד הקרוב" במעגל השנה (`upcomingHoliday.js`),
