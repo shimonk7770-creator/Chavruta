@@ -332,7 +332,17 @@ server/public/js/chat.js (לוגיקת העלאה/פופאפ אימוג'י/של�
   - `GET /api/mobile/feed` - פיד הפוסטים (מקביל ל-`myFeed` באתר), עם כתובות תמונה **מלאות** (כולל host) כי React Native, בניגוד לדפדפן, לא פותר כתובות יחסיות
   - לוגיקת האימות (בדיקת סיסמה + נעילת חשבון BR-010) הוצאה לשירות משותף (`services/loginService.js`) כך שההתחברות באתר ובמובייל משתמשות **באותה** בדיקה בדיוק - לא כפילות קוד שעלולה להתבדר ולפתוח פרצת אבטחה.
   - **הערה לביקורת אבטחה**: הטוקן ללא תפוגה אוטומטית (לא כמו session שפג אחרי 30 דק') - מספיק לפרויקט לימודי, מתועד בקוד (`MobileToken.js`).
-- [ ] **הפרויקט עצמו (Expo/React Native) - השלב הבא** - יוקם כפרויקט Node נפרד **לגמרי** מ-`chavruta-app` (תיקייה אחות, למשל `chavruta-mobile`), כי React Native הוא stack נפרד (לא הרחבה של Express/EJS). האתר כבר כולל יכולת PWA (manifest+service worker) שעונה חלקית על "גישה כמו אפליקציה" - אבל React Native זו דרישה נפרדת ומפורשת של המרצה.
+- [~] **הפרויקט עצמו (Expo/React Native) - נבנה, ממתין לבדיקת הרצה בטלפון** - הוקם כפרויקט נפרד **לגמרי** מ-`chavruta-app` (תיקייה אחות `chavruta-mobile`, עם git משלו), כי React Native הוא stack נפרד (לא הרחבה של Express/EJS). האתר כבר כולל יכולת PWA (manifest+service worker) שעונה חלקית על "גישה כמו אפליקציה" - אבל React Native זו דרישה נפרדת ומפורשת של המרצה.
+  - נוצר עם `create-expo-app` (SDK 57): TypeScript + Expo Router + טאבים. **הוחלט להישאר עם התבנית המתקדמת** (ולא להחליף ל-App.js פשוט כמו בדוגמת המרצה) - יותר מקצועי, אבל צריך להכיר: TypeScript, ניווט מבוסס-קבצים (`src/app/*.tsx`), Context.
+  - **מסכים**: טאב "פיד" (`src/app/index.tsx`) - טופס התחברות כשלא מחוברים, ואז `FlatList` של פוסטים אמיתיים מ-`GET /api/mobile/feed` עם משיכה-לרענון; טאב "חשבון" (`src/app/explore.tsx`) - פרטי משתמש והתנתקות.
+  - **קומפוננטות**: `login-form.tsx`, `post-card.tsx`; **מצב התחברות משותף**: `src/contexts/auth-context.tsx` (React Context; הטוקן נשמר בזיכרון בלבד - כניסה מחדש בכל הפעלת אפליקציה, פשטות מכוונת בלי ספריית אחסון נוספת).
+  - **כתובת השרת**: `src/constants/api.ts` - חייבת להיות כתובת ה-IP המקומית של המחשב (לא `localhost`), והטלפון חייב להיות באותה רשת Wi-Fi. הוגדרה ל-`http://10.100.102.3:3000` - **צריך לעדכן אם הכתובת משתנה** (רשת אחרת/אתחול נתב).
+  - **טרם אומת**: לא הורצה בדיקת TypeScript/הרצה בפועל ב-Expo Go (הגישור לטרמינל היה לא זמין בזמן הכתיבה). להריץ: `cd chavruta-mobile && npx expo start`, ולסרוק את ה-QR בטלפון (השרת `chavruta-app` חייב לרוץ).
+
+### קבצים (chavruta-mobile)
+src/constants/api.ts (חדש), src/contexts/auth-context.tsx (חדש), src/components/login-form.tsx (חדש),
+src/components/post-card.tsx (חדש), src/app/index.tsx, src/app/explore.tsx, src/app/_layout.tsx (עטיפת AuthProvider),
+src/components/app-tabs.tsx (תוויות בעברית)
 
 ### קבצים שהשתנו (שלב 1 - API בלבד)
 server/services/loginService.js (חדש), server/models/MobileToken.js (חדש),
