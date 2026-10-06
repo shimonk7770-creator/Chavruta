@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<!-- server/views/minyanim/new.ejs - הוספת מניין חדש (משתמש מחובר בלבד) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+  <link rel="stylesheet" href="/css/minyanim.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <section class="minyanim-hero">
+      <h1 class="minyanim-hero-title">הוספת מניין</h1>
+      <p class="minyanim-hero-sub">עוזרים לאחרים למצוא תפילה בציבור - מוסיפים מניין שאתם מכירים</p>
+    </section>
+
+    <% if (error) { %><p class="minyanim-warning"><%= error %></p><% } %>
+
+    <form class="minyan-form" method="POST" action="/minyanim">
+      <input type="hidden" name="lat" id="minyanim-lat" value="<%= form.lat || '' %>" />
+      <input type="hidden" name="lng" id="minyanim-lng" value="<%= form.lng || '' %>" />
+
+      <label class="minyanim-field">
+        שם בית הכנסת
+        <input type="text" name="synagogueName" value="<%= form.synagogueName || '' %>" required minlength="2" maxlength="60" placeholder="למשל: בית כנסת שערי תפילה" />
+      </label>
+
+      <div class="minyanim-search-row">
+        <label class="minyanim-field">
+          תפילה
+          <select name="prayer" required>
+            <% Object.keys(prayerLabels).forEach(function (k) { %>
+              <option value="<%= k %>"<%= form.prayer === k ? ' selected' : '' %>><%= prayerLabels[k] %></option>
+            <% }) %>
+          </select>
+        </label>
+        <label class="minyanim-field">
+          שעה
+          <input type="time" name="time" value="<%= form.time || '' %>" required />
+        </label>
+        <label class="minyanim-field">
+          ימים
+          <select name="daysPreset">
+            <% Object.keys(dayPresets).forEach(function (k) { %>
+              <option value="<%= k %>"<%= (form.daysPreset || 'weekdays') === k ? ' selected' : '' %>><%= dayPresets[k].label %></option>
+            <% }) %>
+          </select>
+        </label>
+        <label class="minyanim-field">
+          נוסח
+          <select name="nusach">
+            <% Object.keys(nusachLabels).forEach(function (k) { %>
+              <option value="<%= k %>"<%= (form.nusach || 'any') === k ? ' selected' : '' %>><%= nusachLabels[k] %></option>
+            <% }) %>
+          </select>
+        </label>
+      </div>
+
+      <div class="minyanim-search-row">
+        <label class="minyanim-field">
+          עיר
+          <select name="city" required>
+            <% cities.forEach(function (c) { %>
+              <option value="<%= c.key %>"<%= form.city === c.key ? ' selected' : '' %>><%= c.label %></option>
+            <% }) %>
+          </select>
+        </label>
+        <label class="minyanim-field minyanim-field-grow">
+          רחוב ומספר (אופציונלי - משפר את דיוק המיקום)
+          <input type="text" name="address" value="<%= form.address || '' %>" maxlength="120" placeholder="למשל: רחוב הרב קוק 5" />
+        </label>
+      </div>
+
+      <label class="minyanim-field">
+        הערות (אופציונלי)
+        <input type="text" name="notes" value="<%= form.notes || '' %>" maxlength="200" placeholder="למשל: כניסה מהחצר, יש עזרת נשים" />
+      </label>
+
+      <div class="minyanim-locate-box">
+        <button type="button" class="btn" id="minyanim-locate-here">📍 אני עומד/ת ליד בית הכנסת - קבעו את המיקום לפי המכשיר</button>
+        <span class="minyanim-locate-status" id="minyanim-locate-status" role="status"></span>
+        <p class="meta">בלי זה, המיקום ייקבע לפי הכתובת שהוזנה (או מרכז העיר, בקירוב).</p>
+      </div>
+
+      <div class="minyan-form-actions">
+        <button type="submit" class="btn btn-primary">שמירת המניין</button>
+        <a class="btn" href="/minyanim">ביטול</a>
+      </div>
+    </form>
+  </main>
+
+  <%- include('../partials/footer') %>
+  <script src="/js/minyanim.js"></script>
+</body>
+</html>

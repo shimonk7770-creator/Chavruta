@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!-- server/views/prayers/index.ejs - "נוסח תפילה": בחירת נוסח ותפילה (ציבורי, כולל לאורחים) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+  <link rel="stylesheet" href="/css/prayers.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <section class="prayers-hero">
+      <h1 class="prayers-hero-title">נוסח תפילה</h1>
+      <p class="prayers-hero-sub">בחרו נוסח ואז תפילה - והטקסט המלא יוצג לפניכם</p>
+    </section>
+
+    <!-- שלב 1: בחירת נוסח (קישורים רגילים - עובד גם בלי JavaScript; הבחירה נשמרת ב-session) -->
+    <h2 class="prayers-step">1. בחרו נוסח</h2>
+    <div class="nusach-pills" role="tablist">
+      <% Object.keys(nusachim).forEach(function (key) { %>
+        <a class="nusach-pill<%= key === selectedNusach ? ' active' : '' %>" href="/prayers?nusach=<%= key %>"><%= nusachim[key].label %></a>
+      <% }) %>
+    </div>
+
+    <!-- שלב 2: בחירת תפילה - הקישור כולל את הנוסח שנבחר -->
+    <h2 class="prayers-step">2. בחרו תפילה</h2>
+    <div class="prayer-cards">
+      <% Object.keys(prayers).forEach(function (key) { %>
+        <a class="prayer-card" href="/prayers/<%= selectedNusach %>/<%= key %>">
+          <span class="prayer-card-icon"><%= prayers[key].icon %></span>
+          <span class="prayer-card-name"><%= prayers[key].label %></span>
+          <span class="prayer-card-nusach">נוסח <%= nusachim[selectedNusach].label %></span>
+        </a>
+      <% }) %>
+    </div>
+
+    <p class="meta prayers-source">
+      הנוסחים נשלפים מספריית <a href="https://www.sefaria.org" target="_blank" rel="noopener">Sefaria</a> (טקסטים פתוחים).
+      מוצגת תפילת יום חול. הטעינה הראשונה של כל תפילה לוקחת רגע - לאחר מכן היא נשמרת ופותחת מיד.
+    </p>
+  </main>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

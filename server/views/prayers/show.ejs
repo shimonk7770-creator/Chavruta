@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<!-- server/views/prayers/show.ejs - עמוד תפילה בודדת. הטקסט עצמו נטען ב-Ajax (public/js/prayers.js) מ-/prayers/data/... -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+  <link rel="stylesheet" href="/css/prayers.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <section class="prayers-hero">
+      <p class="prayers-hero-crumb"><a href="/prayers?nusach=<%= nusachKey %>">‹ חזרה לבחירה</a></p>
+      <h1 class="prayers-hero-title"><%= prayerLabel %></h1>
+      <p class="prayers-hero-sub">נוסח <%= nusachLabel %></p>
+    </section>
+
+    <!-- בקרות קריאה: החלפת נוסח, ניקוד, גודל טקסט -->
+    <div class="prayer-controls">
+      <div class="prayer-control-group">
+        <span class="prayer-control-label">נוסח:</span>
+        <% Object.keys(nusachim).forEach(function (key) { %>
+          <a class="nusach-pill small<%= key === nusachKey ? ' active' : '' %>" href="/prayers/<%= key %>/<%= prayerKey %>"><%= nusachim[key].label %></a>
+        <% }) %>
+      </div>
+      <label class="prayer-control-group">
+        <input type="checkbox" id="prayer-nikud" checked />
+        הצג ניקוד
+      </label>
+      <div class="prayer-control-group">
+        <button type="button" class="font-btn" id="prayer-font-minus" aria-label="הקטן טקסט">א-</button>
+        <button type="button" class="font-btn" id="prayer-font-plus" aria-label="הגדל טקסט">א+</button>
+      </div>
+    </div>
+
+    <!-- נתוני הבקשה לסקריפט -->
+    <div id="prayer-root" data-nusach="<%= nusachKey %>" data-prayer="<%= prayerKey %>">
+      <div id="prayer-loading" class="prayer-loading">
+        <span class="prayer-spinner"></span>
+        <p>טוען את הנוסח מ-Sefaria…</p>
+        <p class="meta">בפעם הראשונה זה יכול לקחת עד חצי דקה; בפעמים הבאות הנוסח נפתח מיד.</p>
+      </div>
+      <div id="prayer-error" class="prayer-error" style="display:none"></div>
+      <div id="prayer-unavailable" class="prayer-unavailable" style="display:none">
+        <p id="prayer-unavailable-reason"></p>
+        <p>אפשר לנסות נוסח אחר:</p>
+        <p>
+          <% Object.keys(nusachim).forEach(function (key) { if (key !== nusachKey) { %>
+            <a class="nusach-pill small" href="/prayers/<%= key %>/<%= prayerKey %>">נוסח <%= nusachim[key].label %></a>
+          <% } }) %>
+        </p>
+      </div>
+      <nav id="prayer-toc" class="prayer-toc" style="display:none" aria-label="קפיצה לקטע"></nav>
+      <article id="prayer-text" class="prayer-text"></article>
+    </div>
+
+    <p class="meta prayers-source">מקור הטקסט: <a href="https://www.sefaria.org" target="_blank" rel="noopener">Sefaria.org</a></p>
+  </main>
+
+  <%- include('../partials/footer') %>
+  <script src="/js/prayers.js"></script>
+</body>
+</html>

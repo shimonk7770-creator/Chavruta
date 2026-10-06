@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!-- server/views/compass/index.ejs - "מצפן": כיוון התפילה (ירושלים/הר הבית) עם מחוג שמסתובב לפי חיישן הטלפון (ציבורי) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+  <link rel="stylesheet" href="/css/compass.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <section class="compass-hero">
+      <h1 class="compass-hero-title">מצפן תפילה</h1>
+      <p class="compass-hero-sub">הפנו את הטלפון - המחוג יצביע לכיוון ירושלים (הר הבית)</p>
+    </section>
+
+    <!-- המצפן עצמו. data-bearing = כיוון ירושלים מהעיר שנבחרה (מחושב בשרת); compass.js מעדכן לפי מיקום המכשיר -->
+    <section class="compass-card">
+      <div class="compass-stage">
+        <div class="compass-dial" id="compass-dial" data-bearing="<%= direction.bearing.toFixed(2) %>" data-at-target="<%= direction.isAtTarget ? '1' : '0' %>">
+          <!-- הטבעת (צפון/מזרח/דרום/מערב + סימונים) מסתובבת הפוך מכיוון המכשיר, כך שה"צ" תמיד מצביע לצפון האמיתי -->
+          <svg class="compass-ring" id="compass-ring" viewBox="0 0 300 300" aria-hidden="true">
+            <circle cx="150" cy="150" r="146" class="ring-bg" />
+            <% for (var i = 0; i < 72; i++) { var a = i * 5; var major = i % 6 === 0; var len = major ? 14 : 7; %>
+              <line x1="150" y1="<%= 150 - 146 %>" x2="150" y2="<%= 150 - 146 + len %>" class="ring-tick<%= major ? ' major' : '' %>" transform="rotate(<%= a %> 150 150)" />
+            <% } %>
+            <text x="150" y="44" class="ring-letter north">צ</text>
+            <text x="262" y="160" class="ring-letter">מז'</text>
+            <text x="150" y="272" class="ring-letter">ד</text>
+            <text x="38" y="160" class="ring-letter">מע'</text>
+          </svg>
+          <!-- המחוג: חץ שמצביע לירושלים. מסתובב לפי (כיוון ירושלים - כיוון המכשיר) -->
+          <svg class="compass-needle" id="compass-needle" viewBox="0 0 300 300" aria-label="מחוג לכיוון ירושלים">
+            <polygon points="150,34 166,150 134,150" class="needle-tip" />
+            <polygon points="150,266 166,150 134,150" class="needle-tail" />
+            <circle cx="150" cy="150" r="10" class="needle-hub" />
+          </svg>
+          <!-- סימון קבוע של "קדמת המכשיר" -->
+          <div class="compass-front-marker"></div>
+        </div>
+      </div>
+
+      <p class="compass-legend"><span class="legend-dot"></span> המחוג הכתום מצביע לכיוון ירושלים (הר הבית)</p>
+      <p class="compass-status" id="compass-status" role="status">המצפן במצב סטטי - לחצו "הפעל חיישן" כדי שהמחוג יזוז עם הטלפון</p>
+
+      <div class="compass-readout">
+        <div class="compass-readout-item">
+          <span class="compass-readout-label">כיוון התפילה</span>
+          <span class="compass-readout-value" id="compass-bearing-text"><%= direction.isAtTarget ? 'אתם בהר הבית' : direction.bearingRounded + '° ' + direction.pointHe %></span>
+        </div>
+        <div class="compass-readout-item">
+          <span class="compass-readout-label">מרחק מירושלים</span>
+          <span class="compass-readout-value" id="compass-distance-text"><%= direction.distanceKm.toFixed(direction.distanceKm < 10 ? 1 : 0) %> ק"מ</span>
+        </div>
+        <div class="compass-readout-item">
+          <span class="compass-readout-label">מיקום</span>
+          <span class="compass-readout-value" id="compass-origin-text"><%= city.label %> (מרכז העיר)</span>
+        </div>
+      </div>
+
+      <div class="compass-actions">
+        <button type="button" class="btn btn-primary" id="compass-start">🧭 הפעל חיישן</button>
+        <button type="button" class="btn" id="compass-locate">📍 השתמש במיקום שלי</button>
+        <form method="GET" action="/compass" class="compass-city-form">
+          <label>
+            או בחרו עיר:
+            <select name="city" onchange="this.form.submit()">
+              <% cities.forEach(function (c) { %>
+                <option value="<%= c.key %>"<%= c.key === city.key ? ' selected' : '' %>><%= c.label %></option>
+              <% }) %>
+            </select>
+          </label>
+          <noscript><button type="submit" class="btn">הצג</button></noscript>
+        </form>
+      </div>
+    </section>
+
+    <section class="compass-notes">
+      <h2>טוב לדעת</h2>
+      <ul>
+        <li>המחוג מראה את הקו הקצר ביותר על פני כדור הארץ (מעגל גדול) אל <%= target.label %> - כמו שמצפן אמיתי מצביע.</li>
+        <li><strong>חיישן המצפן והמיקום עובדים בדפדפן רק בחיבור מאובטח (HTTPS)</strong>. באתר שרץ על הרשת הביתית (http://...) הדפדפן בטלפון חוסם אותם - ואז מוצג כיוון סטטי לפי העיר שנבחרה (צפון למעלה). המצפן המלא בזמן אמת יהיה באפליקציית הנייד.</li>
+        <li>לדיוק טוב יותר: התרחקו ממתכות ומגנטים, וסובבו את הטלפון בתנועת "שמונה" כדי לכייל את החיישן.</li>
+        <li>הלכה: בכל מקום בעולם מתפללים לכיוון ארץ ישראל, בתוכה ירושלים, ובתוכה הר הבית. לפסיקה מדויקת יש להיוועץ ברב.</li>
+      </ul>
+    </section>
+  </main>
+
+  <%- include('../partials/footer') %>
+  <script src="/js/compass.js"></script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<!-- server/views/minyanim/index.ejs - "מניינים": חיפוש מניינים קרובים לפי מיקום (ציבורי, כולל לאורחים) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+  <link rel="stylesheet" href="/css/minyanim.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <section class="minyanim-hero">
+      <h1 class="minyanim-hero-title">מניינים</h1>
+      <p class="minyanim-hero-sub">מצאו מניין קרוב אליכם - עם מרחק וספירה לאחור עד התחלת התפילה</p>
+    </section>
+
+    <!-- טופס חיפוש: מיקום (מכשיר / כתובת / עיר) + סינונים. GET, כך שהכתובת ניתנת לשיתוף -->
+    <form class="minyanim-search" method="GET" action="/minyanim" id="minyanim-search-form">
+      <!-- אחרי "המיקום שלי" הקואורדינטות נשמרות כאן, כדי ששינוי סינון (תפילה/מיון/רדיוס) לא יאבד את המיקום.
+           הקלדת כתובת או החלפת עיר מנקה אותן (public/js/minyanim.js) -->
+      <input type="hidden" name="lat" id="minyanim-lat" value="<%= origin.kind === 'device' ? origin.lat.toFixed(6) : '' %>" />
+      <input type="hidden" name="lng" id="minyanim-lng" value="<%= origin.kind === 'device' ? origin.lng.toFixed(6) : '' %>" />
+
+      <div class="minyanim-search-row">
+        <button type="button" class="btn btn-primary minyanim-locate-btn" id="minyanim-locate">📍 המיקום שלי</button>
+        <label class="minyanim-field minyanim-field-grow">
+          או הקלידו כתובת / שכונה
+          <input type="text" name="q" id="minyanim-q" value="<%= filters.q %>" placeholder="למשל: רחוב יפו, ירושלים" maxlength="100" />
+        </label>
+        <label class="minyanim-field">
+          או בחרו עיר
+          <select name="city" id="minyanim-city">
+            <% cities.forEach(function (c) { %>
+              <option value="<%= c.key %>"<%= c.key === selectedCity ? ' selected' : '' %>><%= c.label %></option>
+            <% }) %>
+          </select>
+        </label>
+      </div>
+
+      <div class="minyanim-search-row">
+        <label class="minyanim-field">
+          תפילה
+          <select name="prayer">
+            <option value="all"<%= filters.prayer === 'all' ? ' selected' : '' %>>הכל</option>
+            <% Object.keys(prayerLabels).forEach(function (k) { %>
+              <option value="<%= k %>"<%= filters.prayer === k ? ' selected' : '' %>><%= prayerLabels[k] %></option>
+            <% }) %>
+          </select>
+        </label>
+        <label class="minyanim-field">
+          מיון
+          <select name="sort">
+            <option value="distance"<%= filters.sort === 'distance' ? ' selected' : '' %>>הכי קרוב אליי</option>
+            <option value="time"<%= filters.sort === 'time' ? ' selected' : '' %>>הכי קרוב בזמן</option>
+          </select>
+        </label>
+        <label class="minyanim-field">
+          מתי
+          <select name="when">
+            <option value="24h"<%= filters.when === '24h' ? ' selected' : '' %>>ב-24 השעות הקרובות</option>
+            <option value="all"<%= filters.when === 'all' ? ' selected' : '' %>>כל המניינים</option>
+          </select>
+        </label>
+        <label class="minyanim-field">
+          רדיוס
+          <select name="radius">
+            <option value="0"<%= !filters.radius ? ' selected' : '' %>>ללא הגבלה</option>
+            <% [1, 3, 5, 10, 25].forEach(function (r) { %>
+              <option value="<%= r %>"<%= filters.radius === r ? ' selected' : '' %>>עד <%= r %> ק"מ</option>
+            <% }) %>
+          </select>
+        </label>
+        <button type="submit" class="btn btn-primary minyanim-submit">חיפוש</button>
+      </div>
+      <p class="minyanim-locate-status" id="minyanim-locate-status" role="status"></p>
+    </form>
+
+    <!-- סיכום: מאיפה מחושבים המרחקים + כפתור הוספה -->
+    <div class="minyanim-summary">
+      <p class="meta">
+        מרחקים מחושבים מ: <strong><%= origin.label %></strong>
+        &middot; נמצאו <strong><%= results.length %></strong> מניינים (מתוך <%= totalCount %> במערכת)
+      </p>
+      <% if (isLoggedIn) { %>
+        <a class="btn btn-primary" href="/minyanim/new">+ הוספת מניין</a>
+      <% } else { %>
+        <a class="btn" href="/login">התחברו כדי להוסיף מניין</a>
+      <% } %>
+    </div>
+    <% if (origin.warning) { %><p class="minyanim-warning"><%= origin.warning %></p><% } %>
+
+    <% if (!results.length) { %>
+      <div class="minyanim-empty">
+        <p class="minyanim-empty-title">לא נמצאו מניינים מתאימים</p>
+        <p class="meta">נסו להרחיב את הרדיוס, לבחור "כל המניינים" בשדה "מתי", או להוסיף בעצמכם מניין שאתם מכירים.</p>
+      </div>
+    <% } else { %>
+      <ul class="minyan-list" id="minyan-list">
+        <% results.forEach(function (r) { var m = r.minyan; %>
+          <li class="minyan-card" data-seconds="<%= r.secondsUntil %>">
+            <div class="minyan-time-box">
+              <span class="minyan-time"><%= m.time %></span>
+              <span class="minyan-day"><%= r.dayLabel %></span>
+            </div>
+
+            <div class="minyan-info">
+              <h3 class="minyan-title">
+                <span class="minyan-prayer"><%= prayerLabels[m.prayer] %></span>
+                ב<%= m.synagogueName %>
+                <% if (m.isDemo) { %><span class="minyan-badge demo" title="נתוני דמו להצגה">דמו</span><% } %>
+              </h3>
+              <p class="minyan-address">
+                <%= m.address ? m.address + ', ' : '' %><%= m.cityLabel %>
+                <% if (m.locationPrecision === 'city') { %><span class="meta">(מיקום בקירוב)</span><% } %>
+              </p>
+              <p class="minyan-meta">
+                <span class="minyan-badge"><%= daysLabel(m.days) %></span>
+                <% if (m.nusach && m.nusach !== 'any') { %><span class="minyan-badge"><%= nusachLabels[m.nusach] %></span><% } %>
+                <% if (m.notes) { %><span class="meta"><%= m.notes %></span><% } %>
+              </p>
+              <div class="minyan-links">
+                <a href="https://www.google.com/maps/dir/?api=1&destination=<%= m.lat %>,<%= m.lng %>&travelmode=walking" target="_blank" rel="noopener">🧭 ניווט (Google Maps)</a>
+                <a href="https://waze.com/ul?ll=<%= m.lat %>,<%= m.lng %>&navigate=yes" target="_blank" rel="noopener">Waze</a>
+                <% if (isLoggedIn && (userRole === 'admin' || (m.createdBy && m.createdBy === userId))) { %>
+                  <form class="minyan-delete-form" method="POST" action="/minyanim/<%= m.id %>/delete" onsubmit="return confirm('למחוק את המניין?');">
+                    <button type="submit" class="minyan-delete-btn">מחיקה</button>
+                  </form>
+                <% } %>
+              </div>
+            </div>
+
+            <div class="minyan-distance-box">
+              <span class="minyan-distance"><%= r.distanceText %></span>
+              <span class="minyan-countdown" data-countdown><%= r.countdownText %></span>
+              <% if (r.canMakeItWalking) { %>
+                <span class="minyan-walk ok">מספיקים ברגל (~<%= r.walkMinutes %> דק')</span>
+              <% } else { %>
+                <span class="minyan-walk">הליכה ~<%= r.walkMinutes %> דק'</span>
+              <% } %>
+            </div>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </main>
+
+  <%- include('../partials/footer') %>
+  <script src="/js/minyanim.js"></script>
+</body>
+</html>

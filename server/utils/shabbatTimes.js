@@ -65,6 +65,14 @@ function isValidCityKey(cityKey) {
   return Object.prototype.hasOwnProperty.call(CITIES, cityKey || "");
 }
 
+// פרטי עיר בסיסיים (שם בעברית + קואורדינטות מרכז העיר) - משמש את קטגוריית "מניינים" כנקודת מוצא/מיקום בקירוב.
+// תמיד מחזיר תוצאה (מפתח לא מוכר -> ירושלים)
+function getCityInfo(cityKey) {
+  const key = isValidCityKey(cityKey) ? cityKey : DEFAULT_CITY_KEY;
+  const city = CITIES[key];
+  return { key, label: city.label, lat: city.lat, lng: city.lng };
+}
+
 // בונה אובייקט Location אמיתי של הספרייה מתוך רשומת העיר שלנו
 async function buildLocation(cityKey) {
   const { Location } = await loadHebcal();
@@ -108,4 +116,4 @@ async function getUpcomingShabbat(cityKey = DEFAULT_CITY_KEY) {
 }
 
 // buildLocation מיוצאת גם כן - עמוד "זמני היום" (zmanimTimes.js) משתמש באותה רשימת ערים ובאותו Location
-module.exports = { getUpcomingShabbat, isValidCityKey, getCityOptions, buildLocation, DEFAULT_CITY_KEY };
+module.exports = { getUpcomingShabbat, isValidCityKey, getCityOptions, getCityInfo, buildLocation, DEFAULT_CITY_KEY };

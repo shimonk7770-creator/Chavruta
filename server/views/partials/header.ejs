@@ -45,11 +45,23 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
         מעגל השנה
       </a>
-      <!-- קטגוריה חדשה: זמני היום (עלות השחר, הנץ, חצות, שקיעה...) - הנתיב /zmanim ציבורי גם לאורח, כמו מעגל השנה -->
-      <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/zmanim') ? ' active' : '' %>" href="/zmanim">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-        זמני היום
-      </a>
+      <!--
+        תפריט נפתח "תפילה": ארבע הקטגוריות החדשות (זמני היום, נוסח תפילה, מניינים, מצפן) מקובצות תחת כפתור אחד
+        כדי שלא יציפו את סרגל הניווט. נבנה עם <details> (בלי JavaScript לפתיחה), וסגירה בלחיצה בחוץ ב-navMenu.js.
+        כל ארבעת הנתיבים ציבוריים גם לאורח (כמו מעגל השנה) - רק הקישור מוצג כאן למשתמש מחובר.
+      -->
+      <details class="nav-menu">
+        <summary class="nav-pill<%= typeof currentPath !== 'undefined' && (currentPath.startsWith('/zmanim') || currentPath.startsWith('/prayers') || currentPath.startsWith('/minyanim') || currentPath.startsWith('/compass')) ? ' active' : '' %>">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          תפילה ▾
+        </summary>
+        <div class="nav-menu-panel">
+          <a href="/zmanim"<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/zmanim') ? ' class=active' : '' %>>🕐 זמני היום</a>
+          <a href="/prayers"<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/prayers') ? ' class=active' : '' %>>📖 נוסח תפילה</a>
+          <a href="/minyanim"<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/minyanim') ? ' class=active' : '' %>>🕍 מניינים</a>
+          <a href="/compass"<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/compass') ? ' class=active' : '' %>>🧭 מצפן</a>
+        </div>
+      </details>
       <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/permissions') ? ' active' : '' %>" href="/permissions">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
         הרשאות
@@ -118,6 +130,7 @@
 </header>
 
 <script src="/js/themeToggle.js"></script>
+<script src="/js/navMenu.js"></script>
 <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
   <!-- פעמון ההתראות דורש Socket.io - נטען רק למשתמש מחובר, בכל עמוד באתר (לא רק בעמוד הצ'אט) -->
   <script src="/socket.io/socket.io.js"></script>

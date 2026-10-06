@@ -1,0 +1,45 @@
+/* server/public/css/navMenu.css
+   התפריט הנפתח "תפילה" בסרגל הניווט (partials/header.ejs). בנוי על <details>/<summary> - נפתח בלי JavaScript */
+
+.nav-menu {
+  position: relative;
+  display: inline-block;
+}
+/* ה-summary נראה בדיוק כמו nav-pill רגיל; מסתירים את משולש ברירת המחדל של הדפדפן */
+.nav-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.nav-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.nav-menu-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-start: 0;
+  z-index: 50;
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-hover);
+}
+.nav-menu-panel a {
+  padding: 9px 14px;
+  border-radius: 10px;
+  color: var(--color-text);
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.nav-menu-panel a:hover {
+  background: var(--color-bg);
+  color: var(--color-primary-dark);
+}
+.nav-menu-panel a.active {
+  background: var(--color-primary);
+  color: #ffffff;
+}

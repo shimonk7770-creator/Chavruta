@@ -32,6 +32,9 @@ const statusRoutes = require("./routes/statusRoutes"); // עדכון: פיצ'ר 
 const statsRoutes = require("./routes/statsRoutes"); // שבוע 4 - נתוני גרפי D3
 const holidayRoutes = require("./routes/holidayRoutes"); // "מעגל השנה" - FR-028, FR-029
 const zmanimRoutes = require("./routes/zmanimRoutes"); // "זמני היום" - עלות השחר, הנץ, חצות, שקיעה וכו' (ציבורי)
+const prayerRoutes = require("./routes/prayerRoutes"); // "נוסח תפילה" - שחרית/מנחה/ערבית מ-Sefaria (ציבורי)
+const minyanRoutes = require("./routes/minyanRoutes"); // "מניינים" - חיפוש מניינים קרובים (צפייה ציבורית, הוספה למחוברים)
+const compassRoutes = require("./routes/compassRoutes"); // "מצפן" - כיוון תפילה לירושלים (ציבורי)
 const adminRoutes = require("./routes/adminRoutes"); // לוח בקרה למנהל מערכת
 const notificationRoutes = require("./routes/notificationRoutes"); // פעמון התראות בזמן אמת
 const mobileRoutes = require("./routes/mobileRoutes"); // API לאפליקציית המובייל (React Native/Expo) - דרישת המרצה
@@ -107,6 +110,9 @@ app.use("/", statusRoutes); // סטטוס (סטוריז)
 app.use("/", statsRoutes); // שבוע 4
 app.use("/", holidayRoutes); // מעגל השנה
 app.use("/", zmanimRoutes); // זמני היום
+app.use("/", prayerRoutes); // נוסח תפילה
+app.use("/", minyanRoutes); // מניינים
+app.use("/", compassRoutes); // מצפן
 app.use("/", adminRoutes); // לוח בקרה למנהל
 app.use("/", notificationRoutes); // פעמון התראות
 app.use("/", mobileRoutes); // API לאפליקציית המובייל

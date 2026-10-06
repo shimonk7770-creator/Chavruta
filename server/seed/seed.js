@@ -25,7 +25,7 @@ async function seed() {
 
   // ניקוי נתונים קיימים כדי שההרצה תהיה נקייה וללא כפילויות (NFR-012)
   await Promise.all(
-    ["users", "groups", "posts", "comments", "holidays"].map((col) => clearCollection(db, col))
+    ["users", "groups", "posts", "comments", "holidays", "minyanim"].map((col) => clearCollection(db, col))
   );
 
   const passwordHash = await bcrypt.hash("Password1", 10); // סיסמה אחידה לכל משתמשי הדמו
@@ -251,8 +251,72 @@ async function seed() {
     await db.collection("holidays").add({ ...h, createdAt: now, updatedAt: now });
   }
 
+  // "מניינים" (קטגוריית /minyanim) - נתוני דמו להצגה בלבד (isDemo=true, מוצגים עם תג "דמו"): שמות בתי כנסת כלליים
+  // ושעות לדוגמה, בשכונות/ערים אמיתיות (קואורדינטות מקורבות של מרכז השכונה). משתמשים אמיתיים מוסיפים מניינים אמיתיים בעצמם.
+  // לכל תפילה יש מגוון שעות, כך שבכל שעה ביממה יש לפחות כמה מניינים "קרובים" להדגמה.
+  const WEEKDAYS = [0, 1, 2, 3, 4]; // ראשון-חמישי
+  const ALL_WEEK = [0, 1, 2, 3, 4, 5, 6];
+  const SUN_FRI = [0, 1, 2, 3, 4, 5];
+  // [שם, עיר (מפתח), שכונה/רחוב להצגה, lat, lng, נוסח]
+  const shuls = [
+    ["בית כנסת שערי תפילה", "jerusalem", "רחוב מלכי ישראל, גאולה", 31.7898, 35.2195, "ashkenaz"],
+    ["בית כנסת אהבת שלום", "jerusalem", "רחוב בן מימון, רחביה", 31.7747, 35.213, "any"],
+    ["בית כנסת היכל התורה", "jerusalem", "רחוב הרב קוק, קריית משה", 31.7889, 35.1985, "ashkenaz"],
+    ["בית כנסת נווה שלום", "jerusalem", "הר נוף", 31.7835, 35.175, "sefard"],
+    ["בית כנסת ישורון", "jerusalem", "רמות", 31.8165, 35.1965, "any"],
+    ["בית כנסת אורות המזרח", "jerusalem", "קטמון", 31.7595, 35.2105, "edot"],
+    ["בית כנסת כנסת ישראל", "jerusalem", "תלפיות", 31.744, 35.223, "any"],
+    ["בית כנסת מרכז העיר", "tel-aviv", "רחוב אלנבי", 32.0668, 34.7704, "any"],
+    ["בית כנסת בית יעקב", "tel-aviv", "הצפון הישן", 32.0905, 34.7826, "ashkenaz"],
+    ["בית כנסת שערי ציון", "bnei-brak", "רחוב רבי עקיבא", 32.0839, 34.8335, "ashkenaz"],
+    ["בית כנסת הגר\"א", "bnei-brak", "שכונת פרדס כץ", 32.0905, 34.8412, "sefard"],
+    ["בית כנסת נחלת אבות", "beit-shemesh", "רמת בית שמש", 31.7345, 34.9785, "any"],
+    ["בית כנסת אהל משה", "haifa", "הדר הכרמל", 32.8100, 34.9990, "any"],
+    ["בית כנסת בית אל", "netanya", "מרכז העיר", 32.3300, 34.8570, "any"],
+  ];
+  // [אינדקס בית כנסת, תפילה, שעה, ימים]
+  const minyanSlots = [
+    [0, "shacharit", "06:00", SUN_FRI], [0, "shacharit", "07:30", ALL_WEEK], [0, "mincha", "13:30", WEEKDAYS], [0, "arvit", "19:15", WEEKDAYS],
+    [1, "shacharit", "06:45", WEEKDAYS], [1, "mincha", "14:00", WEEKDAYS], [1, "arvit", "20:00", WEEKDAYS],
+    [2, "shacharit", "05:40", SUN_FRI], [2, "shacharit", "08:15", WEEKDAYS], [2, "arvit", "20:30", WEEKDAYS],
+    [3, "shacharit", "06:15", WEEKDAYS], [3, "mincha", "17:30", WEEKDAYS], [3, "arvit", "18:45", WEEKDAYS], [3, "arvit", "21:15", WEEKDAYS],
+    [4, "shacharit", "07:00", WEEKDAYS], [4, "mincha", "16:00", ALL_WEEK], [4, "arvit", "22:00", WEEKDAYS],
+    [5, "shacharit", "06:30", WEEKDAYS], [5, "mincha", "13:15", WEEKDAYS], [5, "arvit", "19:45", WEEKDAYS],
+    [6, "shacharit", "09:00", WEEKDAYS], [6, "mincha", "14:30", WEEKDAYS], [6, "arvit", "20:15", WEEKDAYS],
+    [7, "shacharit", "06:00", SUN_FRI], [7, "mincha", "13:45", WEEKDAYS], [7, "arvit", "19:00", WEEKDAYS],
+    [8, "shacharit", "07:15", WEEKDAYS], [8, "arvit", "20:00", WEEKDAYS],
+    [9, "shacharit", "05:45", SUN_FRI], [9, "mincha", "14:15", WEEKDAYS], [9, "arvit", "21:00", WEEKDAYS],
+    [10, "shacharit", "06:20", WEEKDAYS], [10, "arvit", "19:30", WEEKDAYS],
+    [11, "shacharit", "06:50", WEEKDAYS], [11, "mincha", "17:45", WEEKDAYS], [11, "arvit", "20:45", WEEKDAYS],
+    [12, "shacharit", "07:10", WEEKDAYS], [12, "arvit", "19:50", WEEKDAYS],
+    [13, "mincha", "14:00", WEEKDAYS], [13, "arvit", "20:10", WEEKDAYS],
+  ];
+  const cityLabels = { jerusalem: "ירושלים", "tel-aviv": "תל אביב-יפו", "bnei-brak": "בני ברק", "beit-shemesh": "בית שמש", haifa: "חיפה", netanya: "נתניה" };
+  for (const [idx, prayer, time, days] of minyanSlots) {
+    const [name, city, address, lat, lng, nusach] = shuls[idx];
+    await db.collection("minyanim").add({
+      synagogueName: name,
+      prayer,
+      time,
+      days,
+      nusach,
+      city,
+      cityLabel: cityLabels[city],
+      address,
+      notes: "",
+      lat,
+      lng,
+      locationPrecision: "address",
+      isDemo: true,
+      createdBy: admin,
+      createdByName: "יוסי כהן",
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
   console.log(
-    `נזרעו בהצלחה: ${usersData.length} משתמשים, ${groupsData.length} קבוצות, ${postsData.length} פוסטים, ${commentsData.length} תגובות, ${holidaysData.length} מאמרי מעגל השנה`
+    `נזרעו בהצלחה: ${usersData.length} משתמשים, ${groupsData.length} קבוצות, ${postsData.length} פוסטים, ${commentsData.length} תגובות, ${holidaysData.length} מאמרי מעגל השנה, ${minyanSlots.length} מניינים (דמו)`
   );
   console.log("סיסמה לכל משתמשי הדמו: Password1");
   process.exit(0);
