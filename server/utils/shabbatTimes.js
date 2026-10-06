@@ -107,4 +107,5 @@ async function getUpcomingShabbat(cityKey = DEFAULT_CITY_KEY) {
   };
 }
 
-module.exports = { getUpcomingShabbat, isValidCityKey, getCityOptions, DEFAULT_CITY_KEY };
+// buildLocation מיוצאת גם כן - עמוד "זמני היום" (zmanimTimes.js) משתמש באותה רשימת ערים ובאותו Location
+module.exports = { getUpcomingShabbat, isValidCityKey, getCityOptions, buildLocation, DEFAULT_CITY_KEY };

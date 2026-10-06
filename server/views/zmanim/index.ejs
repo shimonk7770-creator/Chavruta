@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!-- server/views/zmanim/index.ejs - עמוד "זמני היום" (ציבורי, כולל לאורחים) - בהשראת chabad.org.il/Time -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+  <!-- עיצוב ייעודי לעמוד הזה בקובץ נפרד (כדי לא לנפח את style.css הראשי) -->
+  <link rel="stylesheet" href="/css/zmanim.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <!-- כרטיס עליון: עיר, תאריך עברי+לועזי ושעון חי (מתעדכן בכל שנייה ע"י zmanim.js) -->
+    <section class="zmanim-hero" data-tz="<%= zmanim.tzid %>" data-is-today="<%= zmanim.isToday ? '1' : '0' %>" data-date="<%= zmanim.dateISO %>">
+      <p class="zmanim-hero-city">📍 <%= zmanim.cityLabel %></p>
+      <h1 class="zmanim-hero-title">זמני היום</h1>
+      <p class="zmanim-hero-date"><%= zmanim.weekdayHe %>, <%= zmanim.hebrewDate %> &middot; <%= zmanim.gregorianDateHe %></p>
+      <% if (zmanim.isToday) { %>
+        <p class="zmanim-clock" id="zmanim-clock" aria-live="off">--:--:--</p>
+        <p class="zmanim-next" id="zmanim-next"></p>
+      <% } else { %>
+        <p class="zmanim-next"><a class="zmanim-today-link" href="/zmanim?city=<%= zmanim.cityKey %>">↺ חזרה להיום</a></p>
+      <% } %>
+    </section>
+
+    <!-- בחירת עיר ותאריך - שליחה כ-GET, כך שהכתובת ניתנת לשיתוף/סימניה -->
+    <form class="zmanim-controls" method="GET" action="/zmanim">
+      <label>
+        עיר
+        <select name="city" onchange="this.form.submit()">
+          <% cities.forEach(function (c) { %>
+            <option value="<%= c.key %>"<%= c.key === zmanim.cityKey ? ' selected' : '' %>><%= c.label %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>
+        תאריך
+        <input type="date" name="date" value="<%= zmanim.dateISO %>" onchange="this.form.submit()" />
+      </label>
+      <div class="zmanim-day-nav">
+        <a class="calendar-nav-btn" href="/zmanim?city=<%= zmanim.cityKey %>&date=<%= prevDate %>">‹ יום קודם</a>
+        <a class="calendar-nav-btn" href="/zmanim?city=<%= zmanim.cityKey %>&date=<%= nextDate %>">יום הבא ›</a>
+      </div>
+      <noscript><button type="submit" class="btn btn-primary">הצג</button></noscript>
+    </form>
+
+    <!-- טבלת הזמנים - כל שורה נושאת את חותמת הזמן המדויקת (data-ts) כדי ש-zmanim.js יסמן "עבר"/"הבא" בזמן אמת -->
+    <ul class="zmanim-list">
+      <% zmanim.rows.forEach(function (r) { %>
+        <li class="zman-row" data-ts="<%= r.ts %>" data-key="<%= r.key %>">
+          <span class="zman-label">
+            <%= r.label %>
+            <% if (r.note) { %><small><%= r.note %></small><% } %>
+          </span>
+          <span class="zman-countdown"></span>
+          <span class="zman-time"><%= r.time %></span>
+        </li>
+      <% }) %>
+    </ul>
+
+    <!-- שבת הקרובה: כניסה ויציאה -->
+    <section class="zmanim-shabbat">
+      <h2>שבת הקרובה <span class="meta">(ערב שבת: <%= zmanim.shabbat.fridayISO.split('-').reverse().join('/') %>)</span></h2>
+      <div class="zmanim-shabbat-grid">
+        <div class="zmanim-shabbat-tile">
+          <span class="zmanim-shabbat-name">🕯️ כניסת השבת</span>
+          <span class="zmanim-shabbat-time"><%= zmanim.shabbat.candleTime %></span>
+          <small><%= zmanim.shabbat.candleNote %></small>
+        </div>
+        <div class="zmanim-shabbat-tile">
+          <span class="zmanim-shabbat-name">✨ צאת השבת</span>
+          <span class="zmanim-shabbat-time"><%= zmanim.shabbat.havdalahTime %></span>
+          <small><%= zmanim.shabbat.havdalahNote %></small>
+        </div>
+      </div>
+    </section>
+
+    <p class="meta zmanim-disclaimer">
+      הזמנים מחושבים אסטרונומית בזמן אמת לפי קו הרוחב/האורך של העיר שנבחרה (ספריית Hebcal), בהגדרות הקרובות לאלו שבאתר חב"ד.
+      ייתכן הפרש של דקה-שתיים בחלק מהזמנים. להלכה למעשה - יש להיוועץ ברב.
+    </p>
+  </main>
+
+  <%- include('../partials/footer') %>
+  <script src="/js/zmanim.js"></script>
+</body>
+</html>

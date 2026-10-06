@@ -31,6 +31,7 @@ const messageRoutes = require("./routes/messageRoutes"); // עדכון: צ'אט 
 const statusRoutes = require("./routes/statusRoutes"); // עדכון: פיצ'ר "סטטוס" (סטוריז) - "וואטסאפ-ification"
 const statsRoutes = require("./routes/statsRoutes"); // שבוע 4 - נתוני גרפי D3
 const holidayRoutes = require("./routes/holidayRoutes"); // "מעגל השנה" - FR-028, FR-029
+const zmanimRoutes = require("./routes/zmanimRoutes"); // "זמני היום" - עלות השחר, הנץ, חצות, שקיעה וכו' (ציבורי)
 const adminRoutes = require("./routes/adminRoutes"); // לוח בקרה למנהל מערכת
 const notificationRoutes = require("./routes/notificationRoutes"); // פעמון התראות בזמן אמת
 const mobileRoutes = require("./routes/mobileRoutes"); // API לאפליקציית המובייל (React Native/Expo) - דרישת המרצה
@@ -105,6 +106,7 @@ app.use("/", messageRoutes); // צ'אט פרטי 1-על-1
 app.use("/", statusRoutes); // סטטוס (סטוריז)
 app.use("/", statsRoutes); // שבוע 4
 app.use("/", holidayRoutes); // מעגל השנה
+app.use("/", zmanimRoutes); // זמני היום
 app.use("/", adminRoutes); // לוח בקרה למנהל
 app.use("/", notificationRoutes); // פעמון התראות
 app.use("/", mobileRoutes); // API לאפליקציית המובייל
