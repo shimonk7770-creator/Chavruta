@@ -57,27 +57,34 @@ function mapHttpError(status) {
   return new AiError("UPSTREAM", "שירות ה-AI אינו זמין כרגע. נסו שוב מאוחר יותר.", 502);
 }
 
-// הפונקציה הראשית: שולחת הוראת מערכת + שאלה ומחזירה טקסט.
-//   system - הוראות קבועות ל-AI (תפקיד, שפה, כללים)
-//   prompt - התוכן/השאלה של המשתמש
-async function generate({ system, prompt, maxOutputTokens = 1024, temperature = 0.4 }, { fetchImpl = fetch, env = process.env, timeoutMs } = {}) {
-  // סדר עדיפויות: פרמטר (לבדיקות) > GEMINI_TIMEOUT_MS ב-.env > ברירת מחדל
-  const effectiveTimeout = timeoutMs || Number(env.GEMINI_TIMEOUT_MS) || DEFAULT_TIMEOUT_MS;
-  if (!isConfigured(env)) {
-    throw new AiError("NOT_CONFIGURED", "פיצ'ר ה-AI עדיין לא הוגדר בשרת (חסר מפתח GEMINI_API_KEY בקובץ .env).", 503);
-  }
-  const model = (env.GEMINI_MODEL || DEFAULT_MODEL).trim();
+// ---------- גיבוי מודלים (Fallback) ----------
+// למה: מודלי Gemini נתקלים לפעמים ב"עומס גבוה" (503), במכסה זמנית (429) או שמודל נעלם (404).
+// במקום להציג שגיאה למשתמש - מנסים אוטומטית את המודל הבא ברשימה.
+// קודי שגיאה שבהם כדאי לעבור למודל אחר (הבעיה קשורה למודל/לעומס ולא לבקשה עצמה):
+const FAILOVER_CODES = new Set(["UPSTREAM", "QUOTA", "MODEL", "TIMEOUT", "EMPTY"]);
+// מודלי גיבוי ברירת מחדל (נבדקו כעובדים). ניתן להחליף ב-.env: GEMINI_FALLBACK_MODELS=מודל1,מודל2
+const DEFAULT_FALLBACK_MODELS = ["gemini-flash-lite-latest", "gemini-3-flash-preview"];
+
+// מחזיר את רשימת המודלים לניסיון, לפי הסדר: המודל הראשי, ואחריו מודלי הגיבוי (בלי כפילויות)
+function getModelChain(env = process.env) {
+  const primary = (env.GEMINI_MODEL || DEFAULT_MODEL).trim();
+  const fallbacks =
+    typeof env.GEMINI_FALLBACK_MODELS === "string" && env.GEMINI_FALLBACK_MODELS.trim()
+      ? env.GEMINI_FALLBACK_MODELS.split(",")
+      : DEFAULT_FALLBACK_MODELS;
+  const chain = [primary];
+  fallbacks.map((m) => String(m).trim()).filter(Boolean).forEach((m) => {
+    if (!chain.includes(m)) chain.push(m);
+  });
+  return chain;
+}
+
+// ניסיון בודד מול מודל אחד: שולח בקשה ומחזיר טקסט, או זורק AiError
+async function callModel(model, body, { fetchImpl, env, timeoutMs }) {
   const url = `${GEMINI_BASE_URL}/${encodeURIComponent(model)}:generateContent`;
-
-  const body = {
-    systemInstruction: { parts: [{ text: system }] },
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
-    generationConfig: { temperature, maxOutputTokens },
-  };
-
   // AbortController - מבטל את הבקשה אם עבר זמן ההמתנה
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), effectiveTimeout);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   let response;
   try {
     response = await fetchImpl(url, {
@@ -109,4 +116,49 @@ async function generate({ system, prompt, maxOutputTokens = 1024, temperature = 
   return extractText(json);
 }
 
-module.exports = { generate, isConfigured, extractText, mapHttpError, AiError, DEFAULT_MODEL };
+// הפונקציה הראשית: שולחת הוראת מערכת + שאלה ומחזירה טקסט.
+//   system - הוראות קבועות ל-AI (תפקיד, שפה, כללים)
+//   prompt - התוכן/השאלה של המשתמש
+// אם המודל הראשי נכשל בגלל עומס/מכסה/חריגת זמן - עוברים אוטומטית למודל הגיבוי הבא.
+// שגיאות שקשורות לבקשה עצמה (מפתח לא תקין, בקשה פגומה, חסימת בטיחות, אין רשת) לא עוברות לגיבוי - הן יחזרו זהות בכל מודל.
+async function generate(
+  { system, prompt, maxOutputTokens = 1024, temperature = 0.4 },
+  { fetchImpl = fetch, env = process.env, timeoutMs, logger = console } = {}
+) {
+  // סדר עדיפויות: פרמטר (לבדיקות) > GEMINI_TIMEOUT_MS ב-.env > ברירת מחדל
+  const effectiveTimeout = timeoutMs || Number(env.GEMINI_TIMEOUT_MS) || DEFAULT_TIMEOUT_MS;
+  if (!isConfigured(env)) {
+    throw new AiError("NOT_CONFIGURED", "פיצ'ר ה-AI עדיין לא הוגדר בשרת (חסר מפתח GEMINI_API_KEY בקובץ .env).", 503);
+  }
+
+  const body = {
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: { temperature, maxOutputTokens },
+  };
+
+  // תקציב זמן כולל לכל הניסיונות (פי 2 מזמן ההמתנה לניסיון בודד) - כדי שהמשתמש לא יחכה דקות ארוכות
+  const deadline = Date.now() + effectiveTimeout * 2;
+  const chain = getModelChain(env);
+  let firstError = null; // מחזירים את השגיאה של המודל הראשי - היא המשמעותית ביותר למשתמש/למפתח
+
+  for (let i = 0; i < chain.length; i++) {
+    const remaining = deadline - Date.now();
+    if (i > 0 && remaining <= 0) break;
+    try {
+      return await callModel(chain[i], body, { fetchImpl, env, timeoutMs: Math.max(1, Math.min(effectiveTimeout, remaining)) });
+    } catch (error) {
+      if (!(error instanceof AiError)) throw error;
+      if (!firstError) firstError = error;
+      // שגיאה שלא קשורה לעומס/מודל (מפתח, בקשה פגומה, חסימה, רשת) - מחזירים אותה מיד
+      if (!FAILOVER_CODES.has(error.code)) throw error;
+      // נגמרו המודלים - מחזירים את השגיאה של המודל הראשי
+      if (i === chain.length - 1) throw firstError;
+      // רושמים ללוג רק שם מודל וקוד שגיאה (בלי מפתח ובלי גוף הבקשה)
+      if (logger && logger.warn) logger.warn(`[AI] המודל ${chain[i]} נכשל (${error.code}) - עובר למודל ${chain[i + 1]}`);
+    }
+  }
+  throw firstError;
+}
+
+module.exports = { generate, isConfigured, extractText, mapHttpError, getModelChain, AiError, DEFAULT_MODEL, DEFAULT_FALLBACK_MODELS };
