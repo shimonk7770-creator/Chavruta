@@ -384,6 +384,13 @@ server/server.js (חיבור הנתיבים החדשים)
   - **הגנה מפני prompt injection**: תוכן פוסטים/תגובות נשלח בתוך תגיות כ"נתונים בלבד", תווי `<` `>` מנוטרלים, והוראת המערכת אוסרת על ה-AI לבצע הוראות מתוך התוכן; חיתוך אורך.
   - תשובת ה-AI מוצגת ב-`.text()` (לא `.html()`) - אין XSS. ליד כל תשובה כתוב שה-AI עלול לטעות ושבהלכה למעשה שואלים רב.
   - שגיאות (אין מפתח/מכסה/חסימת בטיחות/רשת/timeout 30 שניות) מתורגמות להודעה ידידותית בעברית ו-HTTP status מתאים.
+- [x] **הרחבות AI מחוץ לקבוצות** (אותו שירות `aiService`, אותה הגבלת קצב ואותה הגנה):
+  - **💡 הסבר לי בנוסח תפילה** (`/prayers/...`): כפתור לכל קטע בתפילה - הסבר פשוט למשמעות ולמילים קשות. הנוסח עצמו נשאר מ-Sefaria, ה-AI רק מסביר. הסברים נשמרים בזיכרון השרת (cache) כך שכולם מקבלים אותו הסבר בלי קריאה נוספת ל-Gemini.
+  - **🤖 סיכום אישי ביומן הלימוד** (`/learning`): "סכם את השבוע / החודש". **השרת מחשב** את הנתונים (ימים עם לימוד, רצף, יעדים - `utils/learningStats.js`) והמודל רק מנסח ומעודד, כי מודלי שפה טועים בחשבון. הנתונים נשלפים לפי המשתמש המחובר בלבד. בלי רישומים - הודעה ידידותית בלי קריאת AI.
+  - **📖 הסבר על החג** (`/holidays/:id`): הסבר מורחב / הסבר לילדים / שאלה חופשית, מבוסס על מאמר החג שבאתר (שני המצבים הקבועים נשמרים ב-cache).
+  - **✨ עזרה בכתיבת פוסט** (טופס פוסט חדש בעמוד קבוצה): "שפר ניסוח" (נוסח משופר + כפתור "השתמש בנוסח") ו"הצע כותרת" (3 הצעות לחיצות). שום דבר לא נשמר ולא מתפרסם אוטומטית.
+  - **🔎 חיפוש חכם** (`/search`): שאלה חופשית על תוכן האתר. השרת בוחר קודם את הפוסטים הרלוונטיים לפי חפיפת מילים (`utils/postRetrieval.js` - רעיון ה-"retrieval" של RAG) ושולח ל-AI רק אותם; התשובה מגיעה עם קישורים למקורות.
+  - קבצים חדשים: server/utils/learningStats.js, server/utils/postRetrieval.js, server/public/js/aiCompose.js, server/test/learningStats.test.js + postRetrieval.test.js (23 בדיקות חדשות); עודכנו: aiService.js (זמן המתנה 60 שניות, ניתן לשינוי ב-`GEMINI_TIMEOUT_MS`), aiPrompts.js, aiController.js, aiRoutes.js, ai.js, ai.css, groups/show.ejs, prayers/show.ejs, prayers.js, prayers.css, learning/index.ejs, holidays/show.ejs, search.ejs
 - **הגדרה**: מפתח חינמי ב-https://aistudio.google.com/apikey -> `GEMINI_API_KEY=...` ב-`.env`. שם המודל ברירת מחדל `gemini-3.6-flash`, ניתן לשינוי ב-`GEMINI_MODEL` (Google מחליפה שמות מודלים - אם יש שגיאת "מודל לא נמצא", מחליפים שם).
 - **מגבלות**: הקריאה החיה ל-Gemini נבדקה רק עם fetch מדומה (אין לי מפתח); אין עדיין AI באפליקציית הנייד (יתווסף בשלב ההעברה למובייל).
 - קבצים: server/services/aiService.js, server/utils/aiPrompts.js, server/controllers/aiController.js, server/routes/aiRoutes.js, server/public/js/ai.js, server/public/css/ai.css, server/test/aiService.test.js + aiPrompts.test.js + aiController.test.js (חדשים, 18 בדיקות); server/models/Post.js (`setAiSummary`), server/server.js, server/views/groups/show.ejs, .env.example

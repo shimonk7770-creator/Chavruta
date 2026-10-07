@@ -20,6 +20,11 @@ const aiLimiter = rateLimit({
 
 router.post("/api/ai/posts/:id/summary", isAuthenticated, aiLimiter, aiController.summarizePost);
 router.post("/api/ai/posts/:id/ask", isAuthenticated, aiLimiter, aiController.askAboutPost);
+router.post("/api/ai/prayers/explain", isAuthenticated, aiLimiter, aiController.explainPrayer);
+router.post("/api/ai/learning/summary", isAuthenticated, aiLimiter, aiController.summarizeLearning);
+router.post("/api/ai/holidays/:id/ask", isAuthenticated, aiLimiter, aiController.askAboutHoliday);
+router.post("/api/ai/compose", isAuthenticated, aiLimiter, aiController.composeHelp);
+router.post("/api/ai/search", isAuthenticated, aiLimiter, aiController.askSite);
 router.post("/api/ai/groups/:id/ask", isAuthenticated, aiLimiter, aiController.askAboutGroup);
 
 module.exports = router;

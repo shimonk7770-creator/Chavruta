@@ -10,7 +10,7 @@ const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models
 // שם המודל ניתן לשינוי ב-.env (GEMINI_MODEL) - Google מחליפה שמות מודלים מדי כמה חודשים,
 // ולכן לא מקודדים אותו בקשיחות. אם המודל הזה לא קיים אצלך, מחליפים רק את השורה ב-.env.
 const DEFAULT_MODEL = "gemini-3.6-flash";
-const DEFAULT_TIMEOUT_MS = 30000; // אם Google לא ענתה תוך 30 שניות - מוותרים (לא תוקעים את הבקשה)
+const DEFAULT_TIMEOUT_MS = 60000; // אם Google לא ענתה תוך דקה - מוותרים (לא תוקעים את הבקשה). ניתן לשינוי ב-.env: GEMINI_TIMEOUT_MS
 
 // שגיאה "מבוקרת" עם קוד ו-HTTP status שמתאימים להחזרה למשתמש (הודעה בעברית, בלי פרטים פנימיים)
 class AiError extends Error {
@@ -60,7 +60,9 @@ function mapHttpError(status) {
 // הפונקציה הראשית: שולחת הוראת מערכת + שאלה ומחזירה טקסט.
 //   system - הוראות קבועות ל-AI (תפקיד, שפה, כללים)
 //   prompt - התוכן/השאלה של המשתמש
-async function generate({ system, prompt, maxOutputTokens = 1024, temperature = 0.4 }, { fetchImpl = fetch, env = process.env, timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
+async function generate({ system, prompt, maxOutputTokens = 1024, temperature = 0.4 }, { fetchImpl = fetch, env = process.env, timeoutMs } = {}) {
+  // סדר עדיפויות: פרמטר (לבדיקות) > GEMINI_TIMEOUT_MS ב-.env > ברירת מחדל
+  const effectiveTimeout = timeoutMs || Number(env.GEMINI_TIMEOUT_MS) || DEFAULT_TIMEOUT_MS;
   if (!isConfigured(env)) {
     throw new AiError("NOT_CONFIGURED", "פיצ'ר ה-AI עדיין לא הוגדר בשרת (חסר מפתח GEMINI_API_KEY בקובץ .env).", 503);
   }
@@ -75,7 +77,7 @@ async function generate({ system, prompt, maxOutputTokens = 1024, temperature = 
 
   // AbortController - מבטל את הבקשה אם עבר זמן ההמתנה
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timer = setTimeout(() => controller.abort(), effectiveTimeout);
   let response;
   try {
     response = await fetchImpl(url, {

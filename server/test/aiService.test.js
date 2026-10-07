@@ -67,3 +67,12 @@ test("extractText: חסימת בטיחות, תשובה ריקה ושרשור כ�
   assert.throws(() => ai.extractText(null), (e) => e.code === "EMPTY");
   assert.strictEqual(ai.extractText({ candidates: [{ content: { parts: [{ text: "א" }, { text: "ב" }] } }] }), "אב");
 });
+
+test("generate: זמן ההמתנה נלקח מ-GEMINI_TIMEOUT_MS ב-env", async () => {
+  const hanging = (url, init) => new Promise((resolve, reject) => {
+    init.signal.addEventListener("abort", () => { const err = new Error("aborted"); err.name = "AbortError"; reject(err); });
+  });
+  const started = Date.now();
+  await assert.rejects(ai.generate({ system: "s", prompt: "p" }, { env: { ...ENV, GEMINI_TIMEOUT_MS: "30" }, fetchImpl: hanging }), (e) => e.code === "TIMEOUT");
+  assert.ok(Date.now() - started < 2000);
+});

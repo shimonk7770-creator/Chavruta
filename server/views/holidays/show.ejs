@@ -3,6 +3,7 @@
 <html lang="he" dir="rtl">
 <head>
   <%- include('../partials/head') %>
+  <link rel="stylesheet" href="/css/ai.css" />
 </head>
 <body>
   <%- include('../partials/header') %>
@@ -33,6 +34,22 @@
       </section>
     <% } %>
 
+    <% if (isLoggedIn) { %>
+      <!-- AI: הסבר מורחב / הסבר לילדים / שאלה על החג - מבוסס על המאמר שלמעלה (השרת שולח אותו ל-Gemini) -->
+      <section class="card ai-holiday-card">
+        <h2>🤖 עוד על החג, עם ה-AI</h2>
+        <div class="ai-row">
+          <button type="button" class="ai-summary-btn ai-holiday-btn" data-mode="explain">📖 הסבר מורחב</button>
+          <button type="button" class="ai-summary-btn ai-holiday-btn" data-mode="kids">🧒 הסבר לילדים</button>
+        </div>
+        <form class="ai-ask-form ai-holiday-form" style="margin-top:10px">
+          <input type="text" name="question" placeholder="שאלה על החג..." maxlength="500" required />
+          <button type="submit" class="ai-summary-btn">שאל</button>
+        </form>
+        <div class="ai-answer" id="ai-holiday-box" role="status" aria-live="polite"></div>
+      </section>
+    <% } %>
+
     <% if (linkedGroup) { %>
       <p><a class="btn btn-secondary" href="/groups/<%= linkedGroup.id %>">לקבוצת ה"<%= linkedGroup.name %>" הקהילתית ←</a></p>
     <% } %>
@@ -51,5 +68,21 @@
   </main>
 
   <%- include('../partials/footer') %>
+  <script src="/js/ai.js"></script>
+  <script>
+    // כפתורי ה-AI בדף החג: מצב קבוע (הסבר/ילדים) או שאלה חופשית - הכול דרך ChavrutaAI.call
+    $(function () {
+      var holidayId = "<%= holiday.id %>";
+      var url = "/api/ai/holidays/" + encodeURIComponent(holidayId) + "/ask";
+      $(".ai-holiday-btn").on("click", function () {
+        window.ChavrutaAI.call(url, { mode: $(this).data("mode") }, $("#ai-holiday-box"), $(".ai-holiday-btn"));
+      });
+      $(".ai-holiday-form").on("submit", function (e) {
+        e.preventDefault();
+        var q = $.trim($(this).find("input[name=question]").val());
+        window.ChavrutaAI.call(url, { mode: "question", question: q }, $("#ai-holiday-box"), $(this).find("button"));
+      });
+    });
+  </script>
 </body>
 </html>

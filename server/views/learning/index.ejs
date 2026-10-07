@@ -4,6 +4,7 @@
 <html lang="he" dir="rtl">
 <head>
   <%- include('../partials/head') %>
+  <link rel="stylesheet" href="/css/ai.css" />
 </head>
 <body>
   <%- include('../partials/header') %>
@@ -14,6 +15,17 @@
       <p class="meta">כל יחידת לימוד שאתה רושם נשמרת כאן, מוצגת בלוח ההתקדמות, ותורמת למגמת הלימוד הקהילתית.</p>
       <a class="learning-hero-cta" href="/study-room">📊 צפייה בלוח ההתקדמות (Canvas) ←</a>
     </div>
+
+    <!-- סיכום אישי מה-AI: השרת מחשב את הנתונים (ימים, רצף, יעדים) מהרישומים של המשתמש המחובר, וה-AI רק מנסח ומעודד -->
+    <section class="card ai-learning-card">
+      <h2>🤖 סיכום אישי מה-AI</h2>
+      <p class="meta">סיכום קצר של הלימוד שלך, עם עידוד והצעה להמשך.</p>
+      <div class="ai-row">
+        <button type="button" class="ai-summary-btn ai-learning-btn" data-period="week">✨ סכם את השבוע</button>
+        <button type="button" class="ai-summary-btn ai-learning-btn" data-period="month">✨ סכם את החודש</button>
+      </div>
+      <div class="ai-answer" id="ai-learning-box" role="status" aria-live="polite"></div>
+    </section>
 
     <% if (error) { %><p class="error-message"><%= error %></p><% } %>
     <% if (shareMessage) { %><p class="success-message"><%= shareMessage %></p><% } %>
@@ -123,5 +135,15 @@
   </main>
 
   <%- include('../partials/footer') %>
+  <script src="/js/ai.js"></script>
+  <script>
+    // כפתורי הסיכום האישי - משתמשים באותו מנגנון Ajax של ai.js (ChavrutaAI.call)
+    $(function () {
+      $(".ai-learning-btn").on("click", function () {
+        var $btn = $(this);
+        window.ChavrutaAI.call("/api/ai/learning/summary", { period: $btn.data("period") }, $("#ai-learning-box"), $(".ai-learning-btn"));
+      });
+    });
+  </script>
 </body>
 </html>

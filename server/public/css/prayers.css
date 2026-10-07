@@ -236,3 +236,9 @@
   .prayer-cards { grid-template-columns: 1fr; }
   .prayer-text { padding: 4px 16px 18px; }
 }
+
+/* כפתור "💡 הסבר לי" (AI) ליד כותרת כל קטע בתפילה - העיצוב הבסיסי מגיע מ-ai.css */
+.prayer-explain-btn {
+  margin: 4px 0 10px;
+  font-size: 0.9rem;
+}

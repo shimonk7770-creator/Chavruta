@@ -91,6 +91,15 @@
           <label for="postContent">תוכן</label>
           <textarea id="postContent" name="content" placeholder="שתף דבר תורה, שאלה, או עדכון עם הקבוצה..." required maxlength="5000"></textarea>
 
+          <!-- עזרה בכתיבה (AI): שיפור ניסוח של הטיוטה / הצעת כותרות. לא מפרסם ולא שומר כלום - רק מציע -->
+          <div class="compose-tools">
+            <div class="ai-row">
+              <button type="button" class="ai-summary-btn compose-btn" data-mode="improve">✨ שפר ניסוח</button>
+              <button type="button" class="ai-summary-btn compose-btn" data-mode="title">💡 הצע כותרת</button>
+            </div>
+            <div class="ai-answer" id="compose-box" role="status" aria-live="polite"></div>
+          </div>
+
           <label>סוג הפוסט</label>
           <div class="post-category-pills">
             <label class="option-pill category-pill">
@@ -189,5 +198,6 @@
   <script src="/js/comments.js"></script>
   <script src="/js/postForm.js"></script>
   <script src="/js/ai.js"></script>
+  <script src="/js/aiCompose.js"></script>
 </body>
 </html>

@@ -21,6 +21,16 @@ $(function () {
         $box.removeClass("is-loading");
         $box.empty();
         $("<div>").addClass("ai-answer-text").text(res.answer).appendTo($box);
+        // מקורות (למשל בחיפוש חכם): רשימת קישורים לפוסטים שעליהם התבסס ה-AI - נבנית ב-.text()/.attr() בלבד
+        if (res.sources && res.sources.length) {
+          var $ul = $("<ul>").addClass("ai-sources");
+          res.sources.forEach(function (src) {
+            var $li = $("<li>").text("[" + src.n + "] ");
+            $("<a>").attr("href", "/groups/" + encodeURIComponent(src.groupId)).text(src.title + (src.groupName ? " (" + src.groupName + ")" : "")).appendTo($li);
+            $ul.append($li);
+          });
+          $box.append($ul);
+        }
         $("<small>")
           .addClass("ai-disclaimer")
           .text((res.cached ? "סיכום שמור. " : "") + (res.disclaimer || ""))
@@ -30,14 +40,23 @@ $(function () {
         // הודעת השגיאה מהשרת היא כבר בעברית וידידותית; אם אין (למשל השרת כבוי) - הודעה כללית
         var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "לא הצלחנו להתחבר לשרת. נסו שוב.";
         $box.removeClass("is-loading").addClass("is-error").text(msg);
+        // משתמש שלא מחובר (401): מוסיפים קישור ישיר להתחברות
+        if (xhr.status === 401) {
+          $box.append(" ").append($("<a>").attr("href", "/login").text("להתחברות"));
+        }
       })
       .always(function () {
         $button.prop("disabled", false);
       });
   }
 
+  // חושפים את פונקציית הקריאה כדי שגם עמודים אחרים (נוסח תפילה, יומן לימוד, מעגל השנה...) ישתמשו באותו מנגנון בדיוק
+  window.ChavrutaAI = { call: callAi };
+
   // סיכום פוסט
-  $(document).on("click", ".ai-summary-btn", function () {
+  // הסלקטור כולל [data-post-id] בכוונה: המחלקה ai-summary-btn משמשת גם לעיצוב כפתורים אחרים (שאל/הסבר/סכם שבוע...)
+  // ואסור שלחיצה עליהם תפעיל את סיכום הפוסט (זה השבית את כפתור "שאל" כי הוא נחסם באמצע השליחה).
+  $(document).on("click", "button.ai-summary-btn[data-post-id]", function () {
     var $btn = $(this);
     var postId = $btn.data("post-id");
     var $box = $("#ai-box-" + postId);
