@@ -320,6 +320,7 @@ server/public/js/chat.js (לוגיקת העלאה/פופאפ אימוג'י/של�
 ## דרישות נוספות מהמרצה (אוקטובר 2026) - שלב 1: אפליקציית מובייל (React Native/Expo)
 
 > המרצה הוסיף 3 דרישות חדשות: (1) אפליקציית React Native נגישה גם מהטלפון, (2) AI בתוך האתר, (3) זיהוי מכונת טיורינג.
+> **עדכון (אוקטובר 2026): דרישה 3 (זיהוי מכונת טיורינג) אינה חובה - הוסרה מרשימת המשימות ולא תיבנה.**
 > המרצה שלח קוד לדוגמה גנרי (Expo + FlatList שמציג "Products" מ-API חיצוני) - תבנית "שלד" בלבד, לא קשורה לתוכן האתר.
 > המשתמש בחר: האפליקציה תציג **"פיד פוסטים אישי"** (הפוסטים מהקבוצות שהמשתמש חבר בהן, בדיוק כמו `/feed` באתר).
 
@@ -335,7 +336,7 @@ server/public/js/chat.js (לוגיקת העלאה/פופאפ אימוג'י/של�
 - [~] **הפרויקט עצמו (Expo/React Native) - נבנה, ממתין לבדיקת הרצה בטלפון** - הוקם כפרויקט נפרד **לגמרי** מ-`chavruta-app` (תיקייה אחות `chavruta-mobile`, עם git משלו), כי React Native הוא stack נפרד (לא הרחבה של Express/EJS). האתר כבר כולל יכולת PWA (manifest+service worker) שעונה חלקית על "גישה כמו אפליקציה" - אבל React Native זו דרישה נפרדת ומפורשת של המרצה.
   - נוצר עם `create-expo-app` (SDK 57): TypeScript + Expo Router + טאבים. **הוחלט להישאר עם התבנית המתקדמת** (ולא להחליף ל-App.js פשוט כמו בדוגמת המרצה) - יותר מקצועי, אבל צריך להכיר: TypeScript, ניווט מבוסס-קבצים (`src/app/*.tsx`), Context.
   - **מסכים**: טאב "פיד" (`src/app/index.tsx`) - טופס התחברות כשלא מחוברים, ואז `FlatList` של פוסטים אמיתיים מ-`GET /api/mobile/feed` עם משיכה-לרענון; טאב "חשבון" (`src/app/explore.tsx`) - פרטי משתמש והתנתקות.
-  - **קומפוננטות**: `login-form.tsx`, `post-card.tsx`; **מצב התחברות משותף**: `src/contexts/auth-context.tsx` (React Context; הטוקן נשמר בזיכרון בלבד - כניסה מחדש בכל הפעלת אפליקציה, פשטות מכוונת בלי ספריית אחסון נוספת).
+  - **קומפוננטות**: `login-form.tsx`, `post-card.tsx`; **מצב התחברות משותף**: `src/contexts/auth-context.tsx` (React Context; **עודכן בשלב 1 של ההעברה**: הטוקן נשמר בכספת המאובטחת של הטלפון, ראו להלן).
   - **כתובת השרת**: `src/constants/api.ts` - חייבת להיות כתובת ה-IP המקומית של המחשב (לא `localhost`), והטלפון חייב להיות באותה רשת Wi-Fi. הוגדרה ל-`http://10.100.102.3:3000` - **צריך לעדכן אם הכתובת משתנה** (רשת אחרת/אתחול נתב).
   - **אומת**: הורצה בפועל ב-Expo Go בטלפון, ההתחברות והפיד עובדים. להרצה: `cd chavruta-mobile && npx expo start`, ולסרוק את ה-QR בטלפון (השרת `chavruta-app` חייב לרוץ).
   - **סבב עיצוב וניווט (אוקטובר 2026)**: פלטת הצבעים של האתר (כתום/טורקיז/קרם, בהיר+כהה) הועברה לאפליקציה (`src/constants/theme.ts`), ניווט תחתון בן 5 טאבים (פיד, קבוצות, מעגל השנה, הודעות, חשבון) עם אימוג'י כאייקונים, כותרת ירוקה כמו האתר. הטאבים קבוצות/מעגל השנה/הודעות הם כרגע מסכי "בקרוב" מעוצבים (`src/components/coming-soon.tsx`).
@@ -343,10 +344,28 @@ server/public/js/chat.js (לוגיקת העלאה/פופאפ אימוג'י/של�
 
   - **גיבוי ב-GitHub**: שני הפרויקטים הועלו ל-GitHub - האתר: `shimonk7770-creator/Chavruta`, האפליקציה: `shimonk7770-creator/chavruta-mobile` (שני repos נפרדים, `git push` ידני ע"י המשתמש).
 
+- [x] **שלב 1 של ההעברה למובייל: קבוצות, פוסטים, תגובות ו-AI** (אוקטובר 2026; נבנה ונבדק בסביבת בדיקות - **ממתין לבדיקת הרצה בטלפון**)
+  - **API חדש בשרת** (כולם עם `Authorization: Bearer <token>`): `GET /api/mobile/groups` (עם `?q=` ו-`?mine=1`), `GET /api/mobile/groups/:id` (פרטים + חברים + פוסטים), `POST .../join`, `POST .../leave`, `POST /api/mobile/groups/:id/posts`, `DELETE /api/mobile/posts/:id`, `GET/POST /api/mobile/posts/:id/comments`, `DELETE /api/mobile/comments/:id`, ו-AI: `POST /api/mobile/ai/posts/:id/summary`, `.../ai/posts/:id/ask`, `.../ai/groups/:id/ask`.
+  - **אותם כללים כמו באתר, ונאכפים בשרת**: פרסום רק לחברי הקבוצה (BR-004), מחיקה לבעלים / מנהל הקבוצה / אדמין (אותה פונקציה `canModifyContent`), ניקוי HTML מכל טקסט (NFR-006), מנהל הקבוצה לא יכול לעזוב אותה, שם המחבר נקבע בשרת ולא נלקח מהבקשה, ותגובה על פוסט שולחת התראת פעמון לבעל הפוסט. תשובות ה-AI עוברות באותם בקרים בדיוק (`aiController`), כולל גיבוי המודלים, והגבלת הקצב (8 בדקה) נספרת לפי משתמש האפליקציה.
+  - **JSON נקי לטלפון** (`utils/mobileSerializers.js`): כתובות תמונה מלאות, תאריכים ב-ISO, שדה `canDelete` מחושב בשרת, ובלי שדות פנימיים (סיסמה, hash של סיכום).
+  - **באפליקציה**: טאב "קבוצות" אמיתי (במקום "בקרוב") - רשימה עם חיפוש וסינון "הקבוצות שלי"; מסך `group/[id]` עם כותרת הקבוצה, חברים, הצטרפות/עזיבה, "שאל את ה-AI על הקבוצה", פרסום פוסט (כותרת/תוכן/סוג), ופוסטים עם 💬 תגובות (נפתחות במקום), ✨ AI (סיכום + שאלה) ו-🗑️ מחיקה. המסך מוסתר מסרגל הטאבים (`href: null`) וכולל כפתור "חזרה".
+  - **התחברות שמורה**: הטוקן ופרטי המשתמש נשמרים ב-`expo-secure-store` (Keychain/Keystore) ומשוחזרים בפתיחה. התנתקות מבטלת את הטוקן גם בשרת. אם השרת עונה 401 (טוקן לא תקף) האפליקציה מתנתקת אוטומטית (`authedFetch`).
+  - **בדיקות**: 15 בדיקות חדשות (`mobileSerializers.test.js`, `mobileGroupsController.test.js`) + בדיקת HTTP חד-פעמית של הנתיבים (401 בלי טוקן, AI עם טוקן, הגבלת קצב נפרדת לכל משתמש) + בדיקת טיפוסים `tsc` לאפליקציה - הכול עבר.
+  - **להרצה**: ב-`chavruta-mobile` להריץ פעם אחת `npx expo install expo-secure-store`, ואז `npx expo start` (השרת `chavruta-app` חייב לרוץ). אחרי הוספת מסך חדש כדאי להפעיל מחדש את `expo start` כדי שהניווט המוקלד (typedRoutes) יתעדכן.
+  - **עוד לא באפליקציה**: צירוף תמונות מהטלפון לפוסט, עריכת פוסט, יצירת קבוצה וניהול חברים (נשארים באתר), ושאר האזורים (מעגל השנה, הודעות, לימוד, סטטוסים, חיפוש, התראות, תפילה/זמנים/מניינים/מצפן, AI בשאר האתר).
+
 ### קבצים (chavruta-mobile)
 src/constants/api.ts (חדש), src/contexts/auth-context.tsx (חדש), src/components/login-form.tsx (חדש),
 src/components/post-card.tsx (חדש), src/app/index.tsx, src/app/explore.tsx, src/app/_layout.tsx (עטיפת AuthProvider),
 src/components/app-tabs.tsx (תוויות בעברית)
+
+### קבצים (שלב 1 של ההעברה - קבוצות במובייל)
+chavruta-mobile: src/types/chavruta.ts, src/lib/api.ts, src/lib/session-storage.ts, src/components/ai-box.tsx, src/components/new-post-form.tsx,
+src/components/group-post-card.tsx, src/components/group-card.tsx, src/app/groups.tsx (מ"בקרוב" למסך אמיתי), src/app/group/[id].tsx (חדש),
+src/contexts/auth-context.tsx (שמירת התחברות + authedFetch), src/components/app-tabs.tsx (מסך קבוצה מוסתר + חזרה), src/app/index.tsx (שחזור התחברות),
+README.md (נכתב מחדש בעברית); תלות חדשה: expo-secure-store.
+chavruta-app: server/utils/mobileSerializers.js, server/controllers/mobileGroupsController.js, server/routes/mobileRoutes.js (נתיבים חדשים),
+server/test/mobileSerializers.test.js, server/test/mobileGroupsController.test.js
 
 ### קבצים שהשתנו (שלב 1 - API בלבד)
 server/services/loginService.js (חדש), server/models/MobileToken.js (חדש),
@@ -395,6 +414,61 @@ server/server.js (חיבור הנתיבים החדשים)
 - [x] **גיבוי מודלים (Fallback)**: אם המודל הראשי עמוס (503), חצה מכסה (429), נעלם (404), לא ענה בזמן או החזיר תשובה ריקה - `aiService.generate` עובר אוטומטית למודל הבא ברשימה (`GEMINI_MODEL` ואחריו `GEMINI_FALLBACK_MODELS`, מופרדים בפסיק; ברירת מחדל: `gemini-flash-lite-latest`, `gemini-3-flash-preview`). שגיאות שלא קשורות לעומס (מפתח לא תקין, בקשה פגומה, חסימת בטיחות, אין רשת) לא עוברות לגיבוי כי הן יחזרו זהות בכל מודל. תקציב זמן כולל = פי 2 מזמן ההמתנה לניסיון בודד, כך שהמשתמש לא ממתין דקות. בלוג השרת נרשם רק שם המודל וקוד השגיאה (בלי המפתח). 6 בדיקות חדשות ב-`aiService.test.js`.
 - **מגבלות**: הקריאה החיה ל-Gemini נבדקה על המחשב של המשתמש (עובדת); מודלי Gemini מוחלפים לעיתים - לכן יש רשימת גיבוי ושם המודל ב-`.env`. אין עדיין AI באפליקציית הנייד (יתווסף בשלב ההעברה למובייל).
 - קבצים: server/services/aiService.js, server/utils/aiPrompts.js, server/controllers/aiController.js, server/routes/aiRoutes.js, server/public/js/ai.js, server/public/css/ai.css, server/test/aiService.test.js + aiPrompts.test.js + aiController.test.js (חדשים, 18 בדיקות); server/models/Post.js (`setAiSummary`), server/server.js, server/views/groups/show.ejs, .env.example
+
+## משוב המרצה סבב 2 (אוקטובר 2026) - "בית חב״ד" אחד במקום קבוצות מפוזרות + בדיקת AI לפני פרסום
+
+> המרצה: להתמקד בבית חב״ד, לרכז את הקבוצות תחת דבר אחד, ש-Gemini יבדוק שהתוכן מתאים לקבוצה, ושאדם יהיה רק בקבוצה אחת מכל סוג.
+
+- [x] **6 מדורים קבועים** (`server/utils/chabadSections.js`): שיעור תניא, מניין, שיעורי תורה, שיעורים לנשים, אבדות ומציאות, מסירת מוצרי קדושה. כל מדור הוא קבוצה רגילה עם שדה `sectionKey` ומזהה קבוע `section_<key>`, ולכן פוסטים, תגובות, חברים וצ'אט ממשיכים לעבוד כרגיל. `Group.ensureSections()` יוצר אותם אוטומטית (בטוח להרצה חוזרת) כשנכנסים ל-`/groups`, כך שאין חובה להריץ seed מחדש.
+- [x] **עמוד `/groups` מחדש**: כותרת "בית חב״ד", כרטיסי מדורים עם אימוג'י, כמות חברים וסימון "אני חבר/ה", ומתחתם "קבוצות נוספות וחיפוש". יצירת קבוצה/מדור חדש הוגבלה לאדמין בלבד (לרכז ולא לפזר), עם בחירת מדור בטופס.
+- [x] **חברות במדור אחד מכל סוג** (`services/groupMembershipService.js`): הצטרפות למדור כשכבר חבר במדור אחר מאותו `sectionKey` נחסמת עם הסבר (409 במובייל). הכלל נאכף בשרת גם בהוספת חבר ע"י מנהל קבוצה.
+- [x] **בדיקת Gemini לפני פרסום** (`services/relevanceService.js`): פוסט/תגובה במדור נבדקים מול נושא המדור ("חולצות" במדור מוצרי קדושה נחסם עם הסבר, 422 `OFF_TOPIC`). **fail-open** לפי החלטת המשתמש: אם ה-AI לא זמין (אין מפתח, עומס, מכסה, תשובה לא מובנת, חריגה מ-10 בדיקות בדקה למשתמש) התוכן מתפרסם ומסומן `aiCheck: "unchecked"` לבדיקת אדמין. תגובה קצרה מ-10 תווים וקבוצה רגילה מסומנות `skipped`. תוכן המשתמש עטוף כנתונים בלבד (הגנה מ-prompt injection).
+- [x] **seed**: 6 המדורים עם חברים, פוסטים לכל מדור ותגובות (במקום 3 הקבוצות הישנות).
+- [x] **מובייל**: מסך "בית חב״ד" - המדורים ראשונים עם אימוג'י (השרת מסדר), והודעות חסימה/התנגשות מוצגות למשתמש.
+- [x] מסך אדמין לתוכן שסומן `unchecked` - נבנה (ראו "תוכן לבדיקה" בסעיף הבא).
+- [x] מונה "אני מגיע" במדור מניין - נבנה (ראו הסעיף הבא).
+- קבצים חדשים: server/utils/chabadSections.js, server/services/groupMembershipService.js, server/services/relevanceService.js, server/test/chabadSections.test.js, relevanceService.test.js, relevanceIntegration.test.js (17 בדיקות חדשות). עודכנו: models/Group.js, Post.js, Comment.js, controllers/groupController.js, postController.js, commentController.js, mobileGroupsController.js, utils/mobileSerializers.js, routes/groupRoutes.js, views/groups/index.ejs + new.ejs, public/css/style.css, seed/seed.js; במובייל: types/chavruta.ts, components/group-card.tsx, app/groups.tsx
+
+## הרשאות מוחשיות + אזור "ניהול" + דיווח + לייקים ושיתוף (אוקטובר 2026)
+
+- [x] **4 תפקידים ברורים**: אורח, חבר קהילה, מנהל קבוצה, מנהל מערכת. עמוד `/permissions` נכתב מחדש: כרטיס "ההרשאה שלך כרגע", תיאור לכל תפקיד, וטבלה מעודכנת. תג תפקיד ליד השם בתפריט ובאנר תפקיד בראש כל קבוצה ("אתה מנהל הקבוצה", "אתה חבר בקבוצה"...). מנהל מערכת מקבל בממשק את כלי הניהול של כל קבוצה (השרת תמיד בודק בפועל).
+- [x] **קטגוריית "ניהול" (אדמין בלבד, בתפריט)** עם תת-תפריט: לוח בקרה, **משתמשים** (`/admin/users`: השבתה, הפעלה מחדש, מינוי/הורדת מנהל מערכת; הגנות: לא פועלים על עצמך ולא מורידים את מנהל המערכת האחרון), **תוכן לבדיקה** (`/admin/moderation`: דיווחי משתמשים עם צילום מצב של התוכן - הסרה או דחייה; ותוכן שה-AI לא בדק - אישור או הסרה).
+- [x] **השבתה נאכפת מיד** (`middleware/activeUser.js`): משתמש מושבת מתנתק גם אם ה-session או הטוקן במובייל עדיין בתוקף (מטמון 30 שניות, מתבטל מיד כשאדמין משנה סטטוס; תקלת DB לא מנתקת אף אחד).
+- [x] **כפתור "🚩 דווח"** על פוסט ותגובה (אתר: חלון בחירת סיבה; מובייל: חלון התראה), `POST /api/reports` ו-`POST /api/mobile/reports`. אי אפשר לדווח על עצמך או פעמיים על אותו תוכן, ועד 10 דיווחים בדקה.
+- [x] **❤️ לייקים ו-🔗 שיתוף** לפוסטים ולתגובות: מערך `likedBy` על המסמך, עדכון בטרנזקציה אטומית, עדכון מיידי במסך (optimistic) וחזרה אחורה אם נכשל, התראה לכותב על לייק חדש. שיתוף: חלון השיתוף של המכשיר (Web Share) או העתקת קישור באתר; `Share` של React Native במובייל. רשימת המזהים לא נחשפת ללקוח.
+- קבצים חדשים: server/utils/moderationRules.js, likes.js; models/Report.js, likeHelper.js; services/moderationService.js, likeService.js; controllers/moderationController.js, likeController.js; middleware/activeUser.js; views/admin/_nav.ejs, users.ejs, moderation.ejs; public/js/report.js, likes.js; test/moderationRules.test.js, moderationService.test.js, activeUser.test.js, likes.test.js (18 בדיקות חדשות). עודכנו: models/User.js, Post.js, Comment.js, Notification.js, controllers/adminController (ללא שינוי) + groupController.js, commentController.js, mobileGroupsController.js, routes (admin/comment/post/mobile), server.js, middleware/mobileAuth.js, utils/mobileSerializers.js, views (header, permissions, groups/show, admin/dashboard), public/js/comments.js, public/css/style.css; במובייל: types/chavruta.ts, components/group-post-card.tsx
+
+## "אני מגיע" למניין (אוקטובר 2026) - בקשת המרצה: מונה מתפללים שמתאפס אחרי התפילה
+
+- [x] ליד כל מניין (`/minyanim`) ובעמוד זמני היום (`/zmanim`, סעיף "מניינים היום בעיר") מופיע מונה **7/10 מגיעים** עם סרגל התקדמות, "חסרים X" ו-"✅ יש מניין!" ברגע שמגיעים ל-10, וכפתור "🙋 אני מגיע" (לחיצה שנייה מבטלת). הצבעה אחת לכל משתמש מחובר; אורח רואה את המונה ומוזמן להתחבר.
+- [x] **איפוס אוטומטי**: ההצבעות נשמרות לפי מופע = מניין + תאריך (collection `minyanAttendance`, מזהה `<minyanId>__YYYY-MM-DD`). אחרי שהתפילה עברה המופע הבא הוא בתאריך אחר ולכן המונה מתחיל מאפס, בלי משימת ניקוי. התאריך מחושב בשרת בשעון ישראל (הלקוח לא שולח תאריך), וההצבעה פתוחה רק ב-24 השעות שלפני התפילה. הצבעה נשמרת בטרנזקציה כדי שלחיצות במקביל לא יאבדו קול.
+- [x] במדור "מניין" של בית חב״ד יש קישורים ישירים למניינים ולזמני היום.
+- [ ] עדיין: מסך המניינים באפליקציית המובייל (ייבנה בשלב העברת שאר הקטגוריות למובייל).
+- קבצים חדשים: server/utils/attendanceLogic.js, models/MinyanAttendance.js, services/attendanceService.js, views/minyanim/_attend.ejs, public/js/attendance.js, test/attendanceLogic.test.js (7 בדיקות). עודכנו: utils/minyanimLogic.js (dayOffset בתוצאה), controllers/minyanController.js + zmanimController.js, routes/minyanRoutes.js, views/minyanim/index.ejs + zmanim/index.ejs + groups/show.ejs, public/css/minyanim.css
+
+## פיד אישי + פיד ציבורי (אוקטובר 2026)
+
+- [x] **שתי לשוניות באתר ובמובייל**: "👤 שלי" (`/feed`, מחובר בלבד - פוסטים מהקבוצות והמדורים שאני חבר בהם) ו-"🌍 הקהילה" (`/community`, פתוח גם לאורחים לקריאה - כל הפוסטים האחרונים בבית חב״ד). כרטיס פוסט בפיד מציג את המדור (אימוג'י + שם), תמונות, ❤️ לייק, 🔗 שיתוף וקישור לתגובות; עמודים עם "הקודם/הבא".
+- [x] **למה כדאי**: פיד אישי נותן למשתמש מחובר רלוונטיות, ופיד ציבורי נותן לאורח ולמשתמש חדש (שעוד לא חבר באף מדור) לראות שהקהילה חיה ולהחליט להצטרף. הפיד האישי נשאר אפס-רעש כי מציג רק את מה שבחרת.
+- [x] מובייל: `GET /api/mobile/feed?tab=community` (ברירת מחדל = אישי), לשוניות בראש המסך, ולייק בכרטיס הפוסט.
+- קבצים: models/Post.js (`listRecent`), controllers/postController.js (`myFeed`, `communityFeed`), routes/postRoutes.js, views/posts/feed.ejs (נכתב מחדש), views/partials/header.ejs ("הפיד" מוביל ל-`/community` לאורח), public/css/style.css, controllers/mobileController.js; במובייל: app/index.tsx, components/post-card.tsx
+
+## הקלטה קולית עם תמלול (אוקטובר 2026)
+
+- [x] **🎤 בכל שדה הודעה**: באתר - כפתור מיקרופון אוטומטי (`public/js/voice.js`) בשדות עם `data-voice` (תוכן פוסט, תגובה, שני צ'אטים). לחיצה = הקלטה (עד דקה), לחיצה נוספת = עצירה ותמלול; הטקסט מוכנס לשדה ואפשר לערוך אותו לפני שליחה.
+- [x] **שרת**: `POST /api/ai/transcribe` (אתר) ו-`POST /api/mobile/ai/transcribe` (מובייל) - קובץ `audio` (multipart, עד 5MB) נשלח ל-Gemini כ-`inlineData` ומוחזר טקסט נקי. ההקלטה לא נשמרת בדיסק או ב-DB. מוגן בהתחברות + הגבלת קצב.
+- [x] **מובייל**: `src/components/voice-button.tsx` (expo-audio, נטען בצורה זהירה כדי שאפליקציה לא תקרוס אם החבילה חסרה), משולב בטופס פוסט חדש ובשדה התגובה.
+- [ ] נדרש פעם אחת: `npx expo install expo-audio` בתיקיית chavruta-mobile (הרשאת מיקרופון ב-Expo Go כלולה; ל-build עצמאי יש להוסיף את הפלאגין `expo-audio` ב-app.json).
+- קבצים: services/aiService.js, middleware/upload.js, utils/transcription.js, controllers/transcribeController.js, routes/aiRoutes.js, routes/mobileRoutes.js, public/js/voice.js, test/transcription.test.js
+
+## התחברות עם Google (אוקטובר 2026)
+
+- [x] **כפתור "המשך עם Google"** בדפי התחברות והרשמה (Firebase Authentication, חלון קופץ). הדפדפן מקבל `idToken`, שולח ל-`POST /auth/google`, והשרת מאמת אותו מול Firebase Admin (חתימה, תפוגה, שייכות לפרויקט שלנו) ורק אז פותח session. לעולם לא סומכים על אימייל שהגיע מהלקוח.
+- [x] **כללים**: אימייל חייב להיות מאומת ע"י Google; אימייל קיים -> מתחברים לאותו חשבון (בלי כפילות); אימייל חדש -> נוצר חבר (`member`) עם שם משתמש פנוי מהאימייל וסיסמה אקראית שאי אפשר לנחש; חשבון לא פעיל נדחה. אותה הגנת קצב כמו התחברות רגילה.
+- [x] **שרת מובייל מוכן**: `POST /api/mobile/login/google` (מחזיר טוקן אפליקציה). מסך Google באפליקציה עצמה עדיין לא נבנה (דורש OAuth client IDs של Google ו-`expo-auth-session`) - נשאר כהמשך.
+- [ ] **הגדרה חד-פעמית (עושה המשתמש, בלי לשתף מפתחות בצ'אט)**: Firebase Console -> Authentication -> Sign-in method -> להפעיל Google; Project settings -> Your apps -> להוסיף Web app ולהעתיק את ה-`apiKey` ל-`FIREBASE_WEB_API_KEY` ב-`.env`. בלי זה הכפתור פשוט לא מוצג.
+- הערה: ה-helmet הוגדר `same-origin-allow-popups` כדי שחלון Google יוכל להחזיר תשובה.
+- קבצים: utils/googleAuth.js, services/googleLoginService.js, controllers/authController.js (`googleLogin`), controllers/mobileController.js, routes/authRoutes.js, routes/mobileRoutes.js, config/db.js (`getProjectId`), views/partials/googleButton.ejs, public/js/googleLogin.js, test/googleLogin.test.js
 
 ## בדיקת התאמה לדרישות הטכניות של הקורס (סעיפים 15-29)
 

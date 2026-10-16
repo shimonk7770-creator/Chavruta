@@ -9,6 +9,7 @@ const Minyan = require("../models/Minyan");
 const { getCityOptions, getCityInfo, isValidCityKey, DEFAULT_CITY_KEY } = require("../utils/shabbatTimes");
 const { geocodeAddress } = require("../utils/geocode");
 const L = require("../utils/minyanimLogic");
+const attendance = require("../services/attendanceService"); // "אני מגיע" - מונה מתפללים לכל מופע
 
 function clean(text) {
   return sanitizeHtml(text || "", { allowedTags: [], allowedAttributes: {} }).trim();
@@ -64,6 +65,7 @@ async function listMinyanim(req, res, next) {
       horizonHours: when === "all" ? 0 : 24,
     });
 
+    await attendance.decorateResults(results, req.session && req.session.userId); // מונה "אני מגיע" לכל מניין
     res.render("minyanim/index", {
       results,
       origin,
@@ -168,4 +170,17 @@ async function deleteMinyan(req, res, next) {
   }
 }
 
-module.exports = { listMinyanim, newForm, createMinyan, deleteMinyan, resolveOrigin };
+// POST /api/minyanim/:id/attend - "אני מגיע": מסמן/מבטל את ההגעה שלי למופע הבא של המניין (משתמש מחובר, הצבעה אחת לכל משתמש)
+async function attendMinyan(req, res) {
+  try {
+    const result = await attendance.toggleAttendance(req.params.id, req.session.userId);
+    if (result.status === "notFound") return res.status(404).json({ success: false, message: "המניין לא נמצא" });
+    if (result.status === "closed") return res.status(409).json({ success: false, message: "אפשר לסמן הגעה רק עד 24 שעות לפני התפילה" });
+    return res.json({ success: true, attendance: result.attendance });
+  } catch (err) {
+    console.error("שגיאה בסימון הגעה למניין:", err.message);
+    return res.status(500).json({ success: false, message: "אירעה שגיאה בשרת" });
+  }
+}
+
+module.exports = { attendMinyan, listMinyanim, newForm, createMinyan, deleteMinyan, resolveOrigin };

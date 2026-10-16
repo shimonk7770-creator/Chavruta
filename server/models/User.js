@@ -110,7 +110,27 @@ async function search(query, { excludeUserId } = {}) {
   return users.slice(0, 20); // די בתוצאה מוגבלת לבחירת משתמש להתחלת שיחה
 }
 
+// ניהול משתמשים (אדמין): כל המשתמשים, חדשים קודם. מחזיר גרסה בטוחה בלי passwordHash
+async function listAll() {
+  const db = getDb();
+  const snaps = await db.collection(COLLECTION).get();
+  const toMs = (v) => (v?.toDate ? v.toDate().getTime() : new Date(v).getTime() || 0);
+  return snaps.docs
+    .map(toUser)
+    .map(toPublicUser)
+    .sort((a, b) => toMs(b.createdAt) - toMs(a.createdAt));
+}
+
+// כמה מנהלי מערכת פעילים יש (הגנה: לא מאפשרים להשבית/להוריד את האחרון)
+async function countActiveAdmins() {
+  const db = getDb();
+  const snaps = await db.collection(COLLECTION).where("role", "==", "admin").get();
+  return snaps.docs.filter((d) => d.data().isActive !== false).length;
+}
+
 module.exports = {
+  listAll,
+  countActiveAdmins,
   create,
   findById,
   findByEmail,

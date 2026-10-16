@@ -6,6 +6,8 @@
 const sanitizeHtml = require("sanitize-html");
 const Post = require("../models/Post");
 const Group = require("../models/Group");
+const { checkRelevance, rejectionMessage } = require("../services/relevanceService"); // בדיקת Gemini: הפוסט מתאים למדור?
+const { getSection } = require("../utils/chabadSections");
 
 // ניקוי HTML/סקריפטים מתוכן שהוזן על ידי משתמש (הגנה מפני XSS - NFR-006)
 // לא מאפשרים תגיות כלל בתוכן פוסט - טקסט חופשי בלבד
@@ -34,8 +36,15 @@ async function createPost(req, res, next) {
     const category = req.body.category;
 
     if (!title || !content) {
-      req.session.flashError = "יש למלא כותרת ותוכן";
-      return res.redirect(`/groups/${group.id}`);
+      return res.redirect(`/groups/${group.id}?memberError=${encodeURIComponent("יש למלא כותרת ותוכן")}`);
+    }
+
+    // בדיקת רלוונטיות (רק במדורי בית חב״ד): Gemini חוסם תוכן שלא מתאים לנושא המדור.
+    // אם ה-AI לא זמין - מפרסמים בכל זאת ומסמנים "unchecked" לבדיקת אדמין (fail-open)
+    const section = getSection(group.sectionKey);
+    const verdict = await checkRelevance({ section, kind: "post", title, content, userId: req.session.userId });
+    if (verdict.status === "rejected") {
+      return res.redirect(`/groups/${group.id}?memberError=${encodeURIComponent(rejectionMessage(section, "post", verdict.reason))}`);
     }
 
     // עדכון לפי משוב המשתמש (אוקטובר 2026): אפשר לצרף עד 6 תמונות כבר בזמן יצירת הפוסט (לא רק אחר כך
@@ -51,6 +60,7 @@ async function createPost(req, res, next) {
       authorId: req.session.userId,
       authorName: req.session.userName,
       imageUrls,
+      aiCheck: verdict.status,
     });
 
     res.redirect(`/groups/${group.id}`);
@@ -122,17 +132,45 @@ async function searchPosts(req, res) {
   res.render("posts/search", { posts, total, page, pageSize, query: req.query });
 }
 
-// GET /feed - FR-017: פיד אישי - פוסטים מכל הקבוצות שהמשתמש חבר בהן + הפוסטים שלו עצמו
-async function myFeed(req, res) {
-  const page = parseInt(req.query.page) || 1;
-  const pageSize = 10;
+// בונה את מודל הפיד המשותף ללשונית "שלי" וללשונית "הקהילה": מוסיף לכל פוסט את מדור בית חב״ד שלו (אימוג'י) לתצוגה
+async function renderFeed(res, tab, { posts, total, page, pageSize }) {
+  const groupIds = [...new Set(posts.map((p) => p.groupId))];
+  const groups = await Promise.all(groupIds.map((id) => Group.findById(id)));
+  const sectionByGroup = new Map(groups.filter(Boolean).map((g) => [g.id, getSection(g.sectionKey)]));
+  res.render("posts/feed", {
+    tab,
+    posts: posts.map((p) => ({ ...p, section: sectionByGroup.get(p.groupId) || null })),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  });
+}
 
-  const myGroups = await Group.findByMember(req.session.userId);
-  const groupIds = myGroups.map((g) => g.id);
+// GET /feed - FR-017: הפיד האישי ("שלי") - פוסטים מכל הקבוצות שהמשתמש חבר בהן
+async function myFeed(req, res, next) {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const pageSize = 10;
+    const myGroups = await Group.findByMember(req.session.userId);
+    const groupIds = myGroups.map((g) => g.id);
+    const result = await Post.listByGroupIds(groupIds, { page, pageSize });
+    await renderFeed(res, "mine", { ...result, page, pageSize });
+  } catch (error) {
+    next(error);
+  }
+}
 
-  const { posts, total } = await Post.listByGroupIds(groupIds, { page, pageSize });
-
-  res.render("posts/feed", { posts, total, page, pageSize });
+// GET /community - הפיד הציבורי ("הקהילה"): הפוסטים האחרונים מכל בית חב״ד. פתוח גם לאורחים (קריאה בלבד)
+async function communityFeed(req, res, next) {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const pageSize = 10;
+    const result = await Post.listRecent({ page, pageSize });
+    await renderFeed(res, "community", { ...result, page, pageSize });
+  } catch (error) {
+    next(error);
+  }
 }
 
 // GET /api/videos/library - דרישה 26: רשימת קטעי הוידאו שצורפו לפוסטים באתר, עבור מרכיב ה-React
@@ -154,4 +192,4 @@ async function videoLibrary(req, res, next) {
   }
 }
 
-module.exports = { createPost, showEditPostForm, updatePost, uploadVideo, uploadImages, deletePost, searchPosts, myFeed, videoLibrary };
+module.exports = { createPost, showEditPostForm, updatePost, uploadVideo, uploadImages, deletePost, searchPosts, myFeed, communityFeed, videoLibrary };

@@ -6,6 +6,7 @@ const path = require("path");
 const admin = require("firebase-admin");
 
 let firestoreDb = null;
+let projectId = ""; // מזהה פרויקט Firebase (משמש את התחברות Google בדפדפן)
 
 // מאתחל את החיבור ל-Firebase באמצעות קובץ מפתח שירות (Service Account)
 // הקובץ מורד מ-Firebase Console (Project Settings -> Service Accounts) ואינו נשמר בגיט
@@ -18,6 +19,7 @@ function connectDB() {
       credential: admin.credential.cert(serviceAccount),
     });
 
+    projectId = serviceAccount.project_id || "";
     firestoreDb = admin.firestore();
     console.log(`Firestore מחובר בהצלחה (פרויקט: ${serviceAccount.project_id})`);
   } catch (error) {
@@ -38,4 +40,8 @@ function getDb() {
   return firestoreDb;
 }
 
-module.exports = { connectDB, getDb };
+function getProjectId() {
+  return projectId;
+}
+
+module.exports = { connectDB, getDb, getProjectId };

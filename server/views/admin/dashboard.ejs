@@ -9,7 +9,9 @@
   <%- include('../partials/header') %>
 
   <main class="container">
-    <h1>לוח בקרה</h1>
+    <h1>ניהול</h1>
+    <%- include('_nav', { active: 'dashboard' }) %>
+    <h2>לוח בקרה</h2>
     <p class="meta">תמונת מצב חיה של המערכת - כל המספרים נשלפים ישירות מ-Firestore בכל טעינת עמוד.</p>
 
     <!-- כרטיסי סטטיסטיקה מהירים -->
@@ -44,7 +46,7 @@
     </div>
 
     <h2>ניהול תוכן</h2>
-    <p><a href="/holidays/new">+ הוספת מאמר "מעגל השנה"</a> &middot; <a href="/groups/new">+ יצירת קבוצה חדשה</a></p>
+    <p><a href="/holidays/new">+ הוספת מאמר "מעגל השנה"</a> &middot; <a href="/groups/new">+ יצירת קבוצה חדשה</a> &middot; <a href="/admin/users">ניהול משתמשים</a> &middot; <a href="/admin/moderation">תוכן לבדיקה</a></p>
   </main>
 
   <%- include('../partials/footer') %>

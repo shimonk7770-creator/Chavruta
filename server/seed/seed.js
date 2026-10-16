@@ -66,62 +66,46 @@ async function seed() {
   const moshe = userIds.moshe_bd;
   const rachel = userIds.rachel_s;
 
-  const groupsData = [
-    {
-      key: "dafYomi",
-      name: "שיעור דף יומי",
-      description: "שיעור יומי בדף היומי, פתוח לכולם",
-      category: "shiur",
-      topic: "דף יומי",
-      dayOfWeek: "ראשון",
-      time: "20:00",
-      level: "intermediate",
-      managerId: ravDavid,
-      managerName: "הרב דוד לוי",
-      members: [ravDavid, sara, avi, moshe],
-    },
-    {
-      key: "parasha",
-      name: "חבורת נשים - עיון בפרשה",
-      description: "לימוד פרשת השבוע לנשים",
-      category: "shiur",
-      topic: "פרשת שבוע",
-      dayOfWeek: "שלישי",
-      time: "10:00",
-      level: "beginners",
-      managerId: miri,
-      managerName: "מירי אברהם",
-      members: [miri, sara, naama, rachel],
-    },
-    {
-      key: "chesed",
-      name: "ועד חסד קהילתי",
-      description: "ריכוז פעילות חסד ותמיכה בקהילה",
-      category: "vaad",
-      topic: "חסד",
+  // עדכון (משוב המרצה): במקום קבוצות מפוזרות - שישה מדורים קבועים של "בית חב״ד" (server/utils/chabadSections.js).
+  // כל מדור נשמר תחת מזהה קבוע (section_<key>) בדיוק כמו Group.ensureSections, כך שהזריעה והשרת מסכימים ביניהם.
+  const sectionMembers = {
+    tanya: { managerId: ravDavid, managerName: "הרב דוד לוי", members: [ravDavid, avi, moshe] },
+    minyan: { managerId: ravDavid, managerName: "הרב דוד לוי", members: [ravDavid, avi, moshe, admin] },
+    torah: { managerId: ravDavid, managerName: "הרב דוד לוי", members: [ravDavid, avi, moshe] },
+    women: { managerId: miri, managerName: "מירי אברהם", members: [miri, sara, naama, rachel] },
+    lostfound: { managerId: admin, managerName: "יוסי כהן", members: [admin, rachel, sara] },
+    kodesh: { managerId: admin, managerName: "יוסי כהן", members: [admin, naama, moshe] },
+  };
+
+  const groupIds = {};
+  for (const def of SECTIONS) {
+    const extra = sectionMembers[def.key];
+    const id = sectionDocId(def.key);
+    await db.collection("groups").doc(id).set({
+      name: def.name,
+      description: def.description,
+      category: def.category,
+      topic: def.topic,
       dayOfWeek: "",
       time: "",
       level: "",
-      managerId: admin,
-      managerName: "יוסי כהן",
-      members: [admin, naama, moshe],
-    },
-  ];
-
-  const groupIds = {};
-  for (const g of groupsData) {
-    const { key, ...data } = g;
-    const ref = await db.collection("groups").add({ ...data, createdAt: now, updatedAt: now });
-    groupIds[key] = ref.id;
+      sectionKey: def.key,
+      groupPhotoUrl: "",
+      ...extra,
+      createdAt: now,
+      updatedAt: now,
+    });
+    groupIds[def.key] = id;
   }
+  const groupsData = SECTIONS; // לשורת הסיכום בסוף הסקריפט
 
   const postsData = [
     {
       title: "חידוש בסוגיה של השבוע",
       content: "רציתי לשתף חידוש קטן שעלה לי בלימוד היום...",
       category: "dvarTorah",
-      groupId: groupIds.dafYomi,
-      groupName: "שיעור דף יומי",
+      groupId: groupIds.torah,
+      groupName: "שיעורי תורה",
       authorId: ravDavid,
       authorName: "הרב דוד לוי",
     },
@@ -129,8 +113,8 @@ async function seed() {
       title: "שאלה על הדף",
       content: "מישהו יכול להסביר לי את הנקודה השנייה בסוגיה?",
       category: "question",
-      groupId: groupIds.dafYomi,
-      groupName: "שיעור דף יומי",
+      groupId: groupIds.torah,
+      groupName: "שיעורי תורה",
       authorId: sara,
       authorName: "שרה מזרחי",
     },
@@ -138,8 +122,8 @@ async function seed() {
       title: "עדכון: השיעור השבוע יתקיים באיחור קל",
       content: "השיעור יתחיל ב-20:30 במקום 20:00",
       category: "update",
-      groupId: groupIds.dafYomi,
-      groupName: "שיעור דף יומי",
+      groupId: groupIds.torah,
+      groupName: "שיעורי תורה",
       authorId: ravDavid,
       authorName: "הרב דוד לוי",
     },
@@ -147,21 +131,52 @@ async function seed() {
       title: "דבר תורה לפרשת השבוע",
       content: "הפעם נתמקד בקשר שבין הפרשה לחיי היום-יום שלנו...",
       category: "dvarTorah",
-      groupId: groupIds.parasha,
-      groupName: "חבורת נשים - עיון בפרשה",
+      groupId: groupIds.women,
+      groupName: "שיעורים לנשים",
       authorId: miri,
       authorName: "מירי אברהם",
     },
     {
-      title: "בקשה לתרומת מזון למשפחה נזקקת",
-      content: "יש משפחה בשכונה שזקוקה לעזרה השבוע, מי יכול לתרום?",
+      title: "מוסרת סידורים וחומשים ישנים",
+      content: "יש לי כמה סידורים וחומשים במצב טוב שאשמח למסור למי שצריך, מי מעוניין?",
       category: "update",
-      groupId: groupIds.chesed,
-      groupName: "ועד חסד קהילתי",
+      groupId: groupIds.kodesh,
+      groupName: "מסירת מוצרי קדושה",
       authorId: admin,
       authorName: "יוסי כהן",
     },
   ];
+
+  // פוסטים נוספים לשאר המדורים (נוספו בסוף המערך כדי לא לשבש את אינדקסי התגובות שמתחת)
+  postsData.push(
+    {
+      title: "שיעור התניא של הבוקר",
+      content: "השיעור היום עוסק באגרת התשובה, פרק ראשון. מוזמנים להצטרף ולשאול.",
+      category: "update",
+      groupId: groupIds.tanya,
+      groupName: "שיעור תניא",
+      authorId: ravDavid,
+      authorName: "הרב דוד לוי",
+    },
+    {
+      title: "חסר אחד למניין מנחה",
+      content: "חסר עשירי למניין של מנחה היום ב-13:45, מי יכול להגיע?",
+      category: "update",
+      groupId: groupIds.minyan,
+      groupName: "מניין",
+      authorId: avi,
+      authorName: "אבי פרץ",
+    },
+    {
+      title: "נמצאו מפתחות ליד בית הכנסת",
+      content: "נמצא צרור מפתחות עם מחזיק כחול ליד הכניסה. אפשר לאסוף אצלי.",
+      category: "update",
+      groupId: groupIds.lostfound,
+      groupName: "אבדות ומציאות",
+      authorId: rachel,
+      authorName: "רחל שמעוני",
+    }
+  );
 
   const postIds = [];
   for (const p of postsData) {
@@ -214,7 +229,7 @@ async function seed() {
       customs: "מקשטים את הסוכה, מארחים אושפיזין.",
       order: 3,
       authorId: admin,
-      linkedGroupId: groupIds.chesed,
+      linkedGroupId: groupIds.torah,
     },
     {
       holidayName: "חנוכה",
@@ -316,7 +331,7 @@ async function seed() {
   }
 
   console.log(
-    `נזרעו בהצלחה: ${usersData.length} משתמשים, ${groupsData.length} קבוצות, ${postsData.length} פוסטים, ${commentsData.length} תגובות, ${holidaysData.length} מאמרי מעגל השנה, ${minyanSlots.length} מניינים (דמו)`
+    `נזרעו בהצלחה: ${usersData.length} משתמשים, ${groupsData.length} מדורי בית חב״ד, ${postsData.length} פוסטים, ${commentsData.length} תגובות, ${holidaysData.length} מאמרי מעגל השנה, ${minyanSlots.length} מניינים (דמו)`
   );
   console.log("סיסמה לכל משתמשי הדמו: Password1");
   process.exit(0);

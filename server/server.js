@@ -45,7 +45,9 @@ const app = express();
 // helmet מוסיף אוטומטית כמה HTTP headers מגנים בסיסיים (מניעת clickjacking, sniffing סוג קובץ וכו').
 // contentSecurityPolicy מבוטלת בכוונה: האתר טוען סקריפטים חיצוניים מ-CDN (jQuery, React, D3, Babel, Socket.io-client, Google Fonts) -
 // מדיניות CSP ברירת המחדל של helmet הייתה חוסמת את כל אלה. בפרויקט אמיתי (לא לימודי) היינו מגדירים CSP מדויקת במקום לבטל אותה.
-app.use(helmet({ contentSecurityPolicy: false }));
+// crossOriginOpenerPolicy: "same-origin-allow-popups" - ברירת המחדל של helmet (same-origin) חוסמת את חלון ההתחברות
+// הקופץ של Google (Firebase signInWithPopup), כי הוא לא יכול להחזיר את התוצאה לחלון האתר.
+app.use(helmet({ contentSecurityPolicy: false, crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" } }));
 
 // מנוע התצוגה - EJS (חלק ה-View במבנה ה-MVC)
 app.set("view engine", "ejs");
@@ -83,6 +85,9 @@ const sessionMiddleware = session({
   },
 });
 app.use(sessionMiddleware);
+
+// משתמש שהושבת ע"י אדמין (או מחק חשבון) מנותק מיד, גם אם ה-session שלו עדיין בתוקף
+app.use(require("./middleware/activeUser").rejectInactiveSession);
 
 // middleware גלובלי נוסף - שם בהישג יד של *כל* תבנית EJS את מצב ההתחברות של המשתמש (res.locals.isLoggedIn/userName/userRole).
 // זה מתקן בעיה שהייתה קיימת: לפני התוספת הזו, רק חלק מהקונטרולרים טרחו להעביר isLoggedIn ל-render בעצמם,

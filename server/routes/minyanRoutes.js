@@ -9,6 +9,7 @@ const minyanController = require("../controllers/minyanController");
 // חשוב: "/minyanim/new" חייב להירשם *לפני* כל נתיב עם :id, אחרת "new" ייתפס כמזהה
 router.get("/minyanim/new", isAuthenticated, minyanController.newForm);
 router.post("/minyanim", isAuthenticated, minyanController.createMinyan);
+router.post("/api/minyanim/:id/attend", isAuthenticated, minyanController.attendMinyan); // "אני מגיע"
 router.post("/minyanim/:id/delete", isAuthenticated, minyanController.deleteMinyan);
 router.get("/minyanim", minyanController.listMinyanim);
 

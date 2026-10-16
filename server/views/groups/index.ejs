@@ -9,7 +9,27 @@
   <%- include('../partials/header') %>
 
   <main class="container">
-    <h1>קבוצות ושיעורים</h1>
+    <h1>🕍 בית חב״ד</h1>
+    <p class="meta">כל הקהילה במקום אחד: בוחרים מדור, מצטרפים ומשתתפים. אפשר להיות חבר במדור אחד מכל סוג.</p>
+
+    <!-- עדכון (משוב המרצה): מדורים קבועים במקום קבוצות מפוזרות. בכל כרטיס: אימוג'י, שם, תיאור, כמות חברים וסימון "אני חבר" -->
+    <% if (sections && sections.length) { %>
+      <div class="section-grid">
+        <% sections.forEach(function(item) { %>
+          <a class="section-card <%= item.group.members.includes(userId) ? 'is-member' : '' %>" href="/groups/<%= item.group.id %>">
+            <span class="section-emoji" aria-hidden="true"><%= item.def.emoji %></span>
+            <span class="section-name"><%= item.group.name %></span>
+            <span class="section-desc"><%= item.group.description %></span>
+            <span class="section-meta">
+              <span><%= item.group.members.length %> חברים</span>
+              <% if (item.group.members.includes(userId)) { %><span class="section-joined">✓ אני חבר/ה</span><% } %>
+            </span>
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <h2><%= sections && sections.length ? 'קבוצות נוספות וחיפוש' : 'חיפוש קבוצות' %></h2>
 
     <!-- טופס חיפוש - GET רגיל (לא Ajax) לפשטות, אפשר לשדרג ל-Ajax בהמשך -->
     <form action="/groups/search" method="GET" class="search-form">
@@ -29,8 +49,10 @@
       <button type="submit">חיפוש</button>
     </form>
 
-    <% if (groups.length === 0) { %>
+    <% if (groups.length === 0 && !(sections && sections.length)) { %>
       <p class="meta">לא נמצאו קבוצות התואמות את החיפוש. נסה להרחיב את הקריטריונים.</p>
+    <% } else if (groups.length === 0) { %>
+      <p class="meta">אין כרגע קבוצות נוספות מעבר למדורי בית חב״ד.</p>
     <% } %>
 
     <!-- רשימת קבוצות בסגנון "רשימת שיחות" של וואטסאפ - שורה לכל קבוצה, תמונה עגולה + שם + תיאור קצר + תגית חברים -->
@@ -55,7 +77,9 @@
     </div>
 
     <!-- כפתור "יצירת קבוצה" צף (FAB) - בהשראת כפתור הצ'אט החדש בוואטסאפ -->
-    <a href="/groups/new" class="fab-new-group" title="יצירת קבוצה חדשה">+</a>
+    <% if (typeof userRole !== 'undefined' && userRole === 'admin') { %>
+      <a href="/groups/new" class="fab-new-group" title="יצירת קבוצה חדשה (אדמין)">+</a>
+    <% } %>
   </main>
 
   <%- include('../partials/footer') %>

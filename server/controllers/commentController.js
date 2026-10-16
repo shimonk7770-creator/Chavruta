@@ -7,6 +7,10 @@ const sanitizeHtml = require("sanitize-html");
 const Comment = require("../models/Comment");
 const Post = require("../models/Post");
 const Notification = require("../models/Notification"); // התראת פעמון לבעל הפוסט על תגובה חדשה
+const Group = require("../models/Group");
+const { checkRelevance, rejectionMessage } = require("../services/relevanceService"); // בדיקת Gemini: התגובה מתאימה למדור?
+const { getSection } = require("../utils/chabadSections");
+const { likeSummary } = require("../utils/likes");
 const { getIo } = require("../sockets/ioInstance");
 
 // ניקוי HTML/סקריפטים מתוכן תגובה (הגנה מפני XSS - NFR-006)
@@ -27,11 +31,20 @@ async function addComment(req, res) {
       return res.status(404).json({ success: false, message: "הפוסט לא נמצא" });
     }
 
+    // בדיקת רלוונטיות (רק בפוסטים של מדורי בית חב״ד); ה-AI לא זמין -> מפרסמים ומסמנים unchecked (fail-open)
+    const group = await Group.findById(post.groupId);
+    const section = getSection(group && group.sectionKey);
+    const verdict = await checkRelevance({ section, kind: "comment", title: "", content, context: post.title, userId: req.session.userId });
+    if (verdict.status === "rejected") {
+      return res.status(422).json({ success: false, code: "OFF_TOPIC", message: rejectionMessage(section, "comment", verdict.reason) });
+    }
+
     const comment = await Comment.create({
       postId: post.id,
       authorId: req.session.userId,
       authorName: req.session.userName,
       content,
+      aiCheck: verdict.status,
     });
 
     // התראת פעמון בזמן אמת לבעל הפוסט - רק אם מישהו אחר הגיב (לא על התגובה של עצמך)
@@ -56,7 +69,12 @@ async function addComment(req, res) {
 // GET /api/posts/:postId/comments - שליפת תגובות לפוסט (לטעינה דרך Ajax)
 async function listComments(req, res) {
   const comments = await Comment.listByPost(req.params.postId);
-  res.json({ success: true, comments });
+  // רשימת מזהי המגיבים-באהבה לא נחשפת ללקוח - רק הספירה והאם אני נתתי לייק
+  const me = req.session && req.session.userId;
+  res.json({
+    success: true,
+    comments: comments.map(({ likedBy, ...rest }) => ({ ...rest, ...likeSummary({ likedBy }, me) })),
+  });
 }
 
 // DELETE /api/comments/:id - FR-016: מחיקת תגובה - הבעלים או מנהל הקבוצה (נבדק במידלוור)

@@ -7,6 +7,8 @@ const rateLimit = require("express-rate-limit");
 const router = express.Router();
 const aiController = require("../controllers/aiController");
 const { isAuthenticated } = require("../middleware/auth");
+const { uploadAudio } = require("../middleware/upload");
+const transcribeController = require("../controllers/transcribeController");
 
 // עד 8 בקשות AI בדקה לכל משתמש מחובר (המפתח הוא מזהה המשתמש, לא ה-IP - כמה משתמשים יכולים לשבת מאחורי אותו IP)
 const aiLimiter = rateLimit({
@@ -25,6 +27,8 @@ router.post("/api/ai/learning/summary", isAuthenticated, aiLimiter, aiController
 router.post("/api/ai/holidays/:id/ask", isAuthenticated, aiLimiter, aiController.askAboutHoliday);
 router.post("/api/ai/compose", isAuthenticated, aiLimiter, aiController.composeHelp);
 router.post("/api/ai/search", isAuthenticated, aiLimiter, aiController.askSite);
+// תמלול קולי: ההקלטה נשלחת כ-multipart (שדה audio) ומתומללת ע"י Gemini. אותה הגבלת קצב כמו שאר ה-AI
+router.post("/api/ai/transcribe", isAuthenticated, aiLimiter, transcribeController.receiveAudio(uploadAudio), transcribeController.transcribe);
 router.post("/api/ai/groups/:id/ask", isAuthenticated, aiLimiter, aiController.askAboutGroup);
 
 module.exports = router;

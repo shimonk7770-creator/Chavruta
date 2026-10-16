@@ -30,7 +30,7 @@
       -->
       <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/groups') ? ' active' : '' %>" href="/groups">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/><circle cx="17" cy="8" r="2.5"/><path d="M16 14.2c2.8.4 5 2.6 5 5.8"/></svg>
-        קבוצות
+        בית חב״ד
       </a>
       <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/search') ? ' active' : '' %>" href="/search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -71,15 +71,15 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         מעקב לימוד
       </a>
-      <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/feed') ? ' active' : '' %>" href="/feed">
+      <a class="nav-pill<%= typeof currentPath !== 'undefined' && (currentPath.startsWith('/feed') || currentPath.startsWith('/community')) ? ' active' : '' %>" href="<%= typeof isLoggedIn !== 'undefined' && isLoggedIn ? '/feed' : '/community' %>">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
-        הפיד שלי
+        הפיד
       </a>
       <% if (typeof userRole !== 'undefined' && userRole === 'admin') { %>
-        <!-- קטגוריית ניווט: לוח בקרה למנהל מערכת - מוצג רק לאדמין -->
+        <!-- קטגוריית ניווט: "ניהול" (לוח בקרה, משתמשים, תוכן לבדיקה) - מוצג רק לאדמין -->
         <a class="nav-pill<%= typeof currentPath !== 'undefined' && currentPath.startsWith('/admin') ? ' active' : '' %>" href="/admin/dashboard">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-          לוח בקרה
+          ניהול
         </a>
       <% } %>
 
@@ -103,6 +103,8 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
         <% } %>
         <%= userName %>
+        <!-- תג תפקיד מוחשי: מראה למשתמש מיד באיזה הרשאה הוא פועל (פירוט מלא בעמוד "הרשאות") -->
+        <span class="role-chip role-chip-<%= typeof userRole !== 'undefined' && userRole ? userRole : 'member' %>"><%= typeof userRole !== 'undefined' && userRole === 'admin' ? 'מנהל מערכת' : (typeof userRole !== 'undefined' && userRole === 'manager' ? 'מנהל' : 'חבר') %></span>
       </a>
       <form action="/logout" method="POST" style="display:inline">
         <button type="submit" class="nav-pill">

@@ -3,7 +3,10 @@
 // מחזיר JSON בלבד (לא EJS!) ומשתמש בטוקן (ראו mobileAuth.js + MobileToken.js) במקום session,
 // כי זו אפליקציה נפרדת לגמרי מהאתר, שרצה כקוד משלה על הטלפון ולא חולקת עוגיות עם הדפדפן.
 const { verifyCredentials } = require("../services/loginService");
+const { likeSummary } = require("../utils/likes");
 const MobileToken = require("../models/MobileToken");
+const { signInWithGoogle } = require("../services/googleLoginService");
+const googleAuth = require("../utils/googleAuth");
 const Group = require("../models/Group");
 const Post = require("../models/Post");
 
@@ -48,6 +51,24 @@ async function login(req, res) {
   });
 }
 
+// POST /api/mobile/login/google - גוף: { idToken } של Firebase (האפליקציה התחברה מול Google). מחזיר טוקן אפליקציה כמו login רגיל
+async function googleLogin(req, res) {
+  try {
+    const result = await signInWithGoogle(req.body && req.body.idToken);
+    if (!result.ok) return res.status(401).json({ success: false, message: googleAuth.reasonMessage(result.reason) });
+    const user = result.user;
+    const token = await MobileToken.create(user.id);
+    res.json({
+      success: true,
+      token,
+      user: { id: user.id, fullName: user.fullName, username: user.username, avatarUrl: toAbsoluteUrl(req, user.avatarUrl) },
+    });
+  } catch (error) {
+    console.error("שגיאה בהתחברות Google (מובייל):", error.message);
+    res.status(500).json({ success: false, message: "אירעה שגיאה בהתחברות עם Google. נסו שוב." });
+  }
+}
+
 // POST /api/mobile/logout
 async function logout(req, res) {
   await MobileToken.remove(req.mobileToken);
@@ -61,12 +82,19 @@ async function feed(req, res, next) {
     const page = parseInt(req.query.page) || 1;
     const pageSize = 10;
 
-    const myGroups = await Group.findByMember(req.mobileUserId);
-    const groupIds = myGroups.map((g) => g.id);
-
-    const { posts, total } = await Post.listByGroupIds(groupIds, { page, pageSize });
+    // tab=community -> הפיד הציבורי (כל הפוסטים האחרונים); אחרת הפיד האישי (קבוצות שאני חבר בהן)
+    let result;
+    if (req.query.tab === "community") {
+      result = await Post.listRecent({ page, pageSize });
+    } else {
+      const myGroups = await Group.findByMember(req.mobileUserId);
+      result = await Post.listByGroupIds(myGroups.map((g) => g.id), { page, pageSize });
+    }
+    const { posts, total } = result;
 
     const mobilePosts = posts.map((p) => ({
+      ...likeSummary(p, req.mobileUserId), // likeCount + likedByMe
+      groupId: p.groupId || "",
       id: p.id,
       title: p.title,
       content: p.content,
@@ -83,4 +111,4 @@ async function feed(req, res, next) {
   }
 }
 
-module.exports = { login, logout, feed };
+module.exports = { login, googleLogin, logout, feed };

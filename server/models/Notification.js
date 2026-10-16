@@ -16,7 +16,7 @@ function toMillis(v) {
   return v && v.toDate ? v.toDate().getTime() : new Date(v).getTime();
 }
 
-// יצירת התראה חדשה - type: "message" | "comment", link: לאן הלחיצה על ההתראה מובילה
+// יצירת התראה חדשה - type: "message" | "comment" | "like", link: לאן הלחיצה על ההתראה מובילה
 async function create({ userId, type, text, link }) {
   const db = getDb();
   const now = new Date();

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<!-- server/views/admin/moderation.ejs - תוכן לבדיקה (אדמין בלבד): דיווחי משתמשים + תוכן שה-AI לא הספיק לבדוק (fail-open) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <h1>ניהול</h1>
+    <%- include('_nav', { active: 'moderation' }) %>
+
+    <% if (message) { %><p class="success-message"><%= message %></p><% } %>
+    <% if (error) { %><p class="error-message"><%= error %></p><% } %>
+
+    <h2>🚩 דיווחי משתמשים (<%= reports.length %>)</h2>
+    <% if (reports.length === 0) { %><p class="meta">אין דיווחים פתוחים. 🎉</p><% } %>
+    <% reports.forEach(function(r) { %>
+      <div class="card moderation-card">
+        <p class="meta">
+          <strong><%= r.targetType === 'post' ? 'פוסט' : 'תגובה' %></strong> במדור/קבוצה "<%= r.groupName || 'לא ידוע' %>"
+          &middot; דווח ע"י <%= r.reporterName %> &middot; סיבה: <%= reasons[r.reason] || r.reason %>
+        </p>
+        <% if (r.details) { %><p class="meta">הערת המדווח: <%= r.details %></p><% } %>
+        <blockquote class="moderation-snapshot">
+          <% if (r.snapshot && r.snapshot.title) { %><strong><%= r.snapshot.title %></strong><br><% } %>
+          <%= r.snapshot ? r.snapshot.content : '' %>
+          <br><span class="meta">נכתב ע"י <%= r.snapshot ? r.snapshot.authorName : '' %></span>
+        </blockquote>
+        <form action="/admin/reports/<%= r.id %>/remove" method="POST" class="inline-actions">
+          <button type="submit" class="btn-link btn-danger-link" onclick="return confirm('להסיר את התוכן?')">🗑️ הסר תוכן</button>
+        </form>
+        <form action="/admin/reports/<%= r.id %>/dismiss" method="POST" class="inline-actions">
+          <button type="submit" class="btn-link">✔ דחה דיווח (התוכן תקין)</button>
+        </form>
+      </div>
+    <% }) %>
+
+    <h2>🤖 תוכן שה-AI לא בדק (<%= uncheckedPosts.length + uncheckedComments.length %>)</h2>
+    <p class="meta">כש-Gemini לא זמין, תוכן במדורי בית חב״ד מתפרסם בכל זאת ומסומן כאן, כדי שתאשרו או תסירו אותו ידנית.</p>
+    <% if (uncheckedPosts.length + uncheckedComments.length === 0) { %><p class="meta">הכל נבדק.</p><% } %>
+    <% uncheckedPosts.forEach(function(p) { %>
+      <div class="card moderation-card">
+        <p class="meta"><strong>פוסט</strong> ב"<%= p.groupName %>" &middot; <%= p.authorName %></p>
+        <blockquote class="moderation-snapshot"><strong><%= p.title %></strong><br><%= p.content %></blockquote>
+        <form action="/admin/unchecked/post/<%= p.id %>/approve" method="POST" class="inline-actions"><button type="submit" class="btn-link">✔ אשר</button></form>
+        <form action="/admin/unchecked/post/<%= p.id %>/remove" method="POST" class="inline-actions"><button type="submit" class="btn-link btn-danger-link" onclick="return confirm('להסיר את הפוסט?')">🗑️ הסר</button></form>
+      </div>
+    <% }) %>
+    <% uncheckedComments.forEach(function(c) { %>
+      <div class="card moderation-card">
+        <p class="meta"><strong>תגובה</strong> &middot; <%= c.authorName %></p>
+        <blockquote class="moderation-snapshot"><%= c.content %></blockquote>
+        <form action="/admin/unchecked/comment/<%= c.id %>/approve" method="POST" class="inline-actions"><button type="submit" class="btn-link">✔ אשר</button></form>
+        <form action="/admin/unchecked/comment/<%= c.id %>/remove" method="POST" class="inline-actions"><button type="submit" class="btn-link btn-danger-link" onclick="return confirm('להסיר את התגובה?')">🗑️ הסר</button></form>
+      </div>
+    <% }) %>
+  </main>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

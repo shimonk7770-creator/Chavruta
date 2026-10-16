@@ -1,0 +1,15 @@
+<!-- server/views/minyanim/_attend.ejs - מונה "אני מגיע" למניין. משתנים: att (סיכום), minyanId, isLoggedIn -->
+<div class="attend-box<%= att.hasMinyan ? ' has-minyan' : '' %>" data-minyan-id="<%= minyanId %>">
+  <div class="attend-top">
+    <span class="attend-count"><strong class="attend-num"><%= att.count %></strong>/<span class="attend-target"><%= att.target %></span> מגיעים</span>
+    <span class="attend-status"><%= att.hasMinyan ? '✅ יש מניין!' : 'חסרים ' + att.missing %></span>
+  </div>
+  <div class="attend-bar" role="progressbar" aria-valuemin="0" aria-valuemax="<%= att.target %>" aria-valuenow="<%= att.count %>"><span style="width: <%= att.percent %>%"></span></div>
+  <% if (!isLoggedIn) { %>
+    <a class="attend-login" href="/login">התחברו כדי לסמן שאתם מגיעים</a>
+  <% } else if (!att.canVote) { %>
+    <span class="meta">אפשר לסמן הגעה 24 שעות לפני התפילה</span>
+  <% } else { %>
+    <button type="button" class="attend-btn<%= att.going ? ' going' : '' %>"><%= att.going ? '✔ אני מגיע (ביטול)' : '🙋 אני מגיע' %></button>
+  <% } %>
+</div>

@@ -4,11 +4,13 @@
 const express = require("express");
 const router = express.Router();
 const commentController = require("../controllers/commentController");
+const likeController = require("../controllers/likeController");
 const { isAuthenticated } = require("../middleware/auth");
 const { canModifyComment } = require("../middleware/permissions");
 
 router.get("/api/posts/:postId/comments", commentController.listComments);
 router.post("/api/posts/:postId/comments", isAuthenticated, commentController.addComment);
+router.post("/api/comments/:id/like", isAuthenticated, likeController.likeComment); // ❤️ אהבתי על תגובה
 router.delete("/api/comments/:id", isAuthenticated, canModifyComment, commentController.deleteComment);
 
 module.exports = router;

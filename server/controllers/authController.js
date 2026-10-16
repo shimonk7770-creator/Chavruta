@@ -11,10 +11,40 @@ const shabbatTimes = require("../utils/shabbatTimes"); // כרטיס "זמני �
 // עדכון (אפליקציית המובייל, אוקטובר 2026): לוגיקת בדיקת אימייל+סיסמה+נעילת חשבון (BR-010) הוצאה
 // לשירות משותף כדי שתהיה זהה בדיוק בין ההתחברות באתר (כאן) לבין ההתחברות באפליקציה (mobileController.js)
 const { verifyCredentials } = require("../services/loginService");
+const { signInWithGoogle } = require("../services/googleLoginService"); // התחברות עם Google (Firebase Authentication)
+const googleAuth = require("../utils/googleAuth");
+const { getProjectId } = require("../config/db");
+
+// הגדרות Firebase לדפדפן (null אם לא הוגדר FIREBASE_WEB_API_KEY ב-.env -> כפתור Google לא מוצג)
+function googleConfig() {
+  return googleAuth.buildWebConfig(process.env, getProjectId());
+}
+
+// פותח session למשתמש מחובר - אותם שדות בדיוק כמו בהתחברות הרגילה
+function startSession(req, user) {
+  req.session.userId = user.id;
+  req.session.userRole = user.role;
+  req.session.userName = user.fullName;
+  req.session.userAvatarUrl = user.avatarUrl || "";
+  req.session.shabbatCity = user.shabbatCity || shabbatTimes.DEFAULT_CITY_KEY;
+}
+
+// POST /auth/google - גוף: { idToken } (מ-Firebase בדפדפן). מאמת בשרת ופותח session
+async function googleLogin(req, res) {
+  try {
+    const result = await signInWithGoogle(req.body && req.body.idToken);
+    if (!result.ok) return res.status(401).json({ success: false, message: googleAuth.reasonMessage(result.reason) });
+    startSession(req, result.user);
+    return res.json({ success: true, redirect: "/", created: result.created });
+  } catch (error) {
+    console.error("שגיאה בהתחברות Google:", error.message);
+    return res.status(500).json({ success: false, message: "אירעה שגיאה בהתחברות עם Google. נסו שוב." });
+  }
+}
 
 // GET /register - מציג את טופס ההרשמה
 function showRegisterForm(req, res) {
-  res.render("register", { error: null, fullName: "", username: "", email: "" });
+  res.render("register", { error: null, fullName: "", username: "", email: "", googleConfig: googleConfig() });
 }
 
 // POST /register - FR-001: הרשמת משתמש חדש
@@ -22,7 +52,7 @@ async function register(req, res) {
   // שדות שאינם סיסמה - נשמרים ומועברים בחזרה לטופס בכל מקרה של שגיאה,
   // כדי שהמשתמש לא יצטרך להקליד מחדש את כל הטופס בגלל טעות בסיסמה בלבד (חוויית משתמש)
   const { fullName, username, email, password, confirmPassword } = req.body;
-  const keepValues = { fullName: fullName || "", username: username || "", email: email || "" };
+  const keepValues = { fullName: fullName || "", username: username || "", email: email || "", googleConfig: googleConfig() };
 
   try {
     // ולידציה בסיסית בצד שרת (חובה! גם אם יש ולידציה בצד לקוח - ראו סעיף 7 ב-SRS)
@@ -77,14 +107,14 @@ async function register(req, res) {
 
 // GET /login - מציג את טופס ההתחברות
 function showLoginForm(req, res) {
-  res.render("login", { error: null, email: "" });
+  res.render("login", { error: null, email: "", googleConfig: googleConfig() });
 }
 
 // POST /login - FR-002: התחברות משתמש
 async function login(req, res) {
   const { email, password } = req.body;
   // שומרים את האימייל שהוקלד גם אם ההתחברות נכשלת - אותו שיפור חוויית משתמש כמו בטופס ההרשמה
-  const keepEmail = { email: email || "" };
+  const keepEmail = { email: email || "", googleConfig: googleConfig() };
 
   try {
     // הבדיקה עצמה (כולל BR-010 נעילת חשבון ומניעת enumeration) נמצאת ב-services/loginService.js -
@@ -213,6 +243,7 @@ async function deleteAccount(req, res) {
 }
 
 module.exports = {
+  googleLogin,
   showRegisterForm,
   register,
   showLoginForm,

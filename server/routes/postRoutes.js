@@ -8,8 +8,10 @@ const { isAuthenticated } = require("../middleware/auth");
 const { canModifyPost } = require("../middleware/permissions");
 const { uploadVideo, uploadImages } = require("../middleware/upload");
 
+router.post("/api/posts/:id/like", isAuthenticated, require("../controllers/likeController").likePost); // ❤️ אהבתי על פוסט
 router.get("/posts/search", postController.searchPosts); // FR-012
-router.get("/feed", isAuthenticated, postController.myFeed); // FR-017 - פיד אישי
+router.get("/feed", isAuthenticated, postController.myFeed); // FR-017 - פיד אישי ("שלי")
+router.get("/community", postController.communityFeed); // פיד ציבורי ("הקהילה") - פתוח גם לאורחים
 router.get("/api/videos/library", isAuthenticated, postController.videoLibrary); // דרישה 26 - נתונים למרכיב React "הספרייה שלי"
 
 router.get("/posts/:id/edit", isAuthenticated, canModifyPost, postController.showEditPostForm); // FR-014

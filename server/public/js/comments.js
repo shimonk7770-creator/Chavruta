@@ -57,11 +57,21 @@ $(function () {
             `<p class="comment">
               <strong>${escapeHtml(comment.authorName)}:</strong> ${escapeHtml(comment.content)}
               <button class="btn-link delete-comment-btn" data-comment-id="${comment.id}" data-post-id="${postId}">מחק</button>
+              <button type="button" class="like-btn like-btn-sm${comment.likedByMe ? " liked" : ""}" data-kind="comment" data-id="${comment.id}"${window.CURRENT_USER_ID ? "" : " disabled"}>
+                <span class="like-heart">${comment.likedByMe ? "❤️" : "🤍"}</span> <span class="like-count">${Number(comment.likeCount) || 0}</span>
+              </button>
+              ${reportButton(comment)}
             </p>`
           );
         });
       },
     });
+  }
+
+  // כפתור "דווח" על תגובה של מישהו אחר (למשתמש מחובר בלבד). window.CURRENT_USER_ID נקבע ב-show.ejs
+  function reportButton(comment) {
+    if (!window.CURRENT_USER_ID || comment.authorId === window.CURRENT_USER_ID) return "";
+    return `<button type="button" class="btn-link report-btn" data-type="comment" data-id="${comment.id}">🚩 דווח</button>`;
   }
 
   // מניעת XSS בצד הלקוח - לעולם לא מכניסים טקסט ממשתמש ל-HTML בלי בריחה (escaping)

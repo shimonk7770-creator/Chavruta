@@ -7,6 +7,7 @@
 // חיפוש טקסט חופשי (FR-012) מבוצע בזיכרון השרת - ל-Firestore אין אינדקס $text מובנה כמו ב-Mongo.
 
 const { getDb } = require("../config/db");
+const { toggleLikeIn } = require("./likeHelper"); // לייקים (❤️) - טרנזקציה אטומית
 
 const COLLECTION = "posts";
 const VALID_CATEGORIES = ["dvarTorah", "question", "update", "holiday"];
@@ -37,6 +38,8 @@ async function create(data) {
     authorName: data.authorName || "",
     videoUrl: data.videoUrl || "",
     imageUrls: data.imageUrls || [], // גלריית תמונות לפוסט (שיפור UX - "רשת חברתית אמיתית")
+    likedBy: [], // מזהי המשתמשים שנתנו ❤️ (ראו utils/likes.js)
+    aiCheck: ["approved", "unchecked", "skipped"].includes(data.aiCheck) ? data.aiCheck : "skipped", // תוצאת בדיקת הרלוונטיות של Gemini; unchecked = ממתין לבדיקת אדמין
     isArchived: false,
     createdAt: now,
     updatedAt: now,
@@ -170,7 +173,35 @@ async function countActiveByGroup() {
   return counts;
 }
 
+// הפיד הציבורי ("הקהילה"): הפוסטים האחרונים מכל הקבוצות, חדשים קודם. מסנן בזיכרון (כמו שאר החיפושים) כדי לא לדרוש אינדקס מורכב ב-Firestore
+async function listRecent({ page = 1, pageSize = 10 } = {}) {
+  const db = getDb();
+  const snaps = await db.collection(COLLECTION).where("isArchived", "==", false).get();
+  return paginate(sortByCreatedAtDesc(snaps.docs.map(toPost)), page, pageSize);
+}
+
+// תוכן שפורסם בלי בדיקת AI (ה-AI לא היה זמין) - לבדיקת אדמין במסך "תוכן לבדיקה"
+async function listUnchecked() {
+  const db = getDb();
+  const snaps = await db.collection(COLLECTION).where("aiCheck", "==", "unchecked").get();
+  return sortByCreatedAtDesc(snaps.docs.map(toPost).filter((p) => p && !p.isArchived));
+}
+
+async function setAiCheck(id, aiCheck) {
+  const db = getDb();
+  await db.collection(COLLECTION).doc(id).update({ aiCheck });
+}
+
+// לייק/ביטול לייק של משתמש על הפוסט
+async function toggleLike(id, userId) {
+  return toggleLikeIn(COLLECTION, id, userId);
+}
+
 module.exports = {
+  listRecent,
+  toggleLike,
+  listUnchecked,
+  setAiCheck,
   create,
   findById,
   listByGroup,

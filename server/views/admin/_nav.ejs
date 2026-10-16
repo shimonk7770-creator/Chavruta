@@ -1,0 +1,6 @@
+<!-- server/views/admin/_nav.ejs - תת-תפריט קבוע לאזור "ניהול" (אדמין בלבד); active = users | moderation | dashboard -->
+<nav class="admin-subnav" aria-label="אזור ניהול">
+  <a href="/admin/dashboard"<%= active === 'dashboard' ? ' class=active' : '' %>>📊 לוח בקרה</a>
+  <a href="/admin/users"<%= active === 'users' ? ' class=active' : '' %>>👥 משתמשים</a>
+  <a href="/admin/moderation"<%= active === 'moderation' ? ' class=active' : '' %>>🛡️ תוכן לבדיקה</a>
+</nav>

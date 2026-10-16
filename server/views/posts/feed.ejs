@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- server/views/posts/feed.ejs - פיד אישי: פוסטים מכל הקבוצות שהמשתמש חבר בהן (FR-017) -->
+<!-- server/views/posts/feed.ejs - הפיד: שתי לשוניות. "שלי" = פוסטים מהקבוצות שאני חבר בהן (FR-017), "הקהילה" = כל הפוסטים האחרונים בבית חב״ד (ציבורי) -->
 <html lang="he" dir="rtl">
 <head>
   <%- include('../partials/head') %>
@@ -8,26 +8,63 @@
   <%- include('../partials/header') %>
 
   <main class="container">
-    <h1>הפיד שלי</h1>
+    <h1>הפיד</h1>
+
+    <nav class="feed-tabs" aria-label="סוג פיד">
+      <a href="/feed" class="feed-tab<%= tab === 'mine' ? ' active' : '' %>">👤 שלי</a>
+      <a href="/community" class="feed-tab<%= tab === 'community' ? ' active' : '' %>">🌍 הקהילה</a>
+    </nav>
+    <p class="meta">
+      <% if (tab === 'mine') { %>הפוסטים האחרונים מהמדורים והקבוצות שאתה חבר בהם.<% } else { %>כל מה שקורה עכשיו בבית חב״ד, מכל המדורים. פתוח לכולם לקריאה.<% } %>
+    </p>
 
     <% if (posts.length === 0) { %>
       <!-- מצב ריק ידידותי - סעיף 12.9 ב-SRS -->
       <div class="card">
-        <p>עדיין אין כאן תוכן. <a href="/groups">הצטרף לקבוצה</a> כדי לראות פוסטים בפיד שלך.</p>
+        <% if (tab === 'mine') { %>
+          <p>עדיין אין כאן תוכן. <a href="/groups">הצטרף למדור בבית חב״ד</a> כדי לראות פוסטים בפיד שלך, או הציץ ב<a href="/community">פיד הקהילה</a>.</p>
+        <% } else { %>
+          <p>עדיין לא פורסמו פוסטים. <a href="/groups">היה הראשון לפרסם!</a></p>
+        <% } %>
       </div>
     <% } %>
 
     <% posts.forEach(function(post) { %>
-      <div class="card">
-        <h3><a href="/groups/<%= post.groupId %>"><%= post.title %></a></h3>
-        <p class="meta"><%= post.authorName %> | קבוצה: <%= post.groupName %></p>
+      <% const likers = Array.isArray(post.likedBy) ? post.likedBy : []; %>
+      <div class="card feed-card">
+        <p class="meta">
+          <% if (post.section) { %><span class="feed-section"><%= post.section.emoji %> <%= post.section.name %></span> &middot; <% } else { %>קבוצה: <%= post.groupName %> &middot; <% } %>
+          <%= post.authorName %>
+        </p>
+        <h3><a href="/groups/<%= post.groupId %>#post-<%= post.id %>"><%= post.title %></a></h3>
         <p><%= post.content %></p>
+        <% if (post.imageUrls && post.imageUrls.length) { %>
+          <div class="image-gallery">
+            <% post.imageUrls.slice(0, 3).forEach(function (url) { %><img src="<%= url %>" class="gallery-thumb" alt="תמונה מצורפת לפוסט" /><% }) %>
+          </div>
+        <% } %>
+        <div class="post-actions">
+          <button type="button" class="like-btn<%= userId && likers.includes(userId) ? ' liked' : '' %>" data-kind="post" data-id="<%= post.id %>"<%= userId ? '' : ' disabled title="יש להתחבר כדי לתת לייק"' %>>
+            <span class="like-heart"><%= userId && likers.includes(userId) ? '❤️' : '🤍' %></span> <span class="like-count"><%= likers.length %></span>
+          </button>
+          <button type="button" class="share-btn" data-url="/groups/<%= post.groupId %>#post-<%= post.id %>" data-title="<%= post.title %>">🔗 שתף</button>
+          <a class="btn-link" href="/groups/<%= post.groupId %>#post-<%= post.id %>">💬 תגובות</a>
+        </div>
       </div>
     <% }) %>
 
-    <p class="meta"><%= total %> פוסטים סה"כ (עמוד <%= page %>)</p>
+    <% if (totalPages > 1) { %>
+      <nav class="feed-pager" aria-label="עמודים">
+        <% if (page > 1) { %><a href="?page=<%= page - 1 %>">‹ הקודם</a><% } %>
+        <span class="meta">עמוד <%= page %> מתוך <%= totalPages %> (<%= total %> פוסטים)</span>
+        <% if (page < totalPages) { %><a href="?page=<%= page + 1 %>">הבא ›</a><% } %>
+      </nav>
+    <% } else { %>
+      <p class="meta"><%= total %> פוסטים</p>
+    <% } %>
   </main>
 
   <%- include('../partials/footer') %>
+  <script src="/js/likes.js"></script>
 </body>
 </html>

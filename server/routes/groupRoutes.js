@@ -13,8 +13,9 @@ router.get("/groups", groupController.listGroups);
 router.get("/groups/search", groupController.searchGroups); // FR-011
 
 // יצירת קבוצה - מנהל קבוצה או אדמין בלבד (FR-006)
-router.get("/groups/new", isAuthenticated, hasRole("manager", "admin"), groupController.showNewGroupForm);
-router.post("/groups", isAuthenticated, hasRole("manager", "admin"), groupController.createGroup);
+// עדכון (משוב המרצה - לרכז ולא לפזר): יצירת קבוצה/מדור חדש מותרת לאדמין בלבד
+router.get("/groups/new", isAuthenticated, hasRole("admin"), groupController.showNewGroupForm);
+router.post("/groups", isAuthenticated, hasRole("admin"), groupController.createGroup);
 
 router.get("/groups/:id", groupController.showGroup);
 

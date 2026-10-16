@@ -298,3 +298,83 @@
     width: 100%;
   }
 }
+
+/* ===== "אני מגיע": מונה מתפללים לכל מניין ===== */
+.attend-box {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.attend-box.has-minyan {
+  border-color: var(--color-secondary);
+  background: rgba(31, 111, 92, 0.08);
+}
+.attend-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.attend-num {
+  font-size: 1.2rem;
+}
+.attend-status {
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+.has-minyan .attend-status {
+  color: var(--color-secondary);
+}
+.attend-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+.attend-bar span {
+  display: block;
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.3s ease;
+}
+.has-minyan .attend-bar span {
+  background: var(--color-secondary);
+}
+.attend-btn {
+  align-self: flex-start;
+  border: 2px solid var(--color-secondary);
+  background: var(--color-surface);
+  color: var(--color-secondary);
+  border-radius: 999px;
+  padding: 5px 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.attend-btn.going {
+  background: var(--color-secondary);
+  color: #fff;
+}
+.attend-btn:disabled {
+  opacity: 0.6;
+}
+.zmanim-minyanim {
+  margin: 24px 0;
+}
+.zmanim-minyan-row {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.zmanim-minyan-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}

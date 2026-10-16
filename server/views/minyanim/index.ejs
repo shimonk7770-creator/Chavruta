@@ -118,6 +118,7 @@
                 <% if (m.nusach && m.nusach !== 'any') { %><span class="minyan-badge"><%= nusachLabels[m.nusach] %></span><% } %>
                 <% if (m.notes) { %><span class="meta"><%= m.notes %></span><% } %>
               </p>
+              <%- include('_attend', { att: r.attendance, minyanId: m.id, isLoggedIn: isLoggedIn }) %>
               <div class="minyan-links">
                 <a href="https://www.google.com/maps/dir/?api=1&destination=<%= m.lat %>,<%= m.lng %>&travelmode=walking" target="_blank" rel="noopener">🧭 ניווט (Google Maps)</a>
                 <a href="https://waze.com/ul?ll=<%= m.lat %>,<%= m.lng %>&navigate=yes" target="_blank" rel="noopener">Waze</a>
@@ -146,5 +147,6 @@
 
   <%- include('../partials/footer') %>
   <script src="/js/minyanim.js"></script>
+  <script src="/js/attendance.js"></script>
 </body>
 </html>

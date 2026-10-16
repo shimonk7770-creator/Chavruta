@@ -7,7 +7,9 @@ const sanitizeHtml = require("sanitize-html");
 const Group = require("../models/Group");
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
-const User = require("../models/User"); // עדכון: עיצוב קבוצות בהשראת וואטסאפ - צריך פרטי משתמשים (שם+אווטאר) לכל חבר בקבוצה
+const User = require("../models/User");
+const { joinGroupWithRules, conflictMessage } = require("../services/groupMembershipService"); // כלל: מדור אחד מכל סוג
+const { SECTIONS, getSection } = require("../utils/chabadSections"); // עדכון: עיצוב קבוצות בהשראת וואטסאפ - צריך פרטי משתמשים (שם+אווטאר) לכל חבר בקבוצה
 
 // ניקוי HTML/סקריפטים משדות טקסט חופשי של קבוצה (הגנה מפני XSS - NFR-006) -
 // עדכון מביקורת האבטחה (סעיף 12.5 ב-SRS): שם/תיאור/נושא הקבוצה לא עברו ניקוי כמו שאר התוכן
@@ -18,30 +20,44 @@ function sanitizeField(text) {
 }
 
 // GET /groups - רשימת/עיון בכל הקבוצות (FR-010), פתוח גם לאורח
-async function listGroups(req, res) {
-  const groups = await Group.listAll();
-  res.render("groups/index", { groups, query: {} });
+// עדכון (משוב המרצה): העמוד הראשי הוא "בית חב״ד" - מדורים קבועים בראש, וקבוצות נוספות (אם יש) מתחתיהן
+async function listGroups(req, res, next) {
+  try {
+    await Group.ensureSections(); // יוצר את 6 המדורים אם עוד לא קיימים (בטוח להרצה חוזרת)
+    const groups = await Group.listAll();
+    res.render("groups/index", buildIndexModel(groups, {}, req.session.userId));
+  } catch (error) {
+    next(error);
+  }
+}
+
+// בונה את מודל התצוגה: sections = המדורים הקבועים (עם כמות חברים וסימון "אני חבר"), others = שאר הקבוצות
+function buildIndexModel(groups, query, userId) {
+  const sections = SECTIONS.map((def) => ({ def, group: groups.find((g) => g.sectionKey === def.key) || null })).filter((x) => x.group);
+  const others = groups.filter((g) => !g.sectionKey);
+  return { groups: others, sections, query, userId };
 }
 
 // GET /groups/search - חיפוש קבוצות (FR-011): topic, dayOfWeek, level - 3 פרמטרים בשילוב
 async function searchGroups(req, res) {
   const { topic, dayOfWeek, level } = req.query;
   const groups = await Group.search({ topic, dayOfWeek, level });
-  res.render("groups/index", { groups, query: req.query });
+  // בחיפוש מציגים את כל התוצאות (כולל מדורים) ברשימה אחת, בלי כרטיסי המדורים
+  res.render("groups/index", { groups, sections: [], query: req.query, userId: req.session.userId });
 }
 
 // GET /groups/new - טופס יצירת קבוצה (מנהל/אדמין בלבד - נבדק ב-route)
 function showNewGroupForm(req, res) {
-  res.render("groups/new", { error: null });
+  res.render("groups/new", { error: null, sections: SECTIONS });
 }
 
 // POST /groups - FR-006: יצירת קבוצה חדשה
 async function createGroup(req, res) {
   try {
-    const { name, description, category, topic, dayOfWeek, time, level } = req.body;
+    const { name, description, category, topic, dayOfWeek, time, level, sectionKey } = req.body;
 
     if (!name || name.trim().length < 2) {
-      return res.render("groups/new", { error: "שם הקבוצה חייב להכיל לפחות 2 תווים" });
+      return res.render("groups/new", { error: "שם הקבוצה חייב להכיל לפחות 2 תווים", sections: SECTIONS });
     }
 
     const group = await Group.create({
@@ -52,6 +68,7 @@ async function createGroup(req, res) {
       dayOfWeek,
       time,
       level,
+      sectionKey, // מדור בית חב״ד (אופציונלי) - ערך לא חוקי נפסל במודל
       managerId: req.session.userId, // היוצר הופך אוטומטית למנהל הקבוצה
       managerName: req.session.userName, // נשמר ישירות על המסמך - אין populate() ב-Firestore
     });
@@ -59,7 +76,7 @@ async function createGroup(req, res) {
     res.redirect(`/groups/${group.id}`);
   } catch (error) {
     console.error("שגיאה ביצירת קבוצה:", error);
-    res.render("groups/new", { error: "אירעה שגיאה, נסה שוב" });
+    res.render("groups/new", { error: "אירעה שגיאה, נסה שוב", sections: SECTIONS });
   }
 }
 
@@ -75,7 +92,9 @@ async function showGroup(req, res, next) {
     const posts = await Post.listByGroup(group.id);
 
     const isMember = group.members.includes(req.session.userId);
-    const isManager = group.managerId === req.session.userId;
+    // מנהל מערכת מקבל בממשק את כלי הניהול של כל קבוצה (ההרשאה האמיתית נבדקת בשרת ב-isGroupManagerOf)
+    const isAdmin = req.session.userRole === "admin";
+    const isManager = group.managerId === req.session.userId || isAdmin;
 
     // עדכון (עיצוב בהשראת וואטסאפ): Group.members הוא רק מערך מזהי משתמשים (אין populate ב-Firestore) -
     // שולפים כאן את הפרטים המלאים (שם+אווטאר) של כל חבר כדי להציג "רשימת חברים" עם תמונות, כמו בקבוצת וואטסאפ.
@@ -88,6 +107,8 @@ async function showGroup(req, res, next) {
       posts,
       isMember,
       isManager,
+      isAdmin,
+      section: getSection(group.sectionKey), // מדור בית חב״ד (או null) - להצגת אימוג'י והסבר "מה מתאים כאן"
       userId: req.session.userId,
       memberUsers,
       memberError: req.query.memberError || null,
@@ -138,12 +159,16 @@ async function deleteGroup(req, res) {
 // POST /groups/:id/join - FR-009: הצטרפות לקבוצה (BR-005: לא ניתן להצטרף פעמיים)
 async function joinGroup(req, res, next) {
   try {
-    const group = await Group.addMember(req.params.id, req.session.userId);
-    if (!group) {
+    const result = await joinGroupWithRules(req.params.id, req.session.userId);
+    if (result.status === "notFound") {
       res.status(404);
       return next(new Error("הקבוצה לא נמצאה"));
     }
-    res.redirect(`/groups/${group.id}`);
+    if (result.status === "conflict") {
+      // כבר חבר במדור אחר מאותו סוג - חוזרים לעמוד הקבוצה עם הסבר
+      return res.redirect(`/groups/${result.group.id}?memberError=${encodeURIComponent(conflictMessage(result.conflict))}`);
+    }
+    res.redirect(`/groups/${result.group.id}`);
   } catch (error) {
     next(error);
   }
@@ -189,7 +214,10 @@ async function addMemberByManager(req, res, next) {
     if (req.group.members.includes(user.id)) {
       return res.redirect(`/groups/${req.group.id}?memberError=${encodeURIComponent("המשתמש כבר חבר בקבוצה")}`);
     }
-    await Group.addMember(req.group.id, user.id);
+    const result = await joinGroupWithRules(req.group.id, user.id);
+    if (result.status === "conflict") {
+      return res.redirect(`/groups/${req.group.id}?memberError=${encodeURIComponent("המשתמש כבר חבר במדור אחר מאותו סוג")}`);
+    }
     res.redirect(`/groups/${req.group.id}`);
   } catch (error) {
     next(error);

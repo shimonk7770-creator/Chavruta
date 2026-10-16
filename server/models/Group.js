@@ -6,6 +6,7 @@
 // שם המנהל (managerName) נשמר ישירות על מסמך הקבוצה (denormalization) בזמן היצירה/העדכון.
 
 const { getDb } = require("../config/db");
+const { SECTIONS, sectionDocId, getSection } = require("../utils/chabadSections"); // מדורי בית חב״ד הקבועים
 
 const COLLECTION = "groups";
 const VALID_CATEGORIES = ["shiur", "vaad", "community"];
@@ -30,6 +31,7 @@ async function create(data) {
     level: VALID_LEVELS.includes(data.level) ? data.level : "",
     managerId: data.managerId,
     managerName: data.managerName || "",
+    sectionKey: getSection(data.sectionKey) ? data.sectionKey : "", // מדור בית חב״ד (ריק = קבוצה רגילה). חברות מוגבלת למדור אחד מכל סוג
     groupPhotoUrl: data.groupPhotoUrl || "", // תמונת קבוצה (עדכון: עיצוב בהשראת וואטסאפ) - מוגדרת אחרי היצירה דרך POST /groups/:id/photo
     members: [data.managerId],
     createdAt: now,
@@ -112,4 +114,42 @@ async function findByMember(userId) {
   return snaps.docs.map(toGroup);
 }
 
-module.exports = { create, findById, listAll, search, update, remove, addMember, removeMember, findByMember };
+// בית חב״ד: יוצר את המדורים הקבועים אם הם עדיין לא קיימים. בטוח להרצה חוזרת (idempotent) -
+// כל מדור נשמר תחת מזהה קבוע (section_<key>), ולכן קריאה חוזרת או מקבילה לא יוצרת כפילויות ולא מוחקת חברים קיימים.
+async function ensureSections() {
+  const db = getDb();
+  const now = new Date();
+  const created = [];
+  for (const def of SECTIONS) {
+    const ref = db.collection(COLLECTION).doc(sectionDocId(def.key));
+    const snap = await ref.get();
+    if (snap.exists) continue;
+    await ref.set({
+      name: def.name,
+      description: def.description,
+      category: def.category,
+      topic: def.topic,
+      dayOfWeek: "",
+      time: "",
+      level: "",
+      managerId: "system", // מדור שייך להנהלת בית חב״ד; ניהול בפועל ע"י אדמין (הרשאת אדמין מכסה הכל)
+      managerName: "הנהלת בית חב״ד",
+      sectionKey: def.key,
+      groupPhotoUrl: "",
+      members: [],
+      createdAt: now,
+      updatedAt: now,
+    });
+    created.push(def.key);
+  }
+  return created;
+}
+
+// כל מדורי בית חב״ד (לפי הסדר הקבוע ב-SECTIONS), כולל הקבוצה עצמה אם כבר נוצרה
+async function listSections() {
+  const all = await listAll();
+  const byKey = new Map(all.filter((g) => g.sectionKey).map((g) => [g.sectionKey, g]));
+  return SECTIONS.map((def) => ({ def, group: byKey.get(def.key) || null })).filter((x) => x.group);
+}
+
+module.exports = { ensureSections, listSections, create, findById, listAll, search, update, remove, addMember, removeMember, findByMember };

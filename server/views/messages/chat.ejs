@@ -36,7 +36,7 @@
     <p id="chat-connection-status" class="meta chat-status"></p>
 
     <form id="chat-form" class="comment-form">
-      <input type="text" id="chat-input" placeholder="כתבו הודעה..." maxlength="1000" autocomplete="off" required />
+      <input type="text" id="chat-input" data-voice placeholder="כתבו הודעה..." maxlength="1000" autocomplete="off" required />
       <button type="submit">שליחה</button>
     </form>
 
@@ -46,5 +46,6 @@
   <%- include('../partials/footer') %>
 
   <script src="/js/dmChat.js"></script>
+  <script src="/js/voice.js"></script>
 </body>
 </html>

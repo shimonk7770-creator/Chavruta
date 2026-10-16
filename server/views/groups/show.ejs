@@ -19,7 +19,7 @@
       <% if (group.groupPhotoUrl) { %>
         <img class="group-avatar-lg" src="<%= group.groupPhotoUrl %>" alt="תמונת הקבוצה <%= group.name %>" />
       <% } else { %>
-        <span class="group-avatar-lg group-avatar-fallback"><%= (group.name || '?').trim().charAt(0) %></span>
+        <span class="group-avatar-lg group-avatar-fallback"><%= section ? section.emoji : (group.name || '?').trim().charAt(0) %></span>
       <% } %>
       <div class="group-header-info">
         <h1><%= group.name %></h1>
@@ -27,6 +27,27 @@
         <p class="meta">מנהל: <%= group.managerName %> | <%= group.members.length %> חברים</p>
       </div>
     </section>
+
+    <!-- באנר תפקיד מוחשי: מה אני יכול לעשות בקבוצה הזו עכשיו (ההרשאות נאכפות בשרת, זה רק הסבר למשתמש) -->
+    <p class="role-banner role-banner-<%= !userId ? 'guest' : (isAdmin ? 'admin' : (isManager ? 'manager' : (isMember ? 'member' : 'guest'))) %>">
+      <% if (!userId) { %>
+        👀 אתה גולש כאורח - אפשר לקרוא. כדי להצטרף ולפרסם צריך <a href="/login">להתחבר</a>.
+      <% } else if (isAdmin) { %>
+        🛡️ מנהל מערכת: אפשר לערוך ולהסיר כל פוסט ותגובה כאן ולנהל את הקבוצה.
+      <% } else if (isManager) { %>
+        ⭐ אתה מנהל הקבוצה: אפשר להסיר כל פוסט ותגובה כאן ולנהל חברים.
+      <% } else if (isMember) { %>
+        ✅ אתה חבר בקבוצה: אפשר לפרסם, להגיב ולדווח על תוכן לא ראוי.
+      <% } else { %>
+        👤 עוד לא חבר: הצטרף כדי לפרסם ולהגיב.
+      <% } %>
+    </p>
+    <% if (section) { %>
+      <p class="meta">📌 <strong>מה מתאים להעלות כאן:</strong> <%= section.topicHint.split(':')[0] %>. Gemini בודק שהתוכן מתאים למדור לפני הפרסום.</p>
+      <% if (section.key === 'minyan') { %>
+        <p><a class="btn btn-secondary" href="/minyanim">🙋 מניינים קרובים וסימון "אני מגיע"</a> <a class="btn" href="/zmanim">🕐 זמני היום והמניינים של היום</a></p>
+      <% } %>
+    <% } %>
 
     <% if (isManager) { %>
       <!-- העלאת/החלפת תמונת קבוצה - מנהל הקבוצה בלבד, אותו דפוס בדיוק כמו תמונת פרופיל -->
@@ -89,7 +110,7 @@
           <input type="text" id="postTitle" name="title" placeholder="על מה תרצה לכתוב?" required maxlength="150" />
 
           <label for="postContent">תוכן</label>
-          <textarea id="postContent" name="content" placeholder="שתף דבר תורה, שאלה, או עדכון עם הקבוצה..." required maxlength="5000"></textarea>
+          <textarea id="postContent" data-voice name="content" placeholder="שתף דבר תורה, שאלה, או עדכון עם הקבוצה..." required maxlength="5000"></textarea>
 
           <!-- עזרה בכתיבה (AI): שיפור ניסוח של הטיוטה / הצעת כותרות. לא מפרסם ולא שומר כלום - רק מציע -->
           <div class="compose-tools">
@@ -137,7 +158,7 @@
 
     <h2>פוסטים בקבוצה</h2>
     <% posts.forEach(function(post) { %>
-      <div class="card post-card" data-post-id="<%= post.id %>">
+      <div class="card post-card" id="post-<%= post.id %>" data-post-id="<%= post.id %>">
         <div class="post-card-header">
           <span class="post-category-badge post-category-<%= post.category %>">
             <%= post.category === 'dvarTorah' ? '📖 דבר תורה' : post.category === 'question' ? '❓ שאלה' : '📢 עדכון' %>
@@ -146,6 +167,9 @@
         </div>
         <h3><%= post.title %></h3>
         <p class="post-content"><%= post.content %></p>
+        <% if (post.aiCheck === 'unchecked' && isManager) { %>
+          <p class="meta">⚠️ פורסם בלי בדיקת AI - ממתין לאישור מנהל</p>
+        <% } %>
         <!-- נגן הוידאו המצורף לפוסט (BR-008) - העיצוב מגיע מ-.post-video ב-style.css, לא inline -->
         <% if (post.videoUrl) { %>
           <video class="post-video" controls src="<%= post.videoUrl %>"></video>
@@ -174,6 +198,17 @@
         <% } %>
 
         <!-- קישורי ניהול פוסט - מוצגים רק לבעל הפוסט או למנהל הקבוצה (בדיקת ההרשאה האמיתית מתבצעת בשרת ב-middleware canModifyPost) -->
+        <!-- שורת אינטראקציה כמו ברשתות חברתיות: ❤️ אהבתי (Ajax) + 🔗 שיתוף (Web Share / העתקת קישור) -->
+        <% const likers = Array.isArray(post.likedBy) ? post.likedBy : []; %>
+        <div class="post-actions">
+          <button type="button" class="like-btn<%= userId && likers.includes(userId) ? ' liked' : '' %>" data-kind="post" data-id="<%= post.id %>"<%= userId ? '' : ' disabled title="יש להתחבר כדי לתת לייק"' %>>
+            <span class="like-heart"><%= userId && likers.includes(userId) ? '❤️' : '🤍' %></span> <span class="like-count"><%= likers.length %></span>
+          </button>
+          <button type="button" class="share-btn" data-url="/groups/<%= group.id %>#post-<%= post.id %>" data-title="<%= post.title %>">🔗 שתף</button>
+        </div>
+        <% if (userId && post.authorId !== userId) { %>
+          <button type="button" class="btn-link report-btn" data-type="post" data-id="<%= post.id %>">🚩 דווח</button>
+        <% } %>
         <% if (isManager || post.authorId === userId) { %>
           <p class="meta">
             <a href="/posts/<%= post.id %>/edit">עריכה</a>
@@ -186,7 +221,7 @@
         <!-- אזור התגובות - נטען ומתעדכן דרך jQuery/Ajax, ללא רענון עמוד (דרישה 25) -->
         <div class="comments-list" id="comments-<%= post.id %>"></div>
         <form class="comment-form" data-post-id="<%= post.id %>">
-          <input type="text" name="content" placeholder="כתוב תגובה..." maxlength="1000" required />
+          <input type="text" name="content" data-voice placeholder="כתוב תגובה..." maxlength="1000" required />
           <button type="submit">שלח</button>
         </form>
       </div>
@@ -195,6 +230,10 @@
 
   <%- include('../partials/footer') %>
 
+  <script>window.CURRENT_USER_ID = <%- JSON.stringify(userId || '') %>;</script>
+  <script src="/js/report.js"></script>
+  <script src="/js/likes.js"></script>
+  <script src="/js/voice.js"></script>
   <script src="/js/comments.js"></script>
   <script src="/js/postForm.js"></script>
   <script src="/js/ai.js"></script>

@@ -5,6 +5,7 @@
   <%- include('../partials/head') %>
   <!-- עיצוב ייעודי לעמוד הזה בקובץ נפרד (כדי לא לנפח את style.css הראשי) -->
   <link rel="stylesheet" href="/css/zmanim.css" />
+  <link rel="stylesheet" href="/css/minyanim.css" /> <!-- מונה "אני מגיע" משותף עם עמוד המניינים -->
 </head>
 <body>
   <%- include('../partials/header') %>
@@ -58,6 +59,26 @@
       <% }) %>
     </ul>
 
+    <% if (zmanim.isToday) { %>
+      <!-- מניינים של היום בעיר + "אני מגיע": כל אחד מסמן הגעה וכולם רואים כמה כבר הצהירו (מתאפס אחרי התפילה) -->
+      <section class="zmanim-minyanim">
+        <h2>🕍 מניינים היום ב<%= zmanim.cityLabel %></h2>
+        <% if (!todaysMinyanim.length) { %>
+          <p class="meta">אין מניינים שנותרו להיום בעיר. אפשר <a href="/minyanim">לחפש מניין קרוב</a> או להוסיף מניין.</p>
+        <% } %>
+        <% todaysMinyanim.forEach(function (item) { var m = item.minyan; %>
+          <div class="zmanim-minyan-row">
+            <div class="zmanim-minyan-head">
+              <span class="minyan-time"><%= m.time %></span>
+              <strong><%= prayerLabels[m.prayer] %></strong> ב<%= m.synagogueName %>
+              <span class="meta"><%= item.countdownText %></span>
+            </div>
+            <%- include('../minyanim/_attend', { att: item.attendance, minyanId: m.id, isLoggedIn: isLoggedIn }) %>
+          </div>
+        <% }) %>
+      </section>
+    <% } %>
+
     <!-- שבת הקרובה: כניסה ויציאה -->
     <section class="zmanim-shabbat">
       <h2>שבת הקרובה <span class="meta">(ערב שבת: <%= zmanim.shabbat.fridayISO.split('-').reverse().join('/') %>)</span></h2>
@@ -83,5 +104,6 @@
 
   <%- include('../partials/footer') %>
   <script src="/js/zmanim.js"></script>
+  <script src="/js/attendance.js"></script>
 </body>
 </html>

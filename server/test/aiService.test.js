@@ -149,3 +149,21 @@ test("generate: הלוג של המעבר לגיבוי לא מכיל את המפ�
   assert.strictEqual(lines.length, 1);
   assert.ok(lines[0].includes("m1") && lines[0].includes("m2") && !lines[0].includes(ENV.GEMINI_API_KEY));
 });
+
+// תמלול קולי: השמע נכנס כ-inlineData (utils/transcription.js + controllers/transcribeController.js)
+test("aiService.generate: קובץ שמע נשלח כ-inlineData לצד הטקסט", async () => {
+  let sent;
+  const fetchImpl = async (url, opts) => {
+    sent = JSON.parse(opts.body);
+    return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text: "שלום" }] } }] }) };
+  };
+  const out = await ai.generate(
+    { system: "s", prompt: "תמלל", audio: { mimeType: "audio/webm", base64: "QUJD" } },
+    { fetchImpl, env: { GEMINI_API_KEY: "test-key-1234567890" } }
+  );
+  assert.strictEqual(out, "שלום");
+  const parts = sent.contents[0].parts;
+  assert.strictEqual(parts.length, 2);
+  assert.deepStrictEqual(parts[1], { inlineData: { mimeType: "audio/webm", data: "QUJD" } });
+});
+

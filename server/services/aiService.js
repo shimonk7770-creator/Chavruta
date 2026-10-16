@@ -122,7 +122,7 @@ async function callModel(model, body, { fetchImpl, env, timeoutMs }) {
 // אם המודל הראשי נכשל בגלל עומס/מכסה/חריגת זמן - עוברים אוטומטית למודל הגיבוי הבא.
 // שגיאות שקשורות לבקשה עצמה (מפתח לא תקין, בקשה פגומה, חסימת בטיחות, אין רשת) לא עוברות לגיבוי - הן יחזרו זהות בכל מודל.
 async function generate(
-  { system, prompt, maxOutputTokens = 1024, temperature = 0.4 },
+  { system, prompt, maxOutputTokens = 1024, temperature = 0.4, audio },
   { fetchImpl = fetch, env = process.env, timeoutMs, logger = console } = {}
 ) {
   // סדר עדיפויות: פרמטר (לבדיקות) > GEMINI_TIMEOUT_MS ב-.env > ברירת מחדל
@@ -133,7 +133,8 @@ async function generate(
 
   const body = {
     systemInstruction: { parts: [{ text: system }] },
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    // audio (אופציונלי) = { mimeType, base64 } - קובץ שמע מצורף לבקשה לצורך תמלול (Gemini מבין שמע ישירות)
+    contents: [{ role: "user", parts: audio ? [{ text: prompt }, { inlineData: { mimeType: audio.mimeType, data: audio.base64 } }] : [{ text: prompt }] }],
     generationConfig: { temperature, maxOutputTokens },
   };
 

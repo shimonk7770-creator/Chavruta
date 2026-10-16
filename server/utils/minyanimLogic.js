@@ -133,6 +133,7 @@ function searchMinyanim(minyanim, origin, now = new Date(), options = {}) {
       distanceText: formatDistance(distanceKm),
       secondsUntil: occ.secondsUntil,
       dayLabel: occ.dayLabel,
+      dayOffset: occ.dayOffset, // 0=היום - משמש לחישוב תאריך המופע ב"אני מגיע"
       countdownText: formatCountdown(occ.secondsUntil),
       walkMinutes,
       canMakeItWalking: occ.secondsUntil / 60 >= walkMinutes,

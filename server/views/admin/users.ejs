@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!-- server/views/admin/users.ejs - ניהול משתמשים (אדמין בלבד): השבתה/הפעלה ושינוי הרשאה. ההגנות נאכפות בשרת (utils/moderationRules.js) -->
+<html lang="he" dir="rtl">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <main class="container">
+    <h1>ניהול</h1>
+    <%- include('_nav', { active: 'users' }) %>
+    <h2>משתמשים (<%= users.length %>)</h2>
+    <p class="meta">השבתת משתמש מנתקת אותו מיד (באתר ובאפליקציה) ומונעת ממנו להתחבר. החשבון והתוכן שלו נשמרים וניתן להפעיל אותו מחדש.</p>
+
+    <% if (message) { %><p class="success-message"><%= message %></p><% } %>
+    <% if (error) { %><p class="error-message"><%= error %></p><% } %>
+
+    <div class="table-scroll">
+      <table class="permissions-table admin-table">
+        <thead>
+          <tr><th>שם</th><th>שם משתמש</th><th>אימייל</th><th>הרשאה</th><th>סטטוס</th><th>פעולות</th></tr>
+        </thead>
+        <tbody>
+          <% users.forEach(function(u) { %>
+            <tr class="<%= u.isActive === false ? 'row-inactive' : '' %>">
+              <td><%= u.fullName %><% if (u.id === userId) { %> <span class="meta">(אני)</span><% } %></td>
+              <td>@<%= u.username %></td>
+              <td><%= u.email %></td>
+              <td><span class="role-badge"><%= u.role === 'admin' ? 'מנהל מערכת' : u.role === 'manager' ? 'מנהל קבוצה' : 'חבר קהילה' %></span></td>
+              <td><%= u.isActive === false ? 'מושבת' : 'פעיל' %></td>
+              <td>
+                <% if (u.id !== userId) { %>
+                  <form action="/admin/users/<%= u.id %>/action" method="POST" class="inline-actions">
+                    <% if (u.isActive === false) { %>
+                      <button type="submit" name="action" value="activate" class="btn-link">הפעל מחדש</button>
+                    <% } else { %>
+                      <button type="submit" name="action" value="suspend" class="btn-link btn-danger-link" onclick="return confirm('להשבית את <%= u.fullName.replace(/'/g, '') %>? הוא ינותק מיד.')">השבת</button>
+                    <% } %>
+                    <% if (u.role === 'admin') { %>
+                      <button type="submit" name="action" value="makeMember" class="btn-link">הורד לחבר</button>
+                    <% } else { %>
+                      <button type="submit" name="action" value="makeAdmin" class="btn-link" onclick="return confirm('למנות את <%= u.fullName.replace(/'/g, '') %> למנהל מערכת?')">מנה למנהל</button>
+                    <% } %>
+                  </form>
+                <% } else { %>
+                  <span class="meta">—</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

@@ -11,6 +11,9 @@ const UPLOAD_DIR = path.join(__dirname, "..", "..", "uploads");
 const VIDEO_MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50MB - BR-008
 const VIDEO_MIME_TYPES = ["video/mp4", "video/webm"];
 
+// הקלטות קול לתמלול (Gemini): נשמרות בזיכרון בלבד ולא בדיסק - הקובץ נשלח ל-AI ונזרק מיד. עד 5MB (דקה של דיבור היא כ-100-500KB)
+const AUDIO_MAX_SIZE_BYTES = 5 * 1024 * 1024;
+
 const IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB לכל תמונה - סביר לגלריית פוסט/אווטאר
 const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
@@ -81,7 +84,13 @@ const uploadChatImage = multer({
   limits: { fileSize: IMAGE_MAX_SIZE_BYTES, files: 1 },
 });
 
+const uploadAudio = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: AUDIO_MAX_SIZE_BYTES, files: 1 },
+});
+
 module.exports = {
+  uploadAudio,
   uploadVideo,
   uploadImages,
   uploadAvatar,

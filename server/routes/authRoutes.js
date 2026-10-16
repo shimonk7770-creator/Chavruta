@@ -25,6 +25,9 @@ router.post("/register", authLimiter, authController.register);
 router.get("/login", authController.showLoginForm);
 router.post("/login", authLimiter, authController.login);
 
+// התחברות/הרשמה עם Google: הדפדפן שולח idToken של Firebase, והשרת מאמת אותו (services/googleLoginService.js)
+router.post("/auth/google", authLimiter, authController.googleLogin);
+
 router.post("/logout", authController.logout);
 
 // FR-004, FR-005 - דורש התחברות

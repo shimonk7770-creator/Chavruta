@@ -16,6 +16,15 @@
       <label for="description">תיאור</label>
       <textarea id="description" name="description" maxlength="1000"></textarea>
 
+      <label for="sectionKey">מדור בבית חב״ד (אופציונלי)</label>
+      <select id="sectionKey" name="sectionKey">
+        <option value="">קבוצה רגילה (ללא מדור)</option>
+        <% (typeof sections !== 'undefined' ? sections : []).forEach(function(sec) { %>
+          <option value="<%= sec.key %>"><%= sec.emoji %> <%= sec.name %></option>
+        <% }) %>
+      </select>
+      <p class="meta">משתמש יכול להיות חבר רק בקבוצה אחת מכל מדור.</p>
+
       <label for="category">סוג</label>
       <select id="category" name="category">
         <option value="shiur">שיעור</option>
