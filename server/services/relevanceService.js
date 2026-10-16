@@ -16,6 +16,7 @@ const MIN_COMMENT_CHARS = 10; // תגובה קצרה מאוד ("תודה", "אמ
 const MIN_CHAT_CHARS = 3; // הודעת צ'אט קצרה מ-3 תווים ("אמן", "👍") לא נבדקת
 const CHAT_GATE_MAX_PER_MINUTE = 30; // צ'אט הוא שיחה מהירה - מכסת בדיקות גבוהה יותר מפוסטים/תגובות
 const CHECK_TIMEOUT_MS = 8000; // לא מחכים ל-AI יותר מדי; אחרת fail-open
+const CHAT_TIMEOUT_MS = 4000; // בצ'אט ממתינים פחות - הודעה לא צריכה להיתקע; אחרי הזמן הזה היא נשלחת (fail-open)
 const GATE_MAX_PER_MINUTE = 10; // מקסימום בדיקות AI בדקה לכל משתמש (חיסכון במכסה); מעבר לכך - fail-open
 
 const SYSTEM = [
@@ -104,7 +105,7 @@ async function checkRelevance(input, deps = {}) {
   if (!gate.allow(userId || "anonymous")) return { status: "unchecked", reason: "" };
 
   try {
-    const answer = await generate(buildRelevanceRequest(input), { timeoutMs: CHECK_TIMEOUT_MS });
+    const answer = await generate(buildRelevanceRequest(input), { timeoutMs: kind === "chat" ? CHAT_TIMEOUT_MS : CHECK_TIMEOUT_MS });
     const verdict = parseVerdict(answer);
     if (verdict.decision === "block") {
       return { status: "rejected", reason: verdict.reason || `התוכן לא מתאים לנושא המדור "${section.name}".` };

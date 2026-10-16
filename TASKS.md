@@ -429,6 +429,7 @@ server/server.js (חיבור הנתיבים החדשים)
 - [x] מונה "אני מגיע" במדור מניין - נבנה (ראו הסעיף הבא).
 - קבצים חדשים: server/utils/chabadSections.js, server/services/groupMembershipService.js, server/services/relevanceService.js, server/test/chabadSections.test.js, relevanceService.test.js, relevanceIntegration.test.js (17 בדיקות חדשות). עודכנו: models/Group.js, Post.js, Comment.js, controllers/groupController.js, postController.js, commentController.js, mobileGroupsController.js, utils/mobileSerializers.js, routes/groupRoutes.js, views/groups/index.ejs + new.ejs, public/css/style.css, seed/seed.js; במובייל: types/chavruta.ts, components/group-card.tsx, app/groups.tsx
 - [x] **בדיקת AI גם בצ'אט המדורים** (בקשת המשתמש): הודעה בצ'אט של מדור נבדקת ע"י Gemini לפני שידור; הודעה לא קשורה לנושא לא נשלחת ולא נשמרת, השולח רואה הסבר והטקסט חוזר לשדה. הודעות קצרות מ-3 תווים ותמונות בלי טקסט לא נבדקות; fail-open כמו בפוסטים; מכסה נפרדת של 30 בדיקות בדקה למשתמש. צ'אט של קבוצה רגילה (בלי מדור) ושיחות פרטיות לא נבדקים. קבצים: sockets/chatSocket.js, services/relevanceService.js (`kind: "chat"`), models/Message.js (`aiCheck`), public/js/chat.js (`chat:blocked`).
+- [x] **האצת הצ'אט**: ההודעה שלי מוצגת מיד בבועה חיוורת ("נשלחת...") בזמן שה-AI בודק, ומוחלפת באמיתית כשהשרת מאשר (או נמחקת וחוזרת לשדה אם נחסמה). בנוסף זמן ההמתנה המקסימלי ל-AI בצ'אט קוצר ל-4 שניות (אחרי זה ההודעה נשלחת - fail-open).
 
 ## הרשאות מוחשיות + אזור "ניהול" + דיווח + לייקים ושיתוף (אוקטובר 2026)
 

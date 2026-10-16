@@ -2474,3 +2474,6 @@ html[data-font-size="xlarge"] {
 .google-btn { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; width: 100%; padding: .65rem 1rem; background: #fff; color: #333; border: 1px solid #ccc; border-radius: 10px; font-size: 1rem; cursor: pointer; }
 .google-btn:hover { background: #f6f6f6; }
 .google-btn:disabled { opacity: .6; cursor: wait; }
+
+/* הודעת צ'אט שנשלחה וממתינה לאישור השרת (בדיקת AI) - חיוורת עד שההודעה האמיתית חוזרת */
+.chat-message.chat-pending { opacity: .55; }

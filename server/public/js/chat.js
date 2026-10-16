@@ -23,7 +23,29 @@ $(function () {
   // אין צורך בלוגיקת retry ידנית, רק להגיב לאירועי connect/disconnect בהתאם
   const socket = io();
 
+  // הודעות שלי שנשלחו וממתינות לאישור השרת (בדיקת ה-AI לוקחת רגע): מוצגות מיד בבועה חיוורת "נשלחת..."
+  // כדי שהצ'אט ירגיש מיידי. כשההודעה האמיתית חוזרת מהשרת - הבועה הזמנית מוחלפת; אם נחסמה - היא נמחקת.
+  const pendingBubbles = [];
+
+  function addPendingBubble(content) {
+    const $msg = $("<div>").addClass("chat-message mine chat-pending");
+    $("<span>").addClass("chat-content").text(content).appendTo($msg);
+    $box.find(".chat-empty").remove();
+    $box.append($msg);
+    $box.scrollTop($box[0].scrollHeight);
+    pendingBubbles.push({ content: content, $el: $msg });
+  }
+
+  function removePendingBubble(content) {
+    // מסירים את הבועה עם אותו תוכן (או את הוותיקה ביותר אם אין התאמה מדויקת)
+    let idx = pendingBubbles.findIndex(function (p) { return p.content === content; });
+    if (idx < 0) idx = 0;
+    const p = pendingBubbles.splice(idx, 1)[0];
+    if (p) p.$el.remove();
+  }
+
   function renderMessage(msg) {
+    if (String(msg.senderId) === myUserId && pendingBubbles.length) removePendingBubble(msg.content);
     const mineClass = String(msg.senderId) === myUserId ? " mine" : "";
     const $msg = $("<div>").addClass("chat-message" + mineClass);
     $("<span>").addClass("chat-sender").text(msg.senderName).appendTo($msg);
@@ -76,6 +98,7 @@ $(function () {
 
   // הודעה שנחסמה ע"י בדיקת ה-AI (לא קשורה לנושא המדור): מציגים הסבר זמני ומחזירים את הטקסט לשדה כדי שלא יאבד
   socket.on("chat:blocked", function (data) {
+    removePendingBubble(data.content);
     const $status = $("#chat-connection-status");
     $status.text(data.message).addClass("error");
     if (!$("#chat-input").val()) $("#chat-input").val(data.content || "");
@@ -85,6 +108,7 @@ $(function () {
   });
 
   socket.on("chat:error", function (message) {
+    if (pendingBubbles.length) removePendingBubble(); // השליחה נכשלה - לא משאירים בועה תקועה
     $("#chat-connection-status").text(message).addClass("error");
   });
 
@@ -174,6 +198,7 @@ $(function () {
 
     function sendMessage(imageUrl) {
       socket.emit("chat:send", { groupId: groupId, content: content, imageUrl: imageUrl || "" });
+      if (content && !imageUrl) addPendingBubble(content); // הודעת טקסט: מציגים מיד, מחכים לאישור השרת
       $input.val("");
       pendingImageFile = null;
       $("#chat-image-input").val("");
