@@ -19,7 +19,7 @@
    - עבור ל-Project Settings -> Service Accounts -> **Generate new private key** - יורד קובץ JSON
    - שמור את הקובץ שהתקבל בשם **`serviceAccountKey.json`** בשורש הפרויקט (ליד `package.json`) - הקובץ הזה **לא** נשמר בגיט (ראו `.gitignore`), כי הוא מכיל סוד רגיש שמעניק גישה מלאה למסד הנתונים
 3. העתק את `.env.example` ל-`.env` ומלא `PORT` ו-`SESSION_SECRET`
-4. `npm run seed` - ממלא נתוני דמו (8 משתמשים, 3 קבוצות, 5 פוסטים, 5 תגובות, 4 מאמרי מעגל השנה, 14 בתי כנסת עם 38 מניינים; סיסמת כל המשתמשים: `Password1`)
+4. `npm run seed` - ממלא נתוני דמו (8 משתמשים, 6 מדורי בית חב״ד, פוסטים ותגובות לדוגמה, 4 מאמרי מעגל השנה, 14 בתי כנסת עם 38 מניינים; סיסמת כל המשתמשים: `Password1`)
 5. `npm run dev` (או `npm start`)
 6. גלוש אל `http://localhost:3000`
 
@@ -39,7 +39,7 @@ npm run make-admin -- your@email.com
 npm test
 ```
 
-מריץ את כל הבדיקות תחת `server/test/` עם `node:test` המובנה ב-Node (לא דורש ספריית בדיקות נוספת) - 217 בדיקות בסה"כ.
+מריץ את כל הבדיקות תחת `server/test/` עם `node:test` המובנה ב-Node (לא דורש ספריית בדיקות נוספת) - 219 בדיקות בסה"כ.
 מכסה ולידציית הרשמה (BR-001/002/003), לוגיקת הרשאות (AC-002/AC-003), בניית לוח השנה (`calendarGrid.js`),
 לוגיקת נמעני התראות הפעמון (`notificationRecipients.js`), חישוב זמני שבת אמיתי (`shabbatTimes.js`, ספריית `@hebcal/core`),
 תפוגת 24 השעות של פיצ'ר "סטטוס" (`status.test.js`), חישוב "המועד הקרוב" במעגל השנה (`upcomingHoliday.js`),

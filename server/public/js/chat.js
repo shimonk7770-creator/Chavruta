@@ -74,6 +74,16 @@ $(function () {
 
   socket.on("chat:message", renderMessage);
 
+  // הודעה שנחסמה ע"י בדיקת ה-AI (לא קשורה לנושא המדור): מציגים הסבר זמני ומחזירים את הטקסט לשדה כדי שלא יאבד
+  socket.on("chat:blocked", function (data) {
+    const $status = $("#chat-connection-status");
+    $status.text(data.message).addClass("error");
+    if (!$("#chat-input").val()) $("#chat-input").val(data.content || "");
+    setTimeout(function () {
+      if (socket.connected) $status.text("מחובר").removeClass("error");
+    }, 8000);
+  });
+
   socket.on("chat:error", function (message) {
     $("#chat-connection-status").text(message).addClass("error");
   });

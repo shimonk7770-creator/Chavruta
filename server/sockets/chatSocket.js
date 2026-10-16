@@ -8,6 +8,8 @@ const Message = require("../models/Message");
 const Notification = require("../models/Notification"); // התראות פעמון בזמן אמת
 const User = require("../models/User"); // עדכון: צ'אט פרטי - ולידציה שהנמען קיים ופעיל
 const { pickNotificationRecipients } = require("../utils/notificationRecipients");
+const { checkRelevance, rejectionMessage } = require("../services/relevanceService"); // בדיקת Gemini גם בצ'אט המדור
+const { getSection } = require("../utils/chabadSections");
 
 // מי (userId) נמצא כרגע (active) בחדר צ'אט מסוים - נבדק לפי אילו sockets מחוברים ל-room הזה כרגע.
 // נעזר בזה כדי לא "להציף" בהתראת פעמון מישהו שכבר צופה בהודעה החדשה בזמן אמת בתוך הצ'אט עצמו.
@@ -73,12 +75,23 @@ module.exports = function initChatSocket(io) {
           return;
         }
 
+        // בדיקת רלוונטיות (בקשת המשתמש): בצ'אט של מדור בבית חב״ד, Gemini בודק שההודעה מתאימה לנושא המדור.
+        // fail-open כמו בפוסטים: אם ה-AI לא זמין ההודעה נשלחת בכל זאת. הודעה שנחסמה לא נשמרת ולא משודרת -
+        // השולח מקבל chat:blocked (עם הטקסט שלו כדי שלא יאבד) ורק הוא רואה זאת.
+        const section = group.sectionKey ? getSection(group.sectionKey) : null;
+        const verdict = await checkRelevance({ section, kind: "chat", title: "", content, userId });
+        if (verdict.status === "rejected") {
+          socket.emit("chat:blocked", { message: rejectionMessage(section, "chat", verdict.reason), content });
+          return;
+        }
+
         const message = await Message.create({
           groupId,
           senderId: userId,
           senderName: userName,
           content,
           imageUrl,
+          aiCheck: verdict.status,
         });
 
         io.to(groupId).emit("chat:message", message);

@@ -428,6 +428,7 @@ server/server.js (חיבור הנתיבים החדשים)
 - [x] מסך אדמין לתוכן שסומן `unchecked` - נבנה (ראו "תוכן לבדיקה" בסעיף הבא).
 - [x] מונה "אני מגיע" במדור מניין - נבנה (ראו הסעיף הבא).
 - קבצים חדשים: server/utils/chabadSections.js, server/services/groupMembershipService.js, server/services/relevanceService.js, server/test/chabadSections.test.js, relevanceService.test.js, relevanceIntegration.test.js (17 בדיקות חדשות). עודכנו: models/Group.js, Post.js, Comment.js, controllers/groupController.js, postController.js, commentController.js, mobileGroupsController.js, utils/mobileSerializers.js, routes/groupRoutes.js, views/groups/index.ejs + new.ejs, public/css/style.css, seed/seed.js; במובייל: types/chavruta.ts, components/group-card.tsx, app/groups.tsx
+- [x] **בדיקת AI גם בצ'אט המדורים** (בקשת המשתמש): הודעה בצ'אט של מדור נבדקת ע"י Gemini לפני שידור; הודעה לא קשורה לנושא לא נשלחת ולא נשמרת, השולח רואה הסבר והטקסט חוזר לשדה. הודעות קצרות מ-3 תווים ותמונות בלי טקסט לא נבדקות; fail-open כמו בפוסטים; מכסה נפרדת של 30 בדיקות בדקה למשתמש. צ'אט של קבוצה רגילה (בלי מדור) ושיחות פרטיות לא נבדקים. קבצים: sockets/chatSocket.js, services/relevanceService.js (`kind: "chat"`), models/Message.js (`aiCheck`), public/js/chat.js (`chat:blocked`).
 
 ## הרשאות מוחשיות + אזור "ניהול" + דיווח + לייקים ושיתוף (אוקטובר 2026)
 

@@ -80,3 +80,28 @@ test("rejectionMessage: מנסח הודעה נפרדת לפוסט ולתגובה
   assert.match(rejectionMessage(kodesh, "post", "סיבה"), /^הפוסט לא פורסם/);
   assert.match(rejectionMessage(kodesh, "comment", "סיבה"), /^התגובה לא פורסם/);
 });
+
+test("צ'אט: בקשה מיוחדת לשיחה, דילוג על הודעה קצרה, וחסימה/אישור/fail-open", async () => {
+  const req = buildRelevanceRequest({ section: kodesh, kind: "chat", title: "", content: "מישהו יודע מתי השיעור?" });
+  assert.ok(req.prompt.includes("הודעת צ'אט"));
+
+  let calls = 0;
+  const skipped = await checkRelevance({ section: kodesh, kind: "chat", content: "הי" }, baseDeps(async () => { calls++; return "BLOCK\nx"; }));
+  assert.strictEqual(skipped.status, "skipped");
+  assert.strictEqual(calls, 0); // הודעה של פחות מ-3 תווים לא נשלחת ל-AI (MIN_CHAT_CHARS)
+
+  const blocked = await checkRelevance({ section: kodesh, kind: "chat", content: "חתולים חמודים" }, baseDeps(async () => "BLOCK\nלא קשור לנושא המדור"));
+  assert.strictEqual(blocked.status, "rejected");
+  assert.match(rejectionMessage(kodesh, "chat", blocked.reason), /^ההודעה לא נשלחה/);
+
+  const approved = await checkRelevance({ section: kodesh, kind: "chat", content: "תודה רבה על המידע" }, baseDeps(async () => "ALLOW\nמתאים"));
+  assert.strictEqual(approved.status, "approved");
+
+  const failOpen = await checkRelevance({ section: kodesh, kind: "chat", content: "שלום לכולם כאן" }, baseDeps(async () => { throw new Error("boom"); }));
+  assert.strictEqual(failOpen.status, "unchecked");
+});
+
+test("צ'אט: קבוצה בלי מדור לא נבדקת", async () => {
+  const r = await checkRelevance({ section: null, kind: "chat", content: "הודעה ארוכה מספיק" }, baseDeps(async () => "BLOCK\nx"));
+  assert.strictEqual(r.status, "skipped");
+});

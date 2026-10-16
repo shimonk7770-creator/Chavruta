@@ -13,6 +13,8 @@ const prompts = require("../utils/aiPrompts");
 
 const MAX_CONTENT_CHARS = 2000;
 const MIN_COMMENT_CHARS = 10; // תגובה קצרה מאוד ("תודה", "אמן") לא שווה קריאה ל-AI - מסומנת "skipped"
+const MIN_CHAT_CHARS = 3; // הודעת צ'אט קצרה מ-3 תווים ("אמן", "👍") לא נבדקת
+const CHAT_GATE_MAX_PER_MINUTE = 30; // צ'אט הוא שיחה מהירה - מכסת בדיקות גבוהה יותר מפוסטים/תגובות
 const CHECK_TIMEOUT_MS = 8000; // לא מחכים ל-AI יותר מדי; אחרת fail-open
 const GATE_MAX_PER_MINUTE = 10; // מקסימום בדיקות AI בדקה לכל משתמש (חיסכון במכסה); מעבר לכך - fail-open
 
@@ -23,13 +25,16 @@ const SYSTEM = [
   "במקרה של ספק החלט ALLOW. חסום (BLOCK) רק תוכן שברור שאינו קשור לנושא המדור, או תוכן פוגעני, או פרסומת שאינה קשורה.",
 ].join("\n");
 
-// kind = "post" | "comment". section = אובייקט מדור מ-utils/chabadSections.js. context = כותרת הפוסט (לתגובה)
+// kind = "post" | "comment" | "chat". section = אובייקט מדור מ-utils/chabadSections.js. context = כותרת הפוסט (לתגובה)
 function buildRelevanceRequest({ section, kind, title, content, context }) {
   const isComment = kind === "comment";
+  const isChat = kind === "chat";
   const lines = [
     `מדור: ${prompts.neutralize(section.name)}`,
     `נושא המדור: ${prompts.neutralize(section.topicHint)}`,
-    isComment
+    isChat
+      ? "סוג התוכן: הודעת צ'אט חיה בין חברי המדור. צ'אט הוא שיחה חופשית - אשר ברכות, תודה, שאלות, תיאום והתייחסות לנושא המדור. חסום רק הודעה שברור שהיא על נושא אחר לגמרי שאינו קשור למדור (למשל ספורט, חיות או פוליטיקה), או הודעה פוגענית."
+      : isComment
       ? "סוג התוכן: תגובה לפוסט במדור. תגובה היא שיחה - אשר תגובות שקשורות לפוסט או למדור (תודה, שאלה, הבהרה, תיאום). חסום רק תגובה שברור שאינה קשורה."
       : "סוג התוכן: פוסט חדש במדור. פוסט חייב להתאים לנושא המדור.",
   ];
@@ -77,6 +82,7 @@ function createRateGate({ max = GATE_MAX_PER_MINUTE, windowMs = 60 * 1000, now =
 }
 
 const defaultGate = createRateGate();
+const chatGate = createRateGate({ max: CHAT_GATE_MAX_PER_MINUTE }); // בדיקות צ'אט נספרות בנפרד מפוסטים/תגובות
 
 // הפונקציה הראשית. מחזירה { status, reason }:
 //   "skipped"   - לא נבדק בכוונה (קבוצה רגילה בלי מדור, או תגובה קצרה מאוד)
@@ -87,12 +93,13 @@ async function checkRelevance(input, deps = {}) {
   const { section, kind, content, userId } = input;
   const generate = deps.generate || ai.generate;
   const isConfigured = deps.isConfigured || ai.isConfigured;
-  const gate = deps.gate || defaultGate;
+  const gate = deps.gate || (kind === "chat" ? chatGate : defaultGate);
   const logger = deps.logger || console;
 
   if (!section) return { status: "skipped", reason: "" };
   const text = String(content || "").trim();
   if (kind === "comment" && text.length < MIN_COMMENT_CHARS) return { status: "skipped", reason: "" };
+  if (kind === "chat" && text.length < MIN_CHAT_CHARS) return { status: "skipped", reason: "" }; // כולל הודעת תמונה בלי טקסט
   if (!isConfigured()) return { status: "unchecked", reason: "" };
   if (!gate.allow(userId || "anonymous")) return { status: "unchecked", reason: "" };
 
@@ -113,6 +120,7 @@ async function checkRelevance(input, deps = {}) {
 
 // ניסוח הודעת החסימה למשתמש
 function rejectionMessage(section, kind, reason) {
+  if (kind === "chat") return `ההודעה לא נשלחה כי נראה שאינה מתאימה למדור "${section.name}". ${reason}`.trim();
   const what = kind === "comment" ? "התגובה" : "הפוסט";
   return `${what} לא פורסם/ה כי נראה שאינו/ה מתאים/ה למדור "${section.name}". ${reason}`.trim();
 }
