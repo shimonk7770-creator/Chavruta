@@ -8,6 +8,7 @@ const Comment = require("../models/Comment");
 const Post = require("../models/Post");
 const Notification = require("../models/Notification"); // התראת פעמון לבעל הפוסט על תגובה חדשה
 const Group = require("../models/Group");
+const { lengthError } = require("../utils/validators");
 const { checkRelevance, rejectionMessage } = require("../services/relevanceService"); // בדיקת Gemini: התגובה מתאימה למדור?
 const { getSection } = require("../utils/chabadSections");
 const { likeSummary } = require("../utils/likes");
@@ -25,6 +26,8 @@ async function addComment(req, res) {
     if (!content) {
       return res.status(400).json({ success: false, message: "התגובה לא יכולה להיות ריקה" });
     }
+    const tooLong = lengthError("comment", content); // BR-007 גם בשרת
+    if (tooLong) return res.status(400).json({ success: false, message: tooLong });
 
     const post = await Post.findById(req.params.postId);
     if (!post) {

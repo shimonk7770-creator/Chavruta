@@ -13,6 +13,7 @@ const { isMobileAuthenticated } = require("../middleware/mobileAuth");
 
 // --- התחברות ופיד (שלב קודם) ---
 router.post("/api/mobile/login", mobileController.login); // ללא הגנת isMobileAuthenticated - זו בדיוק נקודת הכניסה שיוצרת את הטוקן
+router.post("/api/mobile/register", mobileController.register); // הרשמה מהאפליקציה - גם היא נקודת כניסה ללא טוקן
 router.post("/api/mobile/login/google", mobileController.googleLogin); // כמו login - נקודת כניסה ללא טוקן
 router.post("/api/mobile/logout", isMobileAuthenticated, mobileController.logout);
 router.get("/api/mobile/feed", isMobileAuthenticated, mobileController.feed); // "פיד פוסטים אישי"

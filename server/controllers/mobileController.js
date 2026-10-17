@@ -7,6 +7,9 @@ const { likeSummary } = require("../utils/likes");
 const MobileToken = require("../models/MobileToken");
 const { signInWithGoogle } = require("../services/googleLoginService");
 const googleAuth = require("../utils/googleAuth");
+const bcrypt = require("bcryptjs");
+const User = require("../models/User");
+const { isValidPassword } = require("../utils/validators");
 const Group = require("../models/Group");
 const Post = require("../models/Post");
 
@@ -47,6 +50,7 @@ async function login(req, res) {
       fullName: user.fullName,
       username: user.username,
       avatarUrl: toAbsoluteUrl(req, user.avatarUrl),
+      role: user.role,
     },
   });
 }
@@ -61,11 +65,38 @@ async function googleLogin(req, res) {
     res.json({
       success: true,
       token,
-      user: { id: user.id, fullName: user.fullName, username: user.username, avatarUrl: toAbsoluteUrl(req, user.avatarUrl) },
+      user: { id: user.id, fullName: user.fullName, username: user.username, avatarUrl: toAbsoluteUrl(req, user.avatarUrl), role: user.role },
     });
   } catch (error) {
     console.error("שגיאה בהתחברות Google (מובייל):", error.message);
     res.status(500).json({ success: false, message: "אירעה שגיאה בהתחברות עם Google. נסו שוב." });
+  }
+}
+
+// POST /api/mobile/register - הרשמה מהאפליקציה (אותם כללים כמו POST /register באתר: authController.register). מחזיר טוקן כמו login
+async function register(req, res) {
+  const { fullName, username, email, password, confirmPassword } = req.body || {};
+  if (!fullName || !username || !email || !password || !confirmPassword) {
+    return res.status(400).json({ success: false, message: "יש למלא את כל השדות" });
+  }
+  if (password !== confirmPassword) return res.status(400).json({ success: false, message: "הסיסמאות שהוזנו אינן תואמות" });
+  if (!isValidPassword(password)) {
+    return res.status(400).json({ success: false, message: "הסיסמה חייבת לכלול לפחות 8 תווים, אות גדולה אחת וספרה" });
+  }
+  try {
+    const existing = await User.findByEmailOrUsername(email, username);
+    if (existing) return res.status(409).json({ success: false, message: "כתובת האימייל או שם המשתמש כבר תפוסים במערכת" });
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = await User.create({ fullName, username, email, passwordHash, role: "member" });
+    const token = await MobileToken.create(user.id);
+    res.status(201).json({
+      success: true,
+      token,
+      user: { id: user.id, fullName: user.fullName, username: user.username, avatarUrl: toAbsoluteUrl(req, user.avatarUrl), role: user.role },
+    });
+  } catch (error) {
+    console.error("שגיאה בהרשמה (מובייל):", error.message);
+    res.status(500).json({ success: false, message: "אירעה שגיאה, נסו שוב" });
   }
 }
 
@@ -111,4 +142,4 @@ async function feed(req, res, next) {
   }
 }
 
-module.exports = { login, googleLogin, logout, feed };
+module.exports = { login, googleLogin, register, logout, feed };

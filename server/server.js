@@ -39,8 +39,14 @@ const aiRoutes = require("./routes/aiRoutes"); // פיצ'ר AI (Gemini) - סיכ
 const adminRoutes = require("./routes/adminRoutes"); // לוח בקרה למנהל מערכת
 const notificationRoutes = require("./routes/notificationRoutes"); // פעמון התראות בזמן אמת
 const mobileRoutes = require("./routes/mobileRoutes"); // API לאפליקציית המובייל (React Native/Expo) - דרישת המרצה
+const mobileBridge = require("./middleware/mobileBridge"); // גשר טוקן: האפליקציה משתמשת באותם בקרים של האתר (תשובות JSON)
+const { makeRouterAsyncSafe } = require("./utils/asyncSafe"); // בקר async שזורק שגיאה לא "תוקע" את הבקשה
 
 const app = express();
+
+// מאחורי Render/Railway (reverse proxy) כל הבקשות מגיעות ב-HTTP פנימי; trust proxy גורם ל-req.protocol להיות https
+// (חשוב לכתובות מלאות שהאפליקציה מקבלת) ול-rate-limit לזהות את כתובת ה-IP האמיתית של המשתמש
+app.set("trust proxy", 1);
 
 // helmet מוסיף אוטומטית כמה HTTP headers מגנים בסיסיים (מניעת clickjacking, sniffing סוג קובץ וכו').
 // contentSecurityPolicy מבוטלת בכוונה: האתר טוען סקריפטים חיצוניים מ-CDN (jQuery, React, D3, Babel, Socket.io-client, Google Fonts) -
@@ -72,6 +78,23 @@ app.use((req, res, next) => {
   res.locals.currentPath = req.path;
   next();
 });
+
+// ===== גשר האפליקציה (חייב לבוא *לפני* express-session) =====
+// כל הבקשות של האפליקציה ל-/api/mobile/* מקבלות CORS (אימות בטוקן בכותרת, לא בעוגייה).
+// ותחת /api/mobile/web/* מופעלים אותם routers של האתר, אבל עם session שנבנה מהטוקן ותשובות JSON (ראו middleware/mobileBridge.js).
+const webRouters = [
+  authRoutes, pageRoutes, groupRoutes, postRoutes, commentRoutes, learningLogRoutes, chatRoutes, messageRoutes,
+  statusRoutes, statsRoutes, holidayRoutes, zmanimRoutes, prayerRoutes, minyanRoutes, compassRoutes, aiRoutes,
+  adminRoutes, notificationRoutes,
+];
+webRouters.forEach(makeRouterAsyncSafe);
+makeRouterAsyncSafe(mobileRoutes);
+app.use("/api/mobile", mobileBridge.mobileCors);
+const bridgeRouter = express.Router();
+bridgeRouter.use(mobileBridge.bridgeAuth);
+webRouters.forEach((router) => bridgeRouter.use("/", router));
+bridgeRouter.use((req, res) => res.status(404).json({ success: false, message: "הכתובת המבוקשת לא נמצאה" }));
+app.use("/api/mobile/web", bridgeRouter);
 
 // ניהול session - נשמר בזיכרון השרת (מספיק לפרויקט לימודי בתהליך יחיד; ה-DB עצמו הוא Firestore).
 // מחולץ למשתנה נפרד (לא ישר ל-app.use) כדי שנוכל לחבר את אותו session גם ל-Socket.io למטה -
@@ -124,6 +147,14 @@ app.use("/", adminRoutes); // לוח בקרה למנהל
 app.use("/", notificationRoutes); // פעמון התראות
 app.use("/", mobileRoutes); // API לאפליקציית המובייל
 
+// גרסת ה-web של האפליקציה (Expo export, ראו chavruta-mobile/package.json -> export:web): מוגשת מ-/app,
+// כך שקישור אחד (למשל https://<השרת>/app) פותח את האפליקציה בכל מכשיר. SPA: כל נתיב לא מוכר תחת /app מחזיר את index.html
+const appWebDir = path.join(__dirname, "public", "app");
+app.use("/app", express.static(appWebDir));
+app.get("/app/*", (req, res, next) => {
+  res.sendFile(path.join(appWebDir, "index.html"), (err) => err && next());
+});
+
 // טיפול בשגיאות - חייב להיות אחרון (סעיף 8 ב-SRS)
 app.use(notFound);
 app.use(errorHandler);
@@ -132,8 +163,9 @@ app.use(errorHandler);
 // זו התבנית הסטנדרטית לחיבור Socket.io ל-Express (לא ניתן פשוט עם app.listen)
 const server = http.createServer(app);
 
-const io = new Server(server);
+const io = new Server(server, { cors: { origin: true } }); // cors: לקוח ה-web של האפליקציה יכול לרוץ מכתובת אחרת (האימות בטוקן, לא בעוגייה)
 io.engine.use(sessionMiddleware); // "משתילים" את אותו session גם לתוך כל handshake של Socket.io
+io.use(mobileBridge.socketAuth); // לקוח האפליקציה מזדהה בטוקן (auth.token) במקום בעוגייה
 require("./sockets/ioInstance").setIo(io); // חושף את io גם לקונטרולרים REST רגילים (למשל commentController.js) לצורך התראות
 require("./sockets/chatSocket")(io); // רישום כל מאזיני אירועי הצ'אט (join/send/typing/disconnect) + התראות פעמון
 

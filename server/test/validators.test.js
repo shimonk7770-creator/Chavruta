@@ -50,3 +50,12 @@ describe("isValidEmail (BR-003)", () => {
     assert.equal(isValidEmail("shimon@example.com"), true);
   });
 });
+
+test("lengthError: מגבלות אורך פוסט ותגובה נאכפות", () => {
+  const { lengthError, TEXT_LIMITS } = require("../utils/validators");
+  assert.strictEqual(lengthError("postTitle", "א".repeat(TEXT_LIMITS.postTitle)), null);
+  assert.match(lengthError("postTitle", "א".repeat(TEXT_LIMITS.postTitle + 1)), /הכותרת ארוכה מדי/);
+  assert.match(lengthError("postContent", "א".repeat(5001)), /התוכן ארוך מדי/);
+  assert.match(lengthError("comment", "א".repeat(1001)), /התגובה ארוכה מדי/);
+  assert.strictEqual(lengthError("comment", "קצר"), null);
+});

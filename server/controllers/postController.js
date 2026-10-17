@@ -6,6 +6,7 @@
 const sanitizeHtml = require("sanitize-html");
 const Post = require("../models/Post");
 const Group = require("../models/Group");
+const { lengthError } = require("../utils/validators");
 const { checkRelevance, rejectionMessage } = require("../services/relevanceService"); // בדיקת Gemini: הפוסט מתאים למדור?
 const { getSection } = require("../utils/chabadSections");
 
@@ -38,6 +39,8 @@ async function createPost(req, res, next) {
     if (!title || !content) {
       return res.redirect(`/groups/${group.id}?memberError=${encodeURIComponent("יש למלא כותרת ותוכן")}`);
     }
+    const tooLong = lengthError("postTitle", title) || lengthError("postContent", content); // BR-007 גם בשרת
+    if (tooLong) return res.redirect(`/groups/${group.id}?memberError=${encodeURIComponent(tooLong)}`);
 
     // בדיקת רלוונטיות (רק במדורי בית חב״ד): Gemini חוסם תוכן שלא מתאים לנושא המדור.
     // אם ה-AI לא זמין - מפרסמים בכל זאת ומסמנים "unchecked" לבדיקת אדמין (fail-open)
@@ -83,6 +86,8 @@ async function updatePost(req, res) {
   if (!title || !content) {
     return res.render("posts/edit", { post, error: "יש למלא כותרת ותוכן" });
   }
+  const tooLong = lengthError("postTitle", title) || lengthError("postContent", content);
+  if (tooLong) return res.render("posts/edit", { post, error: tooLong });
 
   const patch = { title, content };
   if (req.body.category) patch.category = req.body.category;

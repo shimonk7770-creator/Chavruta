@@ -39,7 +39,7 @@ npm run make-admin -- your@email.com
 npm test
 ```
 
-מריץ את כל הבדיקות תחת `server/test/` עם `node:test` המובנה ב-Node (לא דורש ספריית בדיקות נוספת) - 219 בדיקות בסה"כ.
+מריץ את כל הבדיקות תחת `server/test/` עם `node:test` המובנה ב-Node (לא דורש ספריית בדיקות נוספת) - 220 בדיקות בסה"כ.
 מכסה ולידציית הרשמה (BR-001/002/003), לוגיקת הרשאות (AC-002/AC-003), בניית לוח השנה (`calendarGrid.js`),
 לוגיקת נמעני התראות הפעמון (`notificationRecipients.js`), חישוב זמני שבת אמיתי (`shabbatTimes.js`, ספריית `@hebcal/core`),
 תפוגת 24 השעות של פיצ'ר "סטטוס" (`status.test.js`), חישוב "המועד הקרוב" במעגל השנה (`upcomingHoliday.js`),
@@ -99,3 +99,6 @@ seed/          - סקריפט אתחול נתוני דמו
 - [x] פיד אישי ("שלי") + פיד ציבורי ("הקהילה", פתוח לאורחים), באתר ובמובייל - ראו TASKS.md
 - [x] הקלטה קולית עם תמלול (Gemini) בכל שדה הודעה, באתר ובמובייל - ראו TASKS.md
 - [x] התחברות עם Google (Firebase Authentication) באתר + נקודת קצה למובייל - דורש הפעלת Google ב-Firebase Console והוספת `FIREBASE_WEB_API_KEY` ל-`.env` (ראו `.env.example`)
+
+## האפליקציה (chavruta-mobile) ופריסה לענן
+האפליקציה (Expo / React Native) מכילה את כל מה שיש באתר, ומתחברת לשרת דרך "גשר טוקן" (`/api/mobile/web/*`) שמריץ את אותם ראוטרים של האתר. גרסת הדפדפן שלה מוגשת מהשרת בכתובת `/app`. הוראות פריסה ל-Render ושיתוף קישור: ראו `DEPLOY.md`.

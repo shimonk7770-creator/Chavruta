@@ -18,4 +18,15 @@ function isValidEmail(email) {
   return typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-module.exports = { isValidPassword, isValidUsername, isValidEmail };
+// BR-007: מגבלות אורך טקסט (נאכפות גם בשרת, לא רק ב-maxlength של הדפדפן). הערכים זהים לאלה שבמובייל
+const TEXT_LIMITS = { postTitle: 150, postContent: 5000, comment: 1000 };
+
+// מחזיר הודעת שגיאה בעברית אם הטקסט ארוך מדי, אחרת null
+function lengthError(kind, text) {
+  const max = TEXT_LIMITS[kind];
+  if (!max || typeof text !== "string" || text.length <= max) return null;
+  const label = kind === "postTitle" ? "הכותרת" : kind === "comment" ? "התגובה" : "התוכן";
+  return `${label} ${kind === "postContent" ? "ארוך" : "ארוכה"} מדי (עד ${max} תווים)`;
+}
+
+module.exports = { isValidPassword, isValidUsername, isValidEmail, TEXT_LIMITS, lengthError };

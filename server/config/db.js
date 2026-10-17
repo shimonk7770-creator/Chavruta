@@ -8,12 +8,22 @@ const admin = require("firebase-admin");
 let firestoreDb = null;
 let projectId = ""; // מזהה פרויקט Firebase (משמש את התחברות Google בדפדפן)
 
+// טוען את מפתח השירות: בשרת ציבורי (Render/Railway) מהמשתנה FIREBASE_SERVICE_ACCOUNT_JSON (תוכן הקובץ, JSON או base64),
+// כדי שהסוד לא יישמר בגיט; במחשב המקומי - מהקובץ serviceAccountKey.json בשורש הפרויקט (כמו עד עכשיו)
+function loadServiceAccount() {
+  const raw = (process.env.FIREBASE_SERVICE_ACCOUNT_JSON || "").trim();
+  if (raw) {
+    const text = raw.startsWith("{") ? raw : Buffer.from(raw, "base64").toString("utf8");
+    return JSON.parse(text);
+  }
+  return require(path.join(__dirname, "..", "..", "serviceAccountKey.json"));
+}
+
 // מאתחל את החיבור ל-Firebase באמצעות קובץ מפתח שירות (Service Account)
 // הקובץ מורד מ-Firebase Console (Project Settings -> Service Accounts) ואינו נשמר בגיט
 function connectDB() {
   try {
-    const keyPath = path.join(__dirname, "..", "..", "serviceAccountKey.json");
-    const serviceAccount = require(keyPath);
+    const serviceAccount = loadServiceAccount();
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),

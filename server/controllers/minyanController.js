@@ -66,6 +66,9 @@ async function listMinyanim(req, res, next) {
     });
 
     await attendance.decorateResults(results, req.session && req.session.userId); // מונה "אני מגיע" לכל מניין
+    results.forEach((r) => {
+      r.daysText = L.daysLabel(r.minyan.days); // תווית הימים מחושבת בשרת, כך שגם האפליקציה (שמקבלת JSON) מציגה אותה זהה לאתר
+    });
     res.render("minyanim/index", {
       results,
       origin,

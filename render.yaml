@@ -1,0 +1,24 @@
+# render.yaml - הגדרת פריסה ל-Render (https://render.com). "New +" -> "Blueprint" -> לבחור את הריפו, והשאר אוטומטי.
+# הסודות (sync: false) מוזנים ידנית בלוח הבקרה של Render - הם לעולם לא נשמרים בגיט.
+services:
+  - type: web
+    name: chavruta
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /app/
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: FIREBASE_WEB_API_KEY
+        sync: false
